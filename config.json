@@ -1,0 +1,18 @@
+{
+    "Resolution": [
+        1920,
+        1080
+    ],
+    "Gravitational Field Strength": 0,
+    "Coefficient of Restitution": 1,
+    "Density Of Air": 1.225,
+    "Force Scalar": 1,
+    "Size Scalar": 20,
+    "Aspect Ratio": [
+        16,
+        9
+    ],
+    "Ratio of Elasticity": 1,
+    "Time Scale": 0.1,
+    "Buffer Frames": 0
+}
