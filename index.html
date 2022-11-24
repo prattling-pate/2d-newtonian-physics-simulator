@@ -1,31 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NEA</title>
 
     <style>
-        body {
-            background-color: cornflowerblue;
-        }
+      body {
+        background-color: cornflowerblue;
+      }
 
-        h1 {
-            color: whitesmoke;
-            font-family: "Trebuchet MS", sans-serif;
-        }
+      h1 {
+        color: whitesmoke;
+        font-family: "Trebuchet MS", sans-serif;
+      }
+      form {
+        color: whitesmoke;
+        font-family: "Trebuchet MS", sans-serif;
+      }
     </style>
-</head>
+  </head>
 
-
-
-<body>
-    <h1>2D newtonian motion simulation</h1>
-    <div style = "text-align:center;"><canvas id="Simulation" width="640" height="480" style="border:1px #000000;"></canvas>
-    </div>
+  <body>
+    <h1>2D Newtonian motion simulation</h1>
+    <canvas
+      id="Simulation"
+      width="640"
+      height="480"
+      style="border: 1px #000000"
+    ></canvas>
+    <form id="settings">
+      Gravitational Field Strength:
+      <input type="number" name="G" value="9.81" min="0" step="0.001"/> ms^2<br />
+      Density Of Air:
+      <input type="number" name="D_A" value="1.225" min="0" step="0.001"/> kgm^-3<br />
+      Time Scale:
+      <input type="number" name="RATE" value="1" min="0" step="0.001"/> s^-1<br />
+      Coefficient of Restitution
+      <input type="number" name="E" value="1" min="0" step="0.001"/><br />
+    </form>
     <script src="main.js"></script>
-</body>
-
+  </body>
 </html>
