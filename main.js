@@ -1,11 +1,30 @@
+const Settings = {
+  "Resolution": [
+    1920,
+    1080
+  ],
+  "Gravitational Field Strength": 0,
+  "Coefficient of Restitution": 1,
+  "Density Of Air": 1.225,
+  "Force Scalar": 1,
+  "Size Scalar": 20,
+  "Aspect Ratio": [
+    16,
+    9
+  ],
+  "Ratio of Elasticity": 1,
+  "Time Scale": 0.1,
+  "Buffer Frames": 0
+}
+
 // should take from config.json eventually
-const RESOLUTION = [640, 480];
+const RESOLUTION = Settings.Resolution;
 const RATE = 0.1;
-const G = 9.81;
-const E = 1;
-const SIZESCALE = 1;
-const FORCESCALE = 1;
-const DENSITYOFAIR = 1.225;
+const G = Settings["Gravitational Field Strength"];
+const E = Settings["Coefficient of Restitution"];
+const SIZESCALE = Settings["Size Scalar"];
+const FORCESCALE = Settings["Force Scalar"];
+const DENSITYOFAIR = Settings["Density Of Air"];
 
 class Vector2 {
   #x;
@@ -59,8 +78,7 @@ class Position extends Vector2 {
   #x;
   #y;
   constructor(x, y) {
-    this.#x = x;
-    this.#y = y;
+    super(x, y);
   }
 
   update(velocity) {
@@ -73,8 +91,7 @@ class Velocity extends Vector2 {
   #x;
   #y;
   constructor(x, y) {
-    this.#x = x;
-    this.#y = y;
+    super(x, y);
   }
 
   update(acceleration) {
@@ -87,8 +104,7 @@ class Acceleration extends Vector2 {
   #x;
   #y;
   constructor(x, y) {
-    this.#x = x;
-    this.#y = y;
+    super(x, y);
   }
 
   update(force) {
@@ -99,7 +115,6 @@ class Acceleration extends Vector2 {
 
 class Object {
   constructor(colour, velocity, acceleration, position) {
-    this.mass = 0;
     this.colour = colour;
     this.forces = [new Vector2(0, 0), new Vector2(0, 0), new Vector2(0, 0)];
     this.acceleration = acceleration;
@@ -141,10 +156,10 @@ class Object {
   }
 
   updateAll() {
-    // add drag update
-    this.acceleration.update();
-    this.velocity.update();
-    this.position.update();
+    this.updateDrag();
+    this.acceleration.update(this.resolveVectors());
+    this.velocity.update(this.acceleration);
+    this.position.update(this.velocity);
     // sort out impulse buffer eventually
     this.forces[2] = new Vector2(0, 0);
   }
@@ -194,7 +209,7 @@ class Object {
     // ground collision check - statement 1. ceiling collision check - statement 2
     if (
       this.position.getY() + this.velocity.getY() * RATE >=
-        RESOLUTION[1] * (8 / 9) ||
+      RESOLUTION[1] * (8 / 9) ||
       this.position.getY() + this.velocity.getY() * RATE <= 0
     ) {
       this.velocity.setY(-this.velocity.getY() * E);
@@ -245,16 +260,16 @@ class Object {
     const sumMomentum = thisMomentumCentrePlane + otherMomentumCentrePlane;
     const sumEnergy = 0.5 * (this.mass * (this.velocity().getMag() * thisCosCentrePlane) ** 2 + otherObject.getMass() * (otherObject.getMag() * otherCosCentrePlane) ** 2);
     const a = -this.mass * (otherObject.getMass() + this.mass);
-    const b = 2*sumMomentum*this.mass;
-    const c = 2*sumEnergy*otherObject.getMass() - sumMomentum**2;
-    if (b**2 - 4*a*c >= 0){
-        const thisFinalVelocityCentrePlane = ((-b + Math.sqrt(b**2 - 4 * a * c)) / 2 * a);
-        const otherFinalVelocityCentrePlane = ((sumMomentum - this.mass * thisFinalVelocityCentrePlane) / otherObject.getMass);
+    const b = 2 * sumMomentum * this.mass;
+    const c = 2 * sumEnergy * otherObject.getMass() - sumMomentum ** 2;
+    if (b ** 2 - 4 * a * c >= 0) {
+      const thisFinalVelocityCentrePlane = ((-b + Math.sqrt(b ** 2 - 4 * a * c)) / 2 * a);
+      const otherFinalVelocityCentrePlane = ((sumMomentum - this.mass * thisFinalVelocityCentrePlane) / otherObject.getMass);
     }
     else {
-        console.log("Negative Discriminant")
-        const thisFinalVelocityCentrePlane = this.velocity.getMag() * thisCosCentrePlane;
-        const otherFinalVelocityCentrePlane = otherObject.getVelocity.getMag() * otherCosCentrePlane;
+      console.log("Negative Discriminant")
+      const thisFinalVelocityCentrePlane = this.velocity.getMag() * thisCosCentrePlane;
+      const otherFinalVelocityCentrePlane = otherObject.getVelocity.getMag() * otherCosCentrePlane;
     }
     const thisFinalVelocityPerpendicularPlane = this.velocity.getMag() * thisCosPerpendicularPlane;
     const otherFinalVelocityPerpendicularPlane = otherObject.getVelocity().getMag() * thisCosPerpendicularPlane;
@@ -265,10 +280,10 @@ class Object {
     velocityComponents = this.getFinalVelocities(otherObject);
     thisFinalVelocity = new Velocity(velocityComponents[0], velocityComponents[2]);
     otherFinalVelocity = new Velocity(velocityComponents[1], velocityComponents[3]);
-    thisFinalVelocityXComp = thisFinalVelocity.getMag()*thisFinalVelocity.getCosAngle(new Vector2(1, 0));
-    thisFinalVelocityYComp = thisFinalVelocity.getMag()*thisFinalVelocity.getCosAngle(new Vector2(0, 1));
-    otherFinalVelocityXComp = otherFinalVelocity.getMag()*otherFinalVelocity.getCosAngle(new Vector2(1, 0));
-    otherFinalVelocityYComp = otherFinalVelocity.getMag()*otherFinalVelocity.getCosAngle(new Vector2(0, 1));
+    thisFinalVelocityXComp = thisFinalVelocity.getMag() * thisFinalVelocity.getCosAngle(new Vector2(1, 0));
+    thisFinalVelocityYComp = thisFinalVelocity.getMag() * thisFinalVelocity.getCosAngle(new Vector2(0, 1));
+    otherFinalVelocityXComp = otherFinalVelocity.getMag() * otherFinalVelocity.getCosAngle(new Vector2(1, 0));
+    otherFinalVelocityYComp = otherFinalVelocity.getMag() * otherFinalVelocity.getCosAngle(new Vector2(0, 1));
     this.velocity.setVelocity(thisFinalVelocityXComp, thisFinalVelocityYComp);
     otherObject.getVelocity.setVelocity(otherFinalVelocityXComp, otherFinalVelocityYComp)
   }
@@ -277,16 +292,91 @@ class Object {
 // continue translating the rest of the classes in class
 
 class Circle extends Object {
-    constructor(radius, density, colour, velocity, acceleration, position){ 
-        this.forces = [new Vector2(0, 0), new Vector2(0, 0), new Vector2(0, 0)];
-        this.shape = 'circle';
-        this.width = radius * Math.PI();
-        this.radius = radius;
-        this.volume = Math.PI() * radius ** 2;
-        this.mass = density * this.volume;
-        this.colour = colour;
-        this.velocity = velocity;
-        this.acceleration = acceleration;
-        this.position = position;
-    }
+  constructor(radius, density, colour, velocity, acceleration, position) {
+    super(colour, velocity, acceleration, position)
+    this.shape = 'circle';
+    this.coeffDrag = 0.47;
+    this.width = radius * Math.PI();
+    this.radius = radius;
+    this.volume = Math.PI() * radius ** 2;
+    this.mass = density * this.volume;
+  }
+
+  getShape() {
+    return this.shape;
+  }
+
+  getRadius() {
+    return this.radius;
+  }
 }
+
+class Rectangle extends Object {
+  constructor(height, width, density, colour, velocity, acceleration, position) {
+    super(colour, velocity, acceleration, position);
+    this.height = height;
+    this.coeffDrag = 1.05;
+    this.width = width;
+    this.mass = this.height * this.width * density;
+  }
+  getWidth() {
+    return this.width;
+  }
+
+  getLength() {
+    this.length;
+  }
+
+  getCorner() {
+    let x = this.position.getX();
+    let y = this.position.getY();
+    x -= 0.5 * this.width;
+    y -= 0.5 * this.height;
+    return new Position(x, y);
+  }
+}
+
+function init() {
+  console.log("in init")
+  const c = document.getElementById("Simulation");
+  const ctx = c.getContext("2d");
+  const objects = addObjects(); // array of all objects in simulation.
+  const height = 480; // Resolution/dimensions of canvas displayed in.
+  const width = 640;
+  clock(ctx, objects, width, height);
+}
+
+function addObjects(n) {
+  const objects = []
+  for (let i = 0; i < n; i++) {
+    objects.push(new Circle(5, 5, "red", new Velocity(0, 0), new Acceleration(0, 0), new Position(160, 320)))
+  }
+  return objects;
+}
+
+function drawObject(ctx, object) {
+  ctx.fillStyle = object.getColour();
+  if (object.getShape() == 'circle') {
+    ctx.beginPath();
+    ctx.arc(object.getX(), object.getY(), object.getRadius(), 0, 2 * Math.PI());
+    ctx.closePath();
+    ctx.fill();
+  }
+}
+
+function update(ctx, objects, width, height) {
+  ctx.fillStyle = '#89CFF0';
+  ctx.fillRect(0,0, width, height);
+  for (const object of objects) {
+    object.groundCeilingCollision()
+    object.sideCollision();
+    object.updateAll();
+    drawObject(ctx, object);
+  }
+}
+
+function clock(ctx, objects, width, height) {
+  setInterval(update, 10, ctx, objects, width, height);
+}
+
+window.onload=init;
