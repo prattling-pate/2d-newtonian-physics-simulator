@@ -1,6 +1,6 @@
 // default settings when the simulation is ran
 const Settings = {
-  "Resolution": [640, 480],
+  Resolution: [640, 480],
   "Force Scalar": 5,
   "Size Scalar": 20,
   "Buffer Frames": 0,
@@ -142,7 +142,6 @@ class Object {
   }
 
   addWeight(G) {
-    console.log(G)
     this.forces[0] = new Vector2(0, this.mass * G);
   }
 
@@ -160,13 +159,13 @@ class Object {
 
   updateDrag(DENSITYOFAIR) {
     const dragX =
-      -0.5 *
+      -Math.sign(this.velocity.getX())*0.5 *
       DENSITYOFAIR *
       this.coeffDrag *
       this.width *
       this.velocity.getX() ** 2;
     const dragY =
-      -0.5 *
+      -Math.sign(this.velocity.getY())*0.5 *
       DENSITYOFAIR *
       this.coeffDrag *
       this.height *
@@ -374,7 +373,7 @@ function init() {
   clock(ctx, objects, width, height, constants);
 }
 
-function addObjects(n, G) {
+function addObjects(n) {
   const objects = [];
   for (let i = 0; i < n; i++) {
     objects.push(
@@ -387,7 +386,6 @@ function addObjects(n, G) {
         new Position(i * 10, i * 10)
       )
     );
-    objects[i].addWeight(G);
   }
   return objects;
 }
@@ -399,6 +397,7 @@ function update(ctx, objects, width, height, constants) {
   ctx.fillStyle = "#964B00";
   ctx.fillRect(0, RESOLUTION[1] * (8 / 9), width, RESOLUTION[1]);
   for (const object of objects) {
+    object.addWeight(constants["GravitationalFieldStrength"]);
     object.groundCeilingCollision(constants);
     object.sideCollision(constants);
     object.updateAll(constants);
