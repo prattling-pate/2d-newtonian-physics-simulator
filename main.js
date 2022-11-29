@@ -159,13 +159,15 @@ class Object {
 
   updateDrag(DENSITYOFAIR) {
     const dragX =
-      -Math.sign(this.velocity.getX()) * 0.5 *
+      -Math.sign(this.velocity.getX()) *
+      0.5 *
       DENSITYOFAIR *
       this.coeffDrag *
       this.width *
       this.velocity.getX() ** 2;
     const dragY =
-      -Math.sign(this.velocity.getY()) * 0.5 *
+      -Math.sign(this.velocity.getY()) *
+      0.5 *
       DENSITYOFAIR *
       this.coeffDrag *
       this.height *
@@ -179,7 +181,7 @@ class Object {
     // side collision check (checks if out of bounds on right side or on left side respectively in if statement)
     if (
       this.position.getX() + this.velocity.getX() * RATE + this.radius >=
-      RESOLUTION[0] ||
+        RESOLUTION[0] ||
       this.position.getX() + this.velocity.getX() * RATE + this.radius <= 0
     ) {
       this.velocity.setX(-this.velocity.getX() * E);
@@ -251,7 +253,7 @@ class Object {
       0.5 *
       (this.mass * (this.velocity().getMag() * thisCosCentrePlane) ** 2 +
         otherObject.getMass() *
-        (otherObject.getMag() * otherCosCentrePlane) ** 2);
+          (otherObject.getMag() * otherCosCentrePlane) ** 2);
     const a = -this.mass * (otherObject.getMass() + this.mass);
     const b = 2 * sumMomentum * this.mass;
     const c = 2 * sumEnergy * otherObject.getMass() - sumMomentum ** 2;
@@ -364,18 +366,20 @@ class Rectangle extends Object {
 }
 
 var constants = getConstants();
+var running = true;
+var objects;
 
 function init() {
+  objects = [];
   const c = document.getElementById("Simulation");
   const ctx = c.getContext("2d");
-  const objects = addObjects(10, constants["GravitationalFieldStrength"]);
+  addObjects(10, constants["GravitationalFieldStrength"]);
   const height = 480; // Resolution/dimensions of canvas displayed in.
   const width = 640;
-  clock(ctx, objects, width, height);
+  clock(ctx, width, height);
 }
 
 function addObjects(n) {
-  const objects = [];
   for (let i = 0; i < n; i++) {
     objects.push(
       new Circle(
@@ -388,10 +392,9 @@ function addObjects(n) {
       )
     );
   }
-  return objects;
 }
 
-function update(ctx, objects, width, height) {
+function update(ctx, width, height) {
   ctx.fillStyle = "#89CFF0";
   ctx.fillRect(0, 0, width, height);
   ctx.fillStyle = "#964B00";
@@ -405,6 +408,7 @@ function update(ctx, objects, width, height) {
   }
 }
 
+// this functions draws the given object, differentiating between methods of drawing using the object.shape property of the object class.
 function drawObject(ctx, object) {
   ctx.fillStyle = object.getColour();
   if (object.getShape() == "circle") {
@@ -431,10 +435,12 @@ function drawObject(ctx, object) {
   }
 }
 
-function clock(ctx, objects, width, height) {
-  setInterval(update, 10, ctx, objects, width, height);
+// this function runs an interval (loops a given function) every 10ms, this interval loops the update function which updates the positions of all balls in the animation.
+function clock(ctx, width, height) {
+  window.interval = setInterval(update, 10, ctx, width, height);
 }
 
+// Grabs the values from each input field in order to update the constants array to user selected values.
 function getConstants() {
   const G = document.getElementById("gravity").value;
   const DENSITYOFAIR = document.getElementById("density").value;
@@ -449,19 +455,50 @@ function getConstants() {
   return constants;
 }
 
-function btnClicked() {
+// the global variable constants is updated whenever this function is called, with updated values in the user interface of the web page.
+function updateConstants() {
   constants = getConstants();
-  console.log(constants)
-};
+}
+
+// the function called by the pause button when it is clicked, clears the interval when the button is toggled on when clicked, starts it again when toggled off when clicked.
+// this stops and starts the animation of canvas.
+function pauseSim() {
+  const btn = document.getElementById("pause-btn");
+  if (btn.value == "ON") {
+    clearInterval(window.interval);
+    console.log("paused");
+  } else {
+    const c = document.getElementById("Simulation");
+    const ctx = c.getContext("2d");
+    const height = 480; // Resolution/dimensions of canvas displayed in.
+    const width = 640;
+    clock(ctx, width, height);
+  }
+}
+
+// Toggles the pause button between ON and OFF states, allows for the pauseSim() function to decide when to stop and start the interval function.
+function tgl() {
+  const btn = document.getElementById("pause-btn");
+  if (btn.value == "ON") {
+    btn.value = "OFF";
+  } else {
+    btn.value = "ON";
+  }
+}
 
 // Fix refresh of simulation
 function reInit() {
+  clearInterval(window.interval);
   const c = document.getElementById("Simulation");
-  const ctx = c.getContext("2d");
+  ctx = c.getContext("2d");
   ctx.clearRect(0, 0, 640, 480);
+  running = true;
+  init();
 }
 
-document.getElementById("refresh-btn").addEventListener("click", btnClicked);
+document.getElementById("refresh-btn").addEventListener("click", updateConstants);
+
+document.getElementById("pause-btn").addEventListener("click", pauseSim);
 
 document.getElementById("refresh-sim").addEventListener("click", reInit);
 
