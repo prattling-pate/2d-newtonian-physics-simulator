@@ -159,13 +159,13 @@ class Object {
 
   updateDrag(DENSITYOFAIR) {
     const dragX =
-      -Math.sign(this.velocity.getX())*0.5 *
+      -Math.sign(this.velocity.getX()) * 0.5 *
       DENSITYOFAIR *
       this.coeffDrag *
       this.width *
       this.velocity.getX() ** 2;
     const dragY =
-      -Math.sign(this.velocity.getY())*0.5 *
+      -Math.sign(this.velocity.getY()) * 0.5 *
       DENSITYOFAIR *
       this.coeffDrag *
       this.height *
@@ -179,7 +179,7 @@ class Object {
     // side collision check (checks if out of bounds on right side or on left side respectively in if statement)
     if (
       this.position.getX() + this.velocity.getX() * RATE + this.radius >=
-        RESOLUTION[0] ||
+      RESOLUTION[0] ||
       this.position.getX() + this.velocity.getX() * RATE + this.radius <= 0
     ) {
       this.velocity.setX(-this.velocity.getX() * E);
@@ -251,7 +251,7 @@ class Object {
       0.5 *
       (this.mass * (this.velocity().getMag() * thisCosCentrePlane) ** 2 +
         otherObject.getMass() *
-          (otherObject.getMag() * otherCosCentrePlane) ** 2);
+        (otherObject.getMag() * otherCosCentrePlane) ** 2);
     const a = -this.mass * (otherObject.getMass() + this.mass);
     const b = 2 * sumMomentum * this.mass;
     const c = 2 * sumEnergy * otherObject.getMass() - sumMomentum ** 2;
@@ -363,14 +363,15 @@ class Rectangle extends Object {
   }
 }
 
+var constants = getConstants();
+
 function init() {
-  let constants = getConstants();
   const c = document.getElementById("Simulation");
   const ctx = c.getContext("2d");
   const objects = addObjects(10, constants["GravitationalFieldStrength"]);
   const height = 480; // Resolution/dimensions of canvas displayed in.
   const width = 640;
-  clock(ctx, objects, width, height, constants);
+  clock(ctx, objects, width, height);
 }
 
 function addObjects(n) {
@@ -390,8 +391,7 @@ function addObjects(n) {
   return objects;
 }
 
-function update(ctx, objects, width, height, constants) {
-  constants = getConstants();
+function update(ctx, objects, width, height) {
   ctx.fillStyle = "#89CFF0";
   ctx.fillRect(0, 0, width, height);
   ctx.fillStyle = "#964B00";
@@ -431,16 +431,15 @@ function drawObject(ctx, object) {
   }
 }
 
-function clock(ctx, objects, width, height, constants) {
-  setInterval(update, 10, ctx, objects, width, height, constants);
+function clock(ctx, objects, width, height) {
+  setInterval(update, 10, ctx, objects, width, height);
 }
 
 function getConstants() {
-  const c = document.getElementById("settings");
-  const G = c.elements[0].value;
-  const DENSITYOFAIR = c.elements[1].value;
-  const RATE = c.elements[2].value / 10;
-  const E = c.elements[3].value;
+  const G = document.getElementById("gravity").value;
+  const DENSITYOFAIR = document.getElementById("density").value;
+  const RATE = document.getElementById("scale").value / 10;
+  const E = document.getElementById("restit").value;
   const constants = {
     CoeffRest: E,
     GravitationalFieldStrength: G,
@@ -449,5 +448,21 @@ function getConstants() {
   };
   return constants;
 }
+
+function btnClicked() {
+  constants = getConstants();
+  console.log(constants)
+};
+
+// Fix refresh of simulation
+function reInit() {
+  const c = document.getElementById("Simulation");
+  const ctx = c.getContext("2d");
+  ctx.clearRect(0, 0, 640, 480);
+}
+
+document.getElementById("refresh-btn").addEventListener("click", btnClicked);
+
+document.getElementById("refresh-sim").addEventListener("click", reInit);
 
 window.onload = init;
