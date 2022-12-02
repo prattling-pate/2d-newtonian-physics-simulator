@@ -181,7 +181,7 @@ class Object {
     // side collision check (checks if out of bounds on right side or on left side respectively in if statement)
     if (
       this.position.getX() + this.velocity.getX() * RATE + this.radius >=
-      RESOLUTION[0] ||
+        RESOLUTION[0] ||
       this.position.getX() + this.velocity.getX() * RATE + this.radius <= 0
     ) {
       this.velocity.setX(-this.velocity.getX() * E);
@@ -207,7 +207,13 @@ class Object {
   }
 
   isCollision(other) {
-    if (((this.hitbox[0] > other.hitbox[1] && this.hitbox[1] < other.hitbox[1]) || (this.hitbox[0] > other.hitbox[0] && this.hitbox[1] < other.hitbox[0])) && ((this.hitbox[2] > other.hitbox[3] && this.hitbox[3] < other.hitbox[3]) || (this.hitbox[2] > other.hitbox[2] && this.hitbox[3] < other.hitbox[2]))) {
+    if (
+      ((this.hitbox[0] > other.hitbox[1] && this.hitbox[1] < other.hitbox[1]) ||
+        (this.hitbox[0] > other.hitbox[0] &&
+          this.hitbox[1] < other.hitbox[0])) &&
+      ((this.hitbox[2] > other.hitbox[3] && this.hitbox[3] < other.hitbox[3]) ||
+        (this.hitbox[2] > other.hitbox[2] && this.hitbox[3] < other.hitbox[2]))
+    ) {
       return true;
     }
     return false;
@@ -243,29 +249,29 @@ class Object {
     const thisCosPerpendicularPlane = this.velocity.getCosAngle(
       perpendicularJointPlane
     );
-    const otherCosCentrePlane = otherObject
-      .getVelocity()
-      .getCosAngle(centreJointPlane);
-    const otherCosPerpendicularPlane = otherObject
-      .getVelocity()
-      .getCosAngle(perpendicularJointPlane);
-    const thisMomentumCentrePlane = this.getMomentum() * thisCosCentrePlane;
+    const otherCosCentrePlane =
+      otherObject.velocity.getCosAngle(centreJointPlane);
+    const otherCosPerpendicularPlane = otherObject.velocity.getCosAngle(
+      perpendicularJointPlane
+    );
+    const thisMomentumCentrePlane =
+      this.mass * this.velocity.getMag() * thisCosCentrePlane;
     const otherMomentumCentrePlane =
-      otherObject.getMomentum() * otherCosCentrePlane;
+      otherObject.mass * otherObject.velocity.getMag() * otherCosCentrePlane;
     const sumMomentum = thisMomentumCentrePlane + otherMomentumCentrePlane;
     const sumEnergy =
       0.5 *
       (this.mass * (this.velocity.getMag() * thisCosCentrePlane) ** 2 +
-        otherObject.getMass() *
-        (otherObject.getVelocity().getMag() * otherCosCentrePlane) ** 2);
-    const a = -this.mass * (otherObject.getMass() + this.mass);
+        otherObject.mass *
+          (otherObject.velocity.getMag() * otherCosCentrePlane) ** 2);
+    const a = -this.mass * (otherObject.mass + this.mass);
     const b = 2 * sumMomentum * this.mass;
-    const c = 2 * sumEnergy * otherObject.getMass() - sumMomentum ** 2;
+    const c = 2 * sumEnergy * otherObject.mass - sumMomentum ** 2;
     let thisFinalVelocityCentrePlane = 0;
     let otherFinalVelocityCentrePlane = 0;
     if (b ** 2 - 4 * a * c >= 0) {
       thisFinalVelocityCentrePlane =
-        ((-b + Math.sqrt(b ** 2 - 4 * a * c)) / 2*a);
+        ((-b + Math.sqrt(b ** 2 - 4 * a * c)) / (2 * a));
       otherFinalVelocityCentrePlane =
         (sumMomentum - this.mass * thisFinalVelocityCentrePlane) /
         otherObject.getMass();
@@ -289,7 +295,6 @@ class Object {
 
   otherObjectCollision(otherObject) {
     const velocityComponents = this.getFinalVelocities(otherObject);
-    console.log("here");
     const thisFinalVelocity = new Velocity(
       velocityComponents[0],
       velocityComponents[2]
@@ -311,10 +316,7 @@ class Object {
       otherFinalVelocity.getMag() *
       otherFinalVelocity.getCosAngle(new Vector2(0, 1));
     this.setVelocity(thisFinalVelocityXComp, thisFinalVelocityYComp);
-    otherObject.setVelocity(
-      otherFinalVelocityXComp,
-      otherFinalVelocityYComp
-    );
+    otherObject.setVelocity(otherFinalVelocityXComp, otherFinalVelocityYComp);
   }
 }
 
@@ -330,11 +332,21 @@ class Circle extends Object {
     this.mass = density * this.volume;
     this.hitboxSidelength = Math.sqrt(Math.PI * radius ** 2);
     const l = Math.sqrt(Math.PI * radius ** 2);
-    this.hitbox = [position.getX() + 0.5 * l, position.getX - 0.5 * l, position.getY + 0.5 * l, position.getY - 0.5 * l];
+    this.hitbox = [
+      position.getX() + 0.5 * l,
+      position.getX - 0.5 * l,
+      position.getY + 0.5 * l,
+      position.getY - 0.5 * l,
+    ];
   }
 
   updateHitbox() {
-    this.hitbox = [this.position.getX() + 0.5 * this.hitboxSidelength, this.position.getX() - 0.5 * this.hitboxSidelength, this.position.getY() + 0.5 * this.hitboxSidelength, this.position.getY() - 0.5 * this.hitboxSidelength];
+    this.hitbox = [
+      this.position.getX() + 0.5 * this.hitboxSidelength,
+      this.position.getX() - 0.5 * this.hitboxSidelength,
+      this.position.getY() + 0.5 * this.hitboxSidelength,
+      this.position.getY() - 0.5 * this.hitboxSidelength,
+    ];
   }
 
   getShape() {
@@ -361,11 +373,21 @@ class Rectangle extends Object {
     this.coeffDrag = 1.05;
     this.width = width;
     this.mass = this.height * this.width * density;
-    this.hitbox = [position.getX() + 0.5 * width, position.getX() - 0.5 * width, position.getY() + 0.5 * height, position.getY() - 0.5 * height];
+    this.hitbox = [
+      position.getX() + 0.5 * width,
+      position.getX() - 0.5 * width,
+      position.getY() + 0.5 * height,
+      position.getY() - 0.5 * height,
+    ];
   }
 
   updateHitbox() {
-    this.hitbox = [this.position.getX() + 0.5 * width, this.position.getX() - 0.5 * width, this.position.getY() + 0.5 * height, this.position.getY() - 0.5 * height];
+    this.hitbox = [
+      this.position.getX() + 0.5 * width,
+      this.position.getX() - 0.5 * width,
+      this.position.getY() + 0.5 * height,
+      this.position.getY() - 0.5 * height,
+    ];
   }
 
   getWidth() {
@@ -394,7 +416,7 @@ function init() {
   objects = [];
   const c = document.getElementById("Simulation");
   const ctx = c.getContext("2d");
-  addObjects(10, constants["GravitationalFieldStrength"]);
+  addObjects(1, constants["GravitationalFieldStrength"]);
   const height = 480; // Resolution/dimensions of canvas displayed in.
   const width = 640;
   let collisions = {};
@@ -411,7 +433,17 @@ function addObjects(n) {
         "red",
         new Velocity(100, 0),
         new Acceleration(0, 0),
-        new Position(i * 10, i * 10)
+        new Position(10, 10)
+      )
+    );
+    objects.push(
+      new Circle(
+        10,
+        5,
+        "red",
+        new Velocity(-100, 0),
+        new Acceleration(0, 0),
+        new Position(500, 300)
       )
     );
   }
@@ -419,11 +451,10 @@ function addObjects(n) {
 
 function update(ctx, width, height, collisions, temp) {
   if (temp % buffer == 0) {
-    temp = 0
-    collisions = {}
-  }
-  else {
-    temp += 1
+    temp = 0;
+    collisions = {};
+  } else {
+    temp += 1;
   }
   ctx.fillStyle = "#89CFF0";
   ctx.fillRect(0, 0, width, height);
@@ -441,8 +472,10 @@ function update(ctx, width, height, collisions, temp) {
   // checks for other object collisions, source of most lag O(n^2) time complexity
   for (const object1 of objects) {
     for (const object2 of objects) {
-      if (object1.isCollision(object2) && !(collisions.hasOwnProperty([object1, object2]))) {
-        console.log("here")
+      if (
+        object1.isCollision(object2) &&
+        !collisions.hasOwnProperty([object1, object2])
+      ) {
         object1.otherObjectCollision(object2);
         collisions[[object1, object2]] = true;
         collisions[[object2, object1]] = true;
@@ -480,7 +513,15 @@ function drawObject(ctx, object) {
 
 // this function runs an interval (loops a given function) every 10ms, this interval loops the update function which updates the positions of all balls in the animation.
 function clock(ctx, width, height, collisions, temp) {
-  window.interval = setInterval(update, 10, ctx, width, height, collisions, temp);
+  window.interval = setInterval(
+    update,
+    10,
+    ctx,
+    width,
+    height,
+    collisions,
+    temp
+  );
 }
 
 // Grabs the values from each input field in order to update the constants array to user selected values.
@@ -539,9 +580,12 @@ function reInit() {
   init();
 }
 
-// FIX COLLISIONS DELETING HITBOXES
+// FIX COLLISIONS DELETING OBJECTS
+// caused by large velocities occuring for some reason. - over look where math goes wrong using breakpoints.
 
-document.getElementById("refresh-btn").addEventListener("click", updateConstants);
+document
+  .getElementById("refresh-btn")
+  .addEventListener("click", updateConstants);
 
 document.getElementById("pause-btn").addEventListener("click", pauseSim);
 
