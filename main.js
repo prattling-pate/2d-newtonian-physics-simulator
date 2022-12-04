@@ -132,7 +132,7 @@ class Object {
     return this.velocity.getMag() * this.mass;
   }
 
-  updateAll(constants) {
+  updateAll() {
     this.updateDrag(constants["DensityOfAir"]);
     this.acceleration.update(this);
     this.velocity.update(this.acceleration, constants["TimeScale"]);
@@ -141,8 +141,11 @@ class Object {
     this.forces[2] = new Vector2(0, 0);
   }
 
-  addWeight(G) {
-    this.forces[0] = new Vector2(0, this.mass * G);
+  addWeight() {
+    this.forces[0] = new Vector2(
+      0,
+      this.mass * constants["GravitationalFieldStrength"]
+    );
   }
 
   setInputForce(force) {
@@ -175,20 +178,20 @@ class Object {
     this.forces[1] = new Vector2(dragX, dragY);
   }
 
-  sideCollision(constants) {
+  sideCollision() {
     const E = constants["CoeffRest"];
     const RATE = constants["TimeScale"];
     // side collision check (checks if out of bounds on right side or on left side respectively in if statement)
     if (
       this.position.getX() + this.velocity.getX() * RATE + this.radius >=
         RESOLUTION[0] ||
-      this.position.getX() + this.velocity.getX() * RATE + this.radius <= 0
+      this.position.getX() + this.velocity.getX() * RATE - this.radius <= 0
     ) {
       this.velocity.setX(-this.velocity.getX() * E);
     }
   }
 
-  groundCeilingCollision(constants) {
+  groundCeilingCollision() {
     const E = constants["CoeffRest"];
     const RATE = constants["TimeScale"];
     // ground collision check - statement 1. ceiling collision check - statement 2
@@ -271,7 +274,7 @@ class Object {
     let otherFinalVelocityCentrePlane = 0;
     if (b ** 2 - 4 * a * c >= 0) {
       thisFinalVelocityCentrePlane =
-        ((-b + Math.sqrt(b ** 2 - 4 * a * c)) / (2 * a));
+        (-b + Math.sqrt(b ** 2 - 4 * a * c)) / (2 * a);
       otherFinalVelocityCentrePlane =
         (sumMomentum - this.mass * thisFinalVelocityCentrePlane) /
         otherObject.getMass();
@@ -461,10 +464,10 @@ function update(ctx, width, height, collisions, temp) {
   ctx.fillStyle = "#964B00";
   ctx.fillRect(0, RESOLUTION[1] * (8 / 9), width, RESOLUTION[1]);
   for (const object of objects) {
-    object.addWeight(constants["GravitationalFieldStrength"]);
-    object.groundCeilingCollision(constants);
-    object.sideCollision(constants);
-    object.updateAll(constants);
+    object.addWeight();
+    object.groundCeilingCollision();
+    object.sideCollision();
+    object.updateAll();
     object.updateHitbox();
     drawObject(ctx, object);
   }
@@ -527,7 +530,7 @@ function clock(ctx, width, height, collisions, temp) {
 // Grabs the values from each input field in order to update the constants array to user selected values.
 function getConstants() {
   const G = document.getElementById("gravity").value;
-  const DENSITYOFAIR = document.getElementById("density").value;
+  const DENSITYOFAIR = document.getElementById("densityOA").value;
   const RATE = document.getElementById("scale").value / 10;
   const E = document.getElementById("restit").value;
   const constants = {
@@ -580,8 +583,9 @@ function reInit() {
   init();
 }
 
-// FIX COLLISIONS DELETING OBJECTS
-// caused by large velocities occuring for some reason. - over look where math goes wrong using breakpoints.
+// Time to add adding objects, first create inputs then utilize inputs to add objects in
+// also create presets and an interesting default option or something...
+// then add the graphs (sadge)
 
 document
   .getElementById("refresh-btn")
