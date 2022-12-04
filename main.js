@@ -427,6 +427,26 @@ function init() {
   clock(ctx, width, height, collisions, temp);
 }
 
+function addObject(){
+  let newObj;
+  const shape = document.getElementById("object-type").value;
+  const colour = document.getElementById("colour").value;
+  const density = parseFloat(document.getElementById("density").value);
+  const position = new Position(parseFloat(document.getElementById("position-x").value),parseFloat(document.getElementById("position-y").value));
+  const velocity = new Velocity(parseFloat(document.getElementById("velocity-x").value),parseFloat(document.getElementById("velocity-y").value));
+  const acceleration = new Acceleration(parseFloat(document.getElementById("acc-x").value),parseFloat(document.getElementById("acc-y").value));
+  if (shape=='circle') {
+    const radius = parseFloat(document.getElementById("radius").value);
+    newObj = new Circle(radius, density, colour, velocity, acceleration, position);
+  }
+  else {
+    const width = parseFloat(document.getElementById("width").value);
+    const height = parseFloat(document.getElementById("height").value);
+    newObj = new Rectangle(height, width, density, colour, velocity, acceleration, position)
+  }
+  objects.push(newObj);
+}
+
 function addObjects(n) {
   for (let i = 0; i < n; i++) {
     objects.push(
@@ -529,10 +549,10 @@ function clock(ctx, width, height, collisions, temp) {
 
 // Grabs the values from each input field in order to update the constants array to user selected values.
 function getConstants() {
-  const G = document.getElementById("gravity").value;
-  const DENSITYOFAIR = document.getElementById("densityOA").value;
-  const RATE = document.getElementById("scale").value / 10;
-  const E = document.getElementById("restit").value;
+  const G = parseFloat(document.getElementById("gravity").value);
+  const DENSITYOFAIR = parseFloat(document.getElementById("densityOA").value);
+  const RATE = parseFloat(document.getElementById("scale").value / 10);
+  const E = parseFloat(document.getElementById("restit").value);
   const constants = {
     CoeffRest: E,
     GravitationalFieldStrength: G,
@@ -594,5 +614,7 @@ document
 document.getElementById("pause-btn").addEventListener("click", pauseSim);
 
 document.getElementById("refresh-sim").addEventListener("click", reInit);
+
+document.getElementById("add-object-btn").addEventListener("click", addObject);
 
 window.onload = init;

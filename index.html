@@ -32,45 +32,47 @@
       style="border: 1px #000000"
     ></canvas
     ><br />
-    <label for="G">Gravitational Field Strength:</label>
-    <input
-      type="number"
-      name="G"
-      value="9.81"
-      min="0"
-      step="0.001"
-      id="gravity"
-    />
-    ms^2<br />
-    <label for="densityOA">Density Of Air:</label>
-    <input
-      type="number"
-      name="D_A"
-      value="1.225"
-      min="0"
-      step="0.001"
-      id="densityOA"
-    />
-    kgm^-3<br />
-    <label for="RATE">Time Scale:</label>
-    <input
-      type="number"
-      name="RATE"
-      value="1"
-      min="0"
-      step="0.001"
-      id="scale"
-    />
-    s^-1<br />
-    <label for="restit">Coefficient of Restitution</label>
-    <input
-      type="number"
-      name="E"
-      value="1"
-      min="0"
-      step="0.001"
-      id="restit"
-    /><br />
+    <div class="constants">
+      <label for="G">Gravitational Field Strength:</label>
+      <input
+        type="number"
+        name="G"
+        value="9.81"
+        min="0"
+        step="0.001"
+        id="gravity"
+      />
+      ms^2<br />
+      <label for="densityOA">Density Of Air:</label>
+      <input
+        type="number"
+        name="D_A"
+        value="1.225"
+        min="0"
+        step="0.001"
+        id="densityOA"
+      />
+      kgm^-3<br />
+      <label for="RATE">Time Scale:</label>
+      <input
+        type="number"
+        name="RATE"
+        value="1"
+        min="0"
+        step="0.001"
+        id="scale"
+      />
+      s^-1<br />
+      <label for="restit">Coefficient of Restitution</label>
+      <input
+        type="number"
+        name="E"
+        value="1"
+        min="0"
+        step="0.001"
+        id="restit"
+      /><br />
+    </div>
     <button id="refresh-btn">Refresh constants</button>
     <button id="refresh-sim">Refresh simulation</button>
     <button id="pause-btn" value="OFF" onclick="tgl();">
@@ -80,7 +82,6 @@
     <div class="object-inputs">
       <label for="n-objects">Number of objects to add</label>
       <input type="number" value="1" min="0" step="1" id="n-objects" />
-      <button id="add-object-btn">Add Object</button><br />
       <label for="object-type">Type of object</label>
       <select name="Object type" id="object-type" class="obj-type">
         <option value="rectangle" type="text">Rectangle</option>
@@ -90,8 +91,8 @@
       <label for="colour">Colour of object</label>
       <select name="colour" id="colour">
         <option value="#FF0000" type="text">Red</option>
-        <option value="#FFFFFF" type="text">Black</option>
-        <option value="#000000" type="text">White</option>
+        <option value="#FFFFFF" type="text">White</option>
+        <option value="#000000" type="text">Black</option>
       </select>
       <br />
       <div class="radius-input">
@@ -101,7 +102,7 @@
       <div class="rect-input">
         <label for="width">Input width</label>
         <input type="number" value="1" min="0" step="0.01" id="width" />
-        <label for="height">Input width</label>
+        <label for="height">Input hei</label>
         <input type="number" value="1" min="0" step="0.01" id="height" />
       </div>
       <label for="density"> Density of object </label>
@@ -165,12 +166,13 @@
         max="200"
         id="acc-y"
         type="number"
-      />
-      <script
-        src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"
-        type="text/javascript"
-      ></script>
+      /><br>
+      <button id="add-object-btn">Add Object</button><br />
     </div>
+    <script
+      src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"
+      type="text/javascript"
+    ></script>
     <script src="jqueries.js"></script>
     <script src="main.js"></script>
   </body>
