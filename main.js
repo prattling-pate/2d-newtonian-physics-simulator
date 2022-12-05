@@ -603,9 +603,6 @@ function reInit() {
   init();
 }
 
-// Time to add adding objects, first create inputs then utilize inputs to add objects in
-// also create presets and an interesting default option or something...
-// then add the graphs (sadge)
 
 document
   .getElementById("refresh-btn")
@@ -618,3 +615,8 @@ document.getElementById("refresh-sim").addEventListener("click", reInit);
 document.getElementById("add-object-btn").addEventListener("click", addObject);
 
 window.onload = init;
+
+// notes:
+// 
+// Create presets and an interesting default option or something...
+// then add the graphs (sadge) - all on one canvas if possible (try to create seperate file for this script)
