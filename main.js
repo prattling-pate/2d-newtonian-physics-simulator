@@ -1,6 +1,6 @@
 // default settings when the simulation is ran
 const Settings = {
-  "Resolution": [640, 480],
+  Resolution: [640, 480],
   "Force Scalar": 5,
   "Size Scalar": 20,
   "Buffer Frames": 0,
@@ -412,18 +412,44 @@ class Rectangle extends Object {
   }
 }
 
+// mouse class used to store information on the user mouse cursor for inputting of forces and viewing information about objects.s
+
+class Mouse {
+  constructor() {
+    this.position = new Position(0, 0);
+    // have to use the same .hitbox property structure to not have to code a new function for detecting whether mouse is in an object
+    this.hitbox = [0, 0, 0, 0];
+    this.leftClickDragging = false;
+  }
+
+  updateMousePos(event) {
+    this.position.setX(event.clientX);
+    this.position.setY(event.clientY);
+    for (let i = 0; i < 4; i++) {
+      if (i < 2) {
+        this.hitbox[i] = this.position.getX;
+      } else {
+        this.hitbox[i] = this.position.getY;
+      }
+    }
+  }
+
+  toggleMouse(event) {
+    if (!this.leftClickDragging && event.button == 0) {
+      this.leftClickDragging = true;
+    } else if (this.leftClickDragging && event.button == 0) {
+      this.leftClickDragging = false;
+    }
+  }
+}
+
 // globals needed to be declared
 
 var constants = getConstants();
 var running = true;
 var objects;
-var mouse = {
-  pos: new Vector2(0, 0),
-  hitbox: [0, 0, 0, 0],
-  toggled: false,
-};
+var mouse = new Mouse();
 const buffer = 50;
-
 
 // core functions
 
@@ -584,23 +610,6 @@ function clock(ctx, width, height, collisions, temp) {
 
 // functions handling user input - might turn these into methods of a mouse class later on :).==================================
 
-function toggleMouse(event) {
-  if (!mouse.toggled && event.button == 0) {
-    window.mouse.toggled = true;
-  }
-  else if (mouse.toggled && event.button == 0) {
-    window.mouse.toggled = false;
-  }
-}
-
-function updateMousePos(event) {
-  window.mouse.pos.setX(event.clientX);
-  window.mouse.pos.setY(event.clientY);
-  for (let i=0; i < 4; i++) {
-    window.mouse.hitbox[i]=[mouse.pos.getX, mouse.pos.getY];
-  }
-}
-
 // Grabs the values from each input field in order to update the constants array to user selected values.
 function getConstants() {
   const G = parseFloat(document.getElementById("gravity").value);
@@ -663,11 +672,11 @@ document
   .getElementById("refresh-btn")
   .addEventListener("click", updateConstants);
 
-document.addEventListener("mousemove", updateMousePos);
+document.addEventListener("mousemove", mouse.updateMousePos);
 
-document.addEventListener("mousedown", toggleMouse);
+document.addEventListener("mousedown", mouse.toggleMouse);
 
-document.addEventListener("mouseup", toggleMouse);
+document.addEventListener("mouseup", mouse.toggleMouse);
 
 document.getElementById("pause-btn").addEventListener("click", pauseSim);
 
