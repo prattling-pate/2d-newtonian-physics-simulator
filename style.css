@@ -1,0 +1,18 @@
+body {
+    background-color: cornflowerblue;
+  }
+
+  h1 {
+    color: whitesmoke;
+    font-family: "Trebuchet MS", sans-serif;
+  }
+
+  .constants {
+    border: 1px solid black;
+    width: 550px;
+  }
+
+  .object-inputs {
+    border: 1px solid black;
+    width: 550px;
+  }

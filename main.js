@@ -1,6 +1,6 @@
 // default settings when the simulation is ran
 const Settings = {
-  Resolution: [640, 480],
+  "Resolution": [640, 480],
   "Force Scalar": 5,
   "Size Scalar": 20,
   "Buffer Frames": 0,
@@ -209,7 +209,9 @@ class Object {
     }
   }
 
-  isCollision(other) {
+  isCollision(other, point = false) {
+    if (point) {
+    }
     if (
       ((this.hitbox[0] > other.hitbox[1] && this.hitbox[1] < other.hitbox[1]) ||
         (this.hitbox[0] > other.hitbox[0] &&
@@ -410,10 +412,20 @@ class Rectangle extends Object {
   }
 }
 
+// globals needed to be declared
+
 var constants = getConstants();
 var running = true;
 var objects;
+var mouse = {
+  pos: new Vector2(0, 0),
+  hitbox: [0, 0, 0, 0],
+  toggled: false,
+};
 const buffer = 50;
+
+
+// core functions
 
 function init() {
   objects = [];
@@ -427,22 +439,45 @@ function init() {
   clock(ctx, width, height, collisions, temp);
 }
 
-function addObject(){
+function addObject() {
   let newObj;
   const shape = document.getElementById("object-type").value;
   const colour = document.getElementById("colour").value;
   const density = parseFloat(document.getElementById("density").value);
-  const position = new Position(parseFloat(document.getElementById("position-x").value),parseFloat(document.getElementById("position-y").value));
-  const velocity = new Velocity(parseFloat(document.getElementById("velocity-x").value),parseFloat(document.getElementById("velocity-y").value));
-  const acceleration = new Acceleration(parseFloat(document.getElementById("acc-x").value),parseFloat(document.getElementById("acc-y").value));
-  if (shape=='circle') {
+  const position = new Position(
+    parseFloat(document.getElementById("position-x").value),
+    parseFloat(document.getElementById("position-y").value)
+  );
+  const velocity = new Velocity(
+    parseFloat(document.getElementById("velocity-x").value),
+    parseFloat(document.getElementById("velocity-y").value)
+  );
+  const acceleration = new Acceleration(
+    parseFloat(document.getElementById("acc-x").value),
+    parseFloat(document.getElementById("acc-y").value)
+  );
+  if (shape == "circle") {
     const radius = parseFloat(document.getElementById("radius").value);
-    newObj = new Circle(radius, density, colour, velocity, acceleration, position);
-  }
-  else {
+    newObj = new Circle(
+      radius,
+      density,
+      colour,
+      velocity,
+      acceleration,
+      position
+    );
+  } else {
     const width = parseFloat(document.getElementById("width").value);
     const height = parseFloat(document.getElementById("height").value);
-    newObj = new Rectangle(height, width, density, colour, velocity, acceleration, position)
+    newObj = new Rectangle(
+      height,
+      width,
+      density,
+      colour,
+      velocity,
+      acceleration,
+      position
+    );
   }
   objects.push(newObj);
 }
@@ -547,6 +582,25 @@ function clock(ctx, width, height, collisions, temp) {
   );
 }
 
+// functions handling user input - might turn these into methods of a mouse class later on :).==================================
+
+function toggleMouse(event) {
+  if (!mouse.toggled && event.button == 0) {
+    window.mouse.toggled = true;
+  }
+  else if (mouse.toggled && event.button == 0) {
+    window.mouse.toggled = false;
+  }
+}
+
+function updateMousePos(event) {
+  window.mouse.pos.setX(event.clientX);
+  window.mouse.pos.setY(event.clientY);
+  for (let i=0; i < 4; i++) {
+    window.mouse.hitbox[i]=[mouse.pos.getX, mouse.pos.getY];
+  }
+}
+
 // Grabs the values from each input field in order to update the constants array to user selected values.
 function getConstants() {
   const G = parseFloat(document.getElementById("gravity").value);
@@ -603,10 +657,17 @@ function reInit() {
   init();
 }
 
+// event listeners for user input ------------
 
 document
   .getElementById("refresh-btn")
   .addEventListener("click", updateConstants);
+
+document.addEventListener("mousemove", updateMousePos);
+
+document.addEventListener("mousedown", toggleMouse);
+
+document.addEventListener("mouseup", toggleMouse);
 
 document.getElementById("pause-btn").addEventListener("click", pauseSim);
 
@@ -617,6 +678,6 @@ document.getElementById("add-object-btn").addEventListener("click", addObject);
 window.onload = init;
 
 // notes:
-// 
+//
 // Create presets and an interesting default option or something...
 // then add the graphs (sadge) - all on one canvas if possible (try to create seperate file for this script)
