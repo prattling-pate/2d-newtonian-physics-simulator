@@ -52,6 +52,13 @@ class Vector2 {
     );
   }
 
+  sub(otherVector) {
+    return new Vector2(
+      this.x - otherVector.getX(),
+      this.y - otherVector.getY()
+    );
+  }
+
   mult(number) {
     return new Vector2(this.x * number, this.y * number);
   }
@@ -209,9 +216,7 @@ class Object {
     }
   }
 
-  isCollision(other, point = false) {
-    if (point) {
-    }
+  isCollision(other) {
     if (
       ((this.hitbox[0] > other.hitbox[1] && this.hitbox[1] < other.hitbox[1]) ||
         (this.hitbox[0] > other.hitbox[0] &&
@@ -339,9 +344,9 @@ class Circle extends Object {
     const l = Math.sqrt(Math.PI * radius ** 2);
     this.hitbox = [
       position.getX() + 0.5 * l,
-      position.getX - 0.5 * l,
-      position.getY + 0.5 * l,
-      position.getY - 0.5 * l,
+      position.getX() - 0.5 * l,
+      position.getY() + 0.5 * l,
+      position.getY() - 0.5 * l,
     ];
   }
 
@@ -419,26 +424,23 @@ class Mouse {
     this.position = new Position(0, 0);
     // have to use the same .hitbox property structure to not have to code a new function for detecting whether mouse is in an object
     this.hitbox = [0, 0, 0, 0];
-    this.leftClickDragging = false;
+    this.leftClicked = false;
+    this.leftDragging = false;
+    this.prevPos = new Position(0, 0)
   }
 
-  updateMousePos(event) {
-    this.position.setX(event.clientX);
-    this.position.setY(event.clientY);
-    for (let i = 0; i < 4; i++) {
-      if (i < 2) {
-        this.hitbox[i] = this.position.getX;
-      } else {
-        this.hitbox[i] = this.position.getY;
-      }
+  isInObject(other) {
+    return other.isCollision(this);
+  }
+
+  addForceOnObject(other) {
+    if (this.isInObject(other) && this.leftClicked && !this.leftDragging) {
+      this.leftDragging = true;
+      this.prevPos = this.position;
     }
-  }
-
-  toggleMouse(event) {
-    if (!this.leftClickDragging && event.button == 0) {
-      this.leftClickDragging = true;
-    } else if (this.leftClickDragging && event.button == 0) {
-      this.leftClickDragging = false;
+    else if (this.leftDragging && !this.leftClicked) {
+      diffPos = this.position.sub(this.prevPos);
+      other.forces[2] = new Vector2(-100*diffPos.getX(), -100*diffPos.getY())
     }
   }
 }
@@ -448,7 +450,7 @@ class Mouse {
 var constants = getConstants();
 var running = true;
 var objects;
-var mouse = new Mouse();
+const mouse = new Mouse();
 const buffer = 50;
 
 // core functions
@@ -566,6 +568,9 @@ function update(ctx, width, height, collisions, temp) {
       }
     }
   }
+  for (const object of objects) {
+    mouse.addForceOnObject(object);
+  }
 }
 
 // this functions draws the given object, differentiating between methods of drawing using the object.shape property of the object class.
@@ -609,6 +614,26 @@ function clock(ctx, width, height, collisions, temp) {
 }
 
 // functions handling user input - might turn these into methods of a mouse class later on :).==================================
+function updateMousePos(event) {
+  // convert this to relative canvas coords :)
+  mouse.position.setX(event.clientX);
+  mouse.position.setY(event.clientY);
+  for (let i = 0; i < 4; i++) {
+    if (i < 2) {
+      mouse.hitbox[i] = mouse.position.getX();
+    } else {
+      mouse.hitbox[i] = mouse.position.getY();
+    }
+  }
+}
+
+function toggleMouse(event) {
+  if (!mouse.leftClickDragging && event.button == 0) {
+    mouse.leftClickDragging = true;
+  } else if (mouse.leftClickDragging && event.button == 0) {
+    mouse.leftClickDragging = false;
+  }
+}
 
 // Grabs the values from each input field in order to update the constants array to user selected values.
 function getConstants() {
@@ -672,11 +697,11 @@ document
   .getElementById("refresh-btn")
   .addEventListener("click", updateConstants);
 
-document.addEventListener("mousemove", mouse.updateMousePos);
+document.addEventListener("mousemove", updateMousePos);
 
-document.addEventListener("mousedown", mouse.toggleMouse);
+document.addEventListener("mousedown", toggleMouse);
 
-document.addEventListener("mouseup", mouse.toggleMouse);
+document.addEventListener("mouseup", toggleMouse);
 
 document.getElementById("pause-btn").addEventListener("click", pauseSim);
 
