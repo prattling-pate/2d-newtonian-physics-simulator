@@ -424,9 +424,8 @@ class Mouse {
     this.position = new Position(0, 0);
     // have to use the same .hitbox property structure to not have to code a new function for detecting whether mouse is in an object
     this.hitbox = [0, 0, 0, 0];
-    this.leftClicked = false;
     this.leftDragging = false;
-    this.prevPos = new Position(0, 0)
+    this.prevPos = new Position(0, 0);
   }
 
   isInObject(other) {
@@ -434,13 +433,15 @@ class Mouse {
   }
 
   addForceOnObject(other) {
-    if (this.isInObject(other) && this.leftClicked && !this.leftDragging) {
-      this.leftDragging = true;
+    if (this.isInObject(other) && this.leftDragging) {
       this.prevPos = this.position;
-    }
-    else if (this.leftDragging && !this.leftClicked) {
-      diffPos = this.position.sub(this.prevPos);
-      other.forces[2] = new Vector2(-100*diffPos.getX(), -100*diffPos.getY())
+    } else if (!this.leftDragging) {
+      const diffPos = this.position.sub(this.prevPos);
+      other.forces[2] = new Vector2(
+        -100 * diffPos.getX(),
+        -100 * diffPos.getY()
+      );
+      console.log(diffPos)
     }
   }
 }
@@ -613,11 +614,13 @@ function clock(ctx, width, height, collisions, temp) {
   );
 }
 
-// functions handling user input - might turn these into methods of a mouse class later on :).==================================
+// mouse input handling functions for eventlisteners
 function updateMousePos(event) {
+  const canvas = document.getElementById("Simulation");
+  const relativeCoords = canvas.getBoundingClientRect();
   // convert this to relative canvas coords :)
-  mouse.position.setX(event.clientX);
-  mouse.position.setY(event.clientY);
+  mouse.position.setX(event.clientX - relativeCoords.left);
+  mouse.position.setY(event.clientY - relativeCoords.top);
   for (let i = 0; i < 4; i++) {
     if (i < 2) {
       mouse.hitbox[i] = mouse.position.getX();
@@ -628,10 +631,11 @@ function updateMousePos(event) {
 }
 
 function toggleMouse(event) {
-  if (!mouse.leftClickDragging && event.button == 0) {
-    mouse.leftClickDragging = true;
-  } else if (mouse.leftClickDragging && event.button == 0) {
-    mouse.leftClickDragging = false;
+  if (event.button == 0)
+    if (!mouse.leftClickDragging) {
+      mouse.leftClickDragging = true;
+    } else if (mouse.leftClickDragging) {
+      mouse.leftClickDragging = false;
   }
 }
 
@@ -661,7 +665,6 @@ function pauseSim() {
   const btn = document.getElementById("pause-btn");
   if (btn.value == "ON") {
     clearInterval(window.interval);
-    console.log("paused");
   } else {
     const c = document.getElementById("Simulation");
     const ctx = c.getContext("2d");
