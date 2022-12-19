@@ -437,7 +437,7 @@ class Mouse {
   }
 
   addForceOnObject(other) {
-    // all of this works, but for some reason only every second click cycle (¯\_(ツ)_/¯)
+    // whenever mouse is dragged off of canvas the input method breaks, can fix with oob detection
     if (
       this.isInObject(other) &&
       this.leftClicked &&
@@ -479,8 +479,7 @@ function init() {
   const height = 480; // Resolution/dimensions of canvas displayed in.
   const width = 640;
   let collisions = {};
-  let temp = 0;
-  clock(ctx, width, height, collisions, temp);
+  clock(ctx, width, height, collisions);
 }
 
 function addObject() {
@@ -551,13 +550,8 @@ function addObjects(n) {
   }
 }
 
-function update(ctx, width, height, collisions, temp) {
-  if (temp % buffer == 0) {
-    temp = 0;
-    collisions = {};
-  } else {
-    temp += 1;
-  }
+function update(ctx, width, height, collisions) {
+  collisions = {};
   ctx.fillStyle = "#89CFF0";
   ctx.fillRect(0, 0, width, height);
   ctx.fillStyle = "#964B00";
@@ -617,15 +611,14 @@ function drawObject(ctx, object) {
 }
 
 // this function runs an interval (loops a given function) every 10ms, this interval loops the update function which updates the positions of all balls in the animation.
-function clock(ctx, width, height, collisions, temp) {
+function clock(ctx, width, height, collisions) {
   window.interval = setInterval(
     update,
     10,
     ctx,
     width,
     height,
-    collisions,
-    temp
+    collisions
   );
 }
 
@@ -728,5 +721,7 @@ window.onload = init;
 
 // notes:
 //
+// out of bound mouse causes force input to break a little, fix later
 // Create presets and an interesting default option or something...
+  // create a function which creates the preset situation using an input (maybe a large list of objects to iterate and create or something..., like a configuration file)
 // then add the graphs (sadge) - all on one canvas if possible (try to create seperate file for this script)
