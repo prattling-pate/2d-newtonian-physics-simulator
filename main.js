@@ -424,8 +424,10 @@ class Mouse {
     this.position = new Position(0, 0);
     // have to use the same .hitbox property structure to not have to code a new function for detecting whether mouse is in an object
     this.hitbox = [0, 0, 0, 0];
-    this.leftDragging = false;
+    this.leftClickDragging = false;
     this.prevPos = new Position(0, 0);
+    this.newPos = new Position(0, 0);
+    this.inputPrimed = false;
   }
 
   isInObject(other) {
@@ -433,15 +435,30 @@ class Mouse {
   }
 
   addForceOnObject(other) {
-    if (this.isInObject(other) && this.leftDragging) {
-      this.prevPos = this.position;
-    } else if (!this.leftDragging) {
+    // all of this works, but for some reason only every second click cycle (¯\_(ツ)_/¯)
+    if (
+      this.isInObject(other) &&
+      !this.leftClickDragging &&
+      this.leftClicked &&
+      !this.inputPrimed
+    ) {
+      // cannot directly Assign this.pos as it tracks the property for some reason then
+      this.prevPos = new Position(this.position.x, this.position.y);
+      this.leftClicked = false;
+      this.inputPrimed = true;
+    } else if (
+      !this.leftClickDragging &&
+      this.leftClicked &&
+      this.inputPrimed
+    ) {
       const diffPos = this.position.sub(this.prevPos);
       other.forces[2] = new Vector2(
-        -100 * diffPos.getX(),
-        -100 * diffPos.getY()
+        -10000 * diffPos.getX(),
+        -10000 * diffPos.getY()
       );
-      console.log(diffPos)
+      console.log(diffPos);
+      this.leftClicked = false;
+      this.inputPrimed = false;
     }
   }
 }
@@ -633,10 +650,12 @@ function updateMousePos(event) {
 function toggleMouse(event) {
   if (event.button == 0)
     if (!mouse.leftClickDragging) {
+      mouse.leftClicked = true;
       mouse.leftClickDragging = true;
     } else if (mouse.leftClickDragging) {
+      mouse.leftClicked = true;
       mouse.leftClickDragging = false;
-  }
+    }
 }
 
 // Grabs the values from each input field in order to update the constants array to user selected values.
