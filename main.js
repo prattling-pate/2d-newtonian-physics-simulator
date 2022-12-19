@@ -438,10 +438,8 @@ class Mouse {
 
   addForceOnObject(other) {
     // all of this works, but for some reason only every second click cycle (¯\_(ツ)_/¯)
-    console.log(this.isInObject(other), !this.leftClickDragging, this.leftClicked, !this.inputPrimed)
     if (
       this.isInObject(other) &&
-      !this.leftClickDragging &&
       this.leftClicked &&
       !this.inputPrimed
     ) {
@@ -451,15 +449,11 @@ class Mouse {
       this.inputPrimed = true;
       this.inputtedObject = other;
     } else if (
-      !this.leftClickDragging &&
       this.leftClicked &&
       this.inputPrimed
     ) {
       const diffPos = this.position.sub(this.prevPos);
-      this.inputtedObject.forces[2] = new Vector2(
-        -10000 * diffPos.getX(),
-        -10000 * diffPos.getY()
-      );
+      this.inputtedObject.forces[2] = diffPos.mult(-10000)
       this.leftClicked = false;
       this.inputPrimed = false;
       this.inputtedObject = null;
@@ -651,15 +645,10 @@ function updateMousePos(event) {
   }
 }
 
-function toggleMouse(event) {
-  if (event.button == 0)
-    if (!mouse.leftClickDragging) {
-      mouse.leftClicked = true;
-      mouse.leftClickDragging = true;
-    } else if (mouse.leftClickDragging) {
-      mouse.leftClicked = true;
-      mouse.leftClickDragging = false;
-    }
+function onMouseClick(event) {
+  if (event.button == 0){
+    mouse.leftClicked = true;
+  }
 }
 
 // Grabs the values from each input field in order to update the constants array to user selected values.
@@ -725,9 +714,9 @@ document
 
 document.addEventListener("mousemove", updateMousePos);
 
-document.addEventListener("mousedown", toggleMouse);
+document.addEventListener("mousedown", onMouseClick);
 
-document.addEventListener("mouseup", toggleMouse);
+document.addEventListener("mouseup", onMouseClick);
 
 document.getElementById("pause-btn").addEventListener("click", pauseSim);
 
