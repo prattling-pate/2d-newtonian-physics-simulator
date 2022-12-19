@@ -428,6 +428,8 @@ class Mouse {
     this.prevPos = new Position(0, 0);
     this.newPos = new Position(0, 0);
     this.inputPrimed = false;
+    this.inputtedObject = null;
+    this.leftClicked = false;
   }
 
   isInObject(other) {
@@ -436,29 +438,31 @@ class Mouse {
 
   addForceOnObject(other) {
     // all of this works, but for some reason only every second click cycle (¯\_(ツ)_/¯)
+    console.log(this.isInObject(other), !this.leftClickDragging, this.leftClicked, !this.inputPrimed)
     if (
       this.isInObject(other) &&
       !this.leftClickDragging &&
       this.leftClicked &&
       !this.inputPrimed
     ) {
-      // cannot directly Assign this.pos as it tracks the property for some reason then
+      // cannot directly assign this.pos as it tracks the property for some reason then
       this.prevPos = new Position(this.position.x, this.position.y);
       this.leftClicked = false;
       this.inputPrimed = true;
+      this.inputtedObject = other;
     } else if (
       !this.leftClickDragging &&
       this.leftClicked &&
       this.inputPrimed
     ) {
       const diffPos = this.position.sub(this.prevPos);
-      other.forces[2] = new Vector2(
+      this.inputtedObject.forces[2] = new Vector2(
         -10000 * diffPos.getX(),
         -10000 * diffPos.getY()
       );
-      console.log(diffPos);
       this.leftClicked = false;
       this.inputPrimed = false;
+      this.inputtedObject = null;
     }
   }
 }
