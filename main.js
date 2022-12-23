@@ -417,7 +417,7 @@ class Rectangle extends Object {
   }
 }
 
-// mouse class used to store information on the user mouse cursor for inputting of forces and viewing information about objects.s
+// mouse class used to store information on the user mouse cursor for inputting of forces and viewing information about objects.
 
 class Mouse {
   constructor() {
@@ -459,6 +459,35 @@ class Mouse {
       this.inputtedObject = null;
     }
   }
+
+  containInBounds(x, y) {
+    switch(x != null) {
+      case (x > 0 && x < 640):
+        this.position.setX(x);
+        break;
+      case (x < 0):
+        this.position.setX(0);
+        break;
+      case (x > 640):
+        this.position.setX(640);
+        break;
+      default:
+        break;
+    }
+    switch(y != null) {
+      case (y > 0 && y < 480):
+        this.position.setY(y);
+        break;
+      case (y < 0):
+        this.position.setY(0);
+        break;
+      case (y > 480):
+        this.position.setY(480);
+        break;
+      default:
+        break;
+    }
+  }
 }
 
 // globals needed to be declared
@@ -467,7 +496,6 @@ var constants = getConstants();
 var running = true;
 var objects;
 const mouse = new Mouse();
-const buffer = 50;
 
 // core functions
 
@@ -627,8 +655,7 @@ function updateMousePos(event) {
   const canvas = document.getElementById("Simulation");
   const relativeCoords = canvas.getBoundingClientRect();
   // convert this to relative canvas coords :)
-  mouse.position.setX(event.clientX - relativeCoords.left);
-  mouse.position.setY(event.clientY - relativeCoords.top);
+  mouse.containInBounds(event.clientX - relativeCoords.left, event.clientY - relativeCoords.top)
   for (let i = 0; i < 4; i++) {
     if (i < 2) {
       mouse.hitbox[i] = mouse.position.getX();
@@ -636,6 +663,7 @@ function updateMousePos(event) {
       mouse.hitbox[i] = mouse.position.getY();
     }
   }
+  console.log(mouse.hitbox)
 }
 
 function onMouseClick(event) {
