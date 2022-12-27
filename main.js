@@ -6,7 +6,6 @@ const Settings = {
   "Buffer Frames": 0,
 };
 
-// should take from config.json eventually
 const RESOLUTION = Settings["Resolution"];
 const SIZESCALE = Settings["Size Scalar"];
 const FORCESCALE = Settings["Force Scalar"];
@@ -125,6 +124,10 @@ class Object {
 
   getPosition() {
     return this.position;
+  }
+
+  getDensity() {
+    return this.density;
   }
 
   getMass() {
@@ -492,25 +495,25 @@ class Mouse {
 
 // globals needed to be declared
 
-var constants = getConstants();
-var running = true;
-var objects;
 const mouse = new Mouse();
+var constants = getConstants();
+var objects;
 
 // core functions
 
+// function which initializes the simulation
 function init() {
   objects = [];
   const c = document.getElementById("Simulation");
   const ctx = c.getContext("2d");
-  addObjects(1, constants["GravitationalFieldStrength"]);
   const height = 480; // Resolution/dimensions of canvas displayed in.
   const width = 640;
   let collisions = {};
   clock(ctx, width, height, collisions);
 }
 
-function addObject() {
+// adding object function which grabs from the input fields on the html page to create an object of the given parameters.
+function addInputObject() {
   let newObj;
   const shape = document.getElementById("object-type").value;
   const colour = document.getElementById("colour").value;
@@ -553,31 +556,7 @@ function addObject() {
   objects.push(newObj);
 }
 
-function addObjects(n) {
-  for (let i = 0; i < n; i++) {
-    objects.push(
-      new Circle(
-        10,
-        5,
-        "red",
-        new Velocity(100, 0),
-        new Acceleration(0, 0),
-        new Position(10, 10)
-      )
-    );
-    objects.push(
-      new Circle(
-        10,
-        5,
-        "red",
-        new Velocity(-100, 0),
-        new Acceleration(0, 0),
-        new Position(500, 300)
-      )
-    );
-  }
-}
-
+// function which draws the simulations current frame using the canvas drawing functions.
 function update(ctx, width, height, collisions) {
   collisions = {};
   ctx.fillStyle = "#89CFF0";
@@ -650,7 +629,32 @@ function clock(ctx, width, height, collisions) {
   );
 }
 
+// preset handling function
+function createPresetSituation() {
+  const preset = document.getElementById("presets").value;
+  if (preset != "none"){
+    addPresetObjects(preset);
+  }
+}
+
+function getPresetObjectList(preset) {
+  // object filled with lists of objects which will be added to current object list to be drawn according to each preset.
+  const presets = {
+    "diffusion": [new Circle()], // create these presets either in a function or just type them out (oml i dont want to do this).
+    "other": []
+  };
+  return presets[preset];
+}
+
+  // adding object function which adds a list of objects, used to handle the creation of preset scenarios.
+function addPresetObjects(preset) {
+  const presetObjects = getPresetObjectList(preset);
+  objects = presetObjects;
+}
+
 // mouse input handling functions for eventlisteners
+
+  // mouse input function which updates the position attribute of the mouse class used for player input
 function updateMousePos(event) {
   const canvas = document.getElementById("Simulation");
   const relativeCoords = canvas.getBoundingClientRect();
@@ -663,16 +667,16 @@ function updateMousePos(event) {
       mouse.hitbox[i] = mouse.position.getY();
     }
   }
-  console.log(mouse.hitbox)
 }
 
+  // mouse input handle which handles the event of the mouse click (of any buttons), i.e. inputting a force on an object.
 function onMouseClick(event) {
   if (event.button == 0){
     mouse.leftClicked = true;
   }
 }
 
-// Grabs the values from each input field in order to update the constants array to user selected values.
+  // Grabs the values from each input field in order to update the constants array to user selected values.
 function getConstants() {
   const G = parseFloat(document.getElementById("gravity").value);
   const DENSITYOFAIR = parseFloat(document.getElementById("densityOA").value);
@@ -693,7 +697,7 @@ function updateConstants() {
 }
 
 // the function called by the pause button when it is clicked, clears the interval when the button is toggled on when clicked, starts it again when toggled off when clicked.
-// this stops and starts the animation of canvas.
+  // this stops and starts the animation of canvas.
 function pauseSim() {
   const btn = document.getElementById("pause-btn");
   if (btn.value == "ON") {
@@ -707,7 +711,7 @@ function pauseSim() {
   }
 }
 
-// Toggles the pause button between ON and OFF states, allows for the pauseSim() function to decide when to stop and start the interval function.
+  // Toggles the pause button between ON and OFF states, allows for the pauseSim() function to decide when to stop and start the interval function.
 function tgl() {
   const btn = document.getElementById("pause-btn");
   if (btn.value == "ON") {
@@ -717,21 +721,26 @@ function tgl() {
   }
 }
 
-// Fix refresh of simulation
+  // function which reinitilaizes the 
 function reInit() {
   clearInterval(window.interval);
   const c = document.getElementById("Simulation");
   ctx = c.getContext("2d");
   ctx.clearRect(0, 0, 640, 480);
-  running = true;
   init();
 }
 
 // event listeners for user input ------------
 
-document
-  .getElementById("refresh-btn")
-  .addEventListener("click", updateConstants);
+document.getElementById("refresh-btn").addEventListener("click", updateConstants);
+
+document.getElementById("preset-btn").addEventListener("click", createPresetSituation);
+
+document.getElementById("pause-btn").addEventListener("click", pauseSim);
+
+document.getElementById("refresh-sim").addEventListener("click", reInit);
+
+document.getElementById("add-object-btn").addEventListener("click", addInputObject);
 
 document.addEventListener("mousemove", updateMousePos);
 
@@ -739,17 +748,11 @@ document.addEventListener("mousedown", onMouseClick);
 
 document.addEventListener("mouseup", onMouseClick);
 
-document.getElementById("pause-btn").addEventListener("click", pauseSim);
-
-document.getElementById("refresh-sim").addEventListener("click", reInit);
-
-document.getElementById("add-object-btn").addEventListener("click", addObject);
-
+// when the page is loaded the init function is ran.
 window.onload = init;
 
 // notes:
-//
-// out of bound mouse causes force input to break a little, fix later
+// fix bug where if an object is on the same exact space as another there is an error. If two colliding objects occupy the same space as each other, simply move them next to each other by a predetermined distance.
 // Create presets and an interesting default option or something...
   // create a function which creates the preset situation using an input (maybe a large list of objects to iterate and create or something..., like a configuration file)
 // then add the graphs (sadge) - all on one canvas if possible (try to create seperate file for this script)

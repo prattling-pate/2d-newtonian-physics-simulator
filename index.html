@@ -26,9 +26,11 @@
     <div class="user-inputs">
       <label for="presets">Presets</label>
       <select name="presets" id="presets">
+        <option value="none">Select a preset</option>
         <option value="diffusion">Diffusion</option>
         <option value="WIP">Ask adams for more suggestions :)</option>
       </select>
+      <button id="preset-btn"></button>
       <div class="constants">
         <label for="G">Gravitational Field Strength:</label>
         <input
@@ -170,6 +172,7 @@
       ></script>
     </div>
     <script src="jqueries.js"></script>
+    <script src="presets.json"></script>
     <script src="main.js"></script>
   </body>
 </html>
