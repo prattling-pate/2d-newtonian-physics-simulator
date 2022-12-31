@@ -10,8 +10,12 @@ const RESOLUTION = Settings["Resolution"];
 const SIZESCALE = Settings["Size Scalar"];
 const FORCESCALE = Settings["Force Scalar"];
 
+// CLASSES
+
+// main 2 vector class
+
 class Vector2 {
-  constructor(x, y) {
+  constructor(x = 0, y = 0) {
     this.x = x;
     this.y = y;
   }
@@ -63,6 +67,8 @@ class Vector2 {
   }
 }
 
+// classes extending the 2 vector to run newtonian mechanics simulation
+
 class Position extends Vector2 {
   constructor(x, y) {
     super(x, y);
@@ -96,8 +102,15 @@ class Acceleration extends Vector2 {
   }
 }
 
+// class outlining the generic object
+
 class Object {
-  constructor(colour, velocity, acceleration, position) {
+  constructor(
+    colour = "black",
+    velocity = new Velocity(),
+    acceleration = new Acceleration(),
+    position = new Position()
+  ) {
     this.colour = colour;
     this.forces = [new Vector2(0, 0), new Vector2(0, 0), new Vector2(0, 0)];
     this.acceleration = acceleration;
@@ -333,6 +346,8 @@ class Object {
   }
 }
 
+// classes extending the object class to specific shapes which can be drawn.
+
 class Circle extends Object {
   constructor(radius, density, colour, velocity, acceleration, position) {
     super(colour, velocity, acceleration, position);
@@ -343,22 +358,20 @@ class Circle extends Object {
     this.radius = radius;
     this.volume = Math.PI * radius ** 2;
     this.mass = density * this.volume;
-    this.hitboxSidelength = Math.sqrt(Math.PI * radius ** 2);
-    const l = Math.sqrt(Math.PI * radius ** 2);
     this.hitbox = [
-      position.getX() + 0.5 * l,
-      position.getX() - 0.5 * l,
-      position.getY() + 0.5 * l,
-      position.getY() - 0.5 * l,
+      position.getX() + radius,
+      position.getX() - radius,
+      position.getY() + radius,
+      position.getY() - radius,
     ];
   }
 
   updateHitbox() {
     this.hitbox = [
-      this.position.getX() + 0.5 * this.hitboxSidelength,
-      this.position.getX() - 0.5 * this.hitboxSidelength,
-      this.position.getY() + 0.5 * this.hitboxSidelength,
-      this.position.getY() - 0.5 * this.hitboxSidelength,
+      this.position.getX() + 0.5 * this.radius,
+      this.position.getX() - 0.5 * this.radius,
+      this.position.getY() + 0.5 * this.radius,
+      this.position.getY() - 0.5 * this.radius,
     ];
   }
 
@@ -441,22 +454,15 @@ class Mouse {
 
   addForceOnObject(other) {
     // whenever mouse is dragged off of canvas the input method breaks, can fix with oob detection
-    if (
-      this.isInObject(other) &&
-      this.leftClicked &&
-      !this.inputPrimed
-    ) {
+    if (this.isInObject(other) && this.leftClicked && !this.inputPrimed) {
       // cannot directly assign this.pos as it tracks the property for some reason then
       this.prevPos = new Position(this.position.x, this.position.y);
       this.leftClicked = false;
       this.inputPrimed = true;
       this.inputtedObject = other;
-    } else if (
-      this.leftClicked &&
-      this.inputPrimed
-    ) {
+    } else if (this.leftClicked && this.inputPrimed) {
       const diffPos = this.position.sub(this.prevPos);
-      this.inputtedObject.forces[2] = diffPos.mult(-10000)
+      this.inputtedObject.forces[2] = diffPos.mult(-10000);
       this.leftClicked = false;
       this.inputPrimed = false;
       this.inputtedObject = null;
@@ -464,27 +470,27 @@ class Mouse {
   }
 
   containInBounds(x, y) {
-    switch(x != null) {
-      case (x > 0 && x < 640):
+    switch (x != null) {
+      case x > 0 && x < 640:
         this.position.setX(x);
         break;
-      case (x < 0):
+      case x < 0:
         this.position.setX(0);
         break;
-      case (x > 640):
+      case x > 640:
         this.position.setX(640);
         break;
       default:
         break;
     }
-    switch(y != null) {
-      case (y > 0 && y < 480):
+    switch (y != null) {
+      case y > 0 && y < 480:
         this.position.setY(y);
         break;
-      case (y < 0):
+      case y < 0:
         this.position.setY(0);
         break;
-      case (y > 480):
+      case y > 480:
         this.position.setY(480);
         break;
       default:
@@ -493,13 +499,13 @@ class Mouse {
   }
 }
 
-// globals needed to be declared
+// GLOBALS
 
 const mouse = new Mouse();
 var constants = getConstants();
 var objects;
 
-// core functions
+// CORE FUNCTIONS
 
 // function which initializes the simulation
 function init() {
@@ -508,8 +514,8 @@ function init() {
   const ctx = c.getContext("2d");
   const height = 480; // Resolution/dimensions of canvas displayed in.
   const width = 640;
-  let collisions = {};
-  clock(ctx, width, height, collisions);
+  // let collisions = {};
+  clock(ctx, width, height);
 }
 
 // adding object function which grabs from the input fields on the html page to create an object of the given parameters.
@@ -557,8 +563,8 @@ function addInputObject() {
 }
 
 // function which draws the simulations current frame using the canvas drawing functions.
-function update(ctx, width, height, collisions) {
-  collisions = {};
+function update(ctx, width, height) {
+  // collisions = {};
   ctx.fillStyle = "#89CFF0";
   ctx.fillRect(0, 0, width, height);
   ctx.fillStyle = "#964B00";
@@ -576,12 +582,13 @@ function update(ctx, width, height, collisions) {
   for (const object1 of objects) {
     for (const object2 of objects) {
       if (
-        object1.isCollision(object2) &&
-        !collisions.hasOwnProperty([object1, object2])
+        object1.isCollision(object2) 
+        // && !collisions.hasOwnProperty(object1) &&
+        // !collisions.hasOwnProperty(object2)
       ) {
         object1.otherObjectCollision(object2);
-        collisions[[object1, object2]] = true;
-        collisions[[object2, object1]] = true;
+        // collisions[object1] = true;
+        // collisions[object2] = true;
       }
     }
   }
@@ -617,49 +624,122 @@ function drawObject(ctx, object) {
   }
 }
 
-// this function runs an interval (loops a given function) every 10ms, this interval loops the update function which updates the positions of all balls in the animation.
-function clock(ctx, width, height, collisions) {
-  window.interval = setInterval(
-    update,
-    10,
-    ctx,
-    width,
-    height,
-    collisions
-  );
+// this function runs the update every 10ms using an interval function, this interval loops the update function which updates the positions of all balls in the animation.
+function clock(ctx, width, height) {
+  window.interval = setInterval(update, 10, ctx, width, height);
 }
 
 // preset handling function
 function createPresetSituation() {
   const preset = document.getElementById("presets").value;
-  if (preset != "none"){
+  if (preset != "none") {
     addPresetObjects(preset);
+    presetConstants(preset);
+  }
+}
+
+function presetConstants(preset) {
+  switch (preset) {
+    case ("diffusion"):
+      window.constants = {
+        CoeffRest: 1,
+        GravitationalFieldStrength: 0,
+        TimeScale: 0.1,
+        DensityOfAir: 0,
+      };
+      break;
+    default:
+      break;
   }
 }
 
 function getPresetObjectList(preset) {
   // object filled with lists of objects which will be added to current object list to be drawn according to each preset.
-  const presets = {
-    "diffusion": [new Circle()], // create these presets either in a function or just type them out (oml i dont want to do this).
-    "other": []
-  };
-  return presets[preset];
+  let presetObjectList = [];
+  switch (preset) {
+    case ("diffusion"):
+      for (let i = 0; i < 100; i++) {
+        // randomly decides if the y velocity will be upwards or downwards.
+        let sign = generateRandomSign();
+        presetObjectList.push(
+          new Circle(
+            5,
+            5,
+            "red",
+            new Velocity(
+              sign * generateRandomFloat(0, 50),
+              sign * generateRandomFloat(0, 50)
+            ),
+            new Acceleration(),
+            new Position(
+              generateRandomFloat(0, 0.25 * RESOLUTION[0]),
+              (((8 / 9) * RESOLUTION[1]) / 100) * i
+            )
+          )
+        );
+      }
+      for (let i = 0; i < 100; i++) {
+        // randomly decides if the y velocity will be upwards or downwards.
+        let sign = generateRandomSign();
+        const k = new Position(
+          generateRandomFloat(0.75 * RESOLUTION[0], RESOLUTION[0]),
+          (((8 / 9) * RESOLUTION[1]) / 100) * i
+        );
+        presetObjectList.push(
+          new Circle(
+            5,
+            5,
+            "green",
+            new Velocity(
+              sign * generateRandomFloat(0, 50),
+              sign * generateRandomFloat(0, 50)
+            ),
+            new Acceleration(),
+            k
+          )
+        );
+        console.log(k);
+      }
+      break;
+    case "other":
+      break;
+    default:
+      break;
+  }
+  return presetObjectList;
 }
 
-  // adding object function which adds a list of objects, used to handle the creation of preset scenarios.
+// INPUT HANDLING FUNCTIONS
+
+// adding object function which adds a list of objects, used to handle the creation of preset scenarios.
 function addPresetObjects(preset) {
   const presetObjects = getPresetObjectList(preset);
   objects = presetObjects;
 }
 
-// mouse input handling functions for eventlisteners
+function generateRandomSign() {
+  let sign;
+  if (Math.random() < 0.5) {
+    sign = -1;
+  } else {
+    sign = 1;
+  }
+  return sign;
+}
 
-  // mouse input function which updates the position attribute of the mouse class used for player input
+function generateRandomFloat(lower, upper) {
+  return lower + Math.random() * (upper - lower);
+}
+
+// mouse input function which updates the position attribute of the mouse class used for player input
 function updateMousePos(event) {
   const canvas = document.getElementById("Simulation");
   const relativeCoords = canvas.getBoundingClientRect();
   // convert this to relative canvas coords :)
-  mouse.containInBounds(event.clientX - relativeCoords.left, event.clientY - relativeCoords.top)
+  mouse.containInBounds(
+    event.clientX - relativeCoords.left,
+    event.clientY - relativeCoords.top
+  );
   for (let i = 0; i < 4; i++) {
     if (i < 2) {
       mouse.hitbox[i] = mouse.position.getX();
@@ -669,14 +749,14 @@ function updateMousePos(event) {
   }
 }
 
-  // mouse input handle which handles the event of the mouse click (of any buttons), i.e. inputting a force on an object.
+// mouse input handle which handles the event of the mouse click (of any buttons), i.e. inputting a force on an object.
 function onMouseClick(event) {
-  if (event.button == 0){
+  if (event.button == 0) {
     mouse.leftClicked = true;
   }
 }
 
-  // Grabs the values from each input field in order to update the constants array to user selected values.
+// Grabs the values from each input field in order to update the constants array to user selected values.
 function getConstants() {
   const G = parseFloat(document.getElementById("gravity").value);
   const DENSITYOFAIR = parseFloat(document.getElementById("densityOA").value);
@@ -697,7 +777,7 @@ function updateConstants() {
 }
 
 // the function called by the pause button when it is clicked, clears the interval when the button is toggled on when clicked, starts it again when toggled off when clicked.
-  // this stops and starts the animation of canvas.
+// this stops and starts the animation of canvas.
 function pauseSim() {
   const btn = document.getElementById("pause-btn");
   if (btn.value == "ON") {
@@ -711,7 +791,7 @@ function pauseSim() {
   }
 }
 
-  // Toggles the pause button between ON and OFF states, allows for the pauseSim() function to decide when to stop and start the interval function.
+// Toggles the pause button between ON and OFF states, allows for the pauseSim() function to decide when to stop and start the interval function.
 function tgl() {
   const btn = document.getElementById("pause-btn");
   if (btn.value == "ON") {
@@ -721,7 +801,7 @@ function tgl() {
   }
 }
 
-  // function which reinitilaizes the 
+// function which reinitilaizes the
 function reInit() {
   clearInterval(window.interval);
   const c = document.getElementById("Simulation");
@@ -732,15 +812,21 @@ function reInit() {
 
 // event listeners for user input ------------
 
-document.getElementById("refresh-btn").addEventListener("click", updateConstants);
+document
+  .getElementById("refresh-btn")
+  .addEventListener("click", updateConstants);
 
-document.getElementById("preset-btn").addEventListener("click", createPresetSituation);
+document
+  .getElementById("preset-btn")
+  .addEventListener("click", createPresetSituation);
 
 document.getElementById("pause-btn").addEventListener("click", pauseSim);
 
 document.getElementById("refresh-sim").addEventListener("click", reInit);
 
-document.getElementById("add-object-btn").addEventListener("click", addInputObject);
+document
+  .getElementById("add-object-btn")
+  .addEventListener("click", addInputObject);
 
 document.addEventListener("mousemove", updateMousePos);
 
@@ -752,7 +838,8 @@ document.addEventListener("mouseup", onMouseClick);
 window.onload = init;
 
 // notes:
+// objects phase through each other for some reason
 // fix bug where if an object is on the same exact space as another there is an error. If two colliding objects occupy the same space as each other, simply move them next to each other by a predetermined distance.
 // Create presets and an interesting default option or something...
-  // create a function which creates the preset situation using an input (maybe a large list of objects to iterate and create or something..., like a configuration file)
+// create a function which creates the preset situation using an input (maybe a large list of objects to iterate and create or something..., like a configuration file)
 // then add the graphs (sadge) - all on one canvas if possible (try to create seperate file for this script)
