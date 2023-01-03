@@ -116,6 +116,7 @@ class Object {
     this.acceleration = acceleration;
     this.velocity = velocity;
     this.position = position;
+    this.initialPosition = position;
   }
 
   getForces() {
@@ -153,6 +154,10 @@ class Object {
 
   getMomentum() {
     return this.velocity.getMag() * this.mass;
+  }
+
+  getDisplacement() {
+    return (self.position - self.initialPosition);
   }
 
   updateAll() {
@@ -240,9 +245,17 @@ class Object {
       ((this.hitbox[2] > other.hitbox[3] && this.hitbox[3] < other.hitbox[3]) ||
         (this.hitbox[2] > other.hitbox[2] && this.hitbox[3] < other.hitbox[2]))
     ) {
+      this.fixSamePointProblem(other);
       return true;
     }
     return false;
+  }
+
+  // fixes problem of object phasing out of simulation due to taking up the same point in 2d space.
+  fixSamePointProblem(other) {
+    if (this.position == other.getPosition()) {
+      this.position.setX(this.position.getX() + 1);
+    }
   }
 
   getCollisionPlanes(otherObject) {
@@ -838,8 +851,5 @@ document.addEventListener("mouseup", onMouseClick);
 window.onload = init;
 
 // notes:
-// objects phase through each other for some reason
-// fix bug where if an object is on the same exact space as another there is an error. If two colliding objects occupy the same space as each other, simply move them next to each other by a predetermined distance.
-// Create presets and an interesting default option or something...
-// create a function which creates the preset situation using an input (maybe a large list of objects to iterate and create or something..., like a configuration file)
+// Create presets and an interesting default option or something... - talk to monsiour adams
 // then add the graphs (sadge) - all on one canvas if possible (try to create seperate file for this script)
