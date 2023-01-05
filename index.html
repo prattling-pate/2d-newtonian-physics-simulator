@@ -30,6 +30,8 @@
         <option value="diffusion">Diffusion</option>
         <option value="WIP">Ask adams for more suggestions :)</option>
       </select>
+      <label for="force-enabled">Enable force input?</label>
+      <input type="checkbox" name="force-enabled" id="force-enabled" checked>
       <button id="preset-btn">Load Preset</button>
       <div class="constants">
         <label for="G">Gravitational Field Strength:</label>
@@ -171,8 +173,12 @@
         type="text/javascript"
       ></script>
     </div>
+    <div class="instructions">
+      <h1>Instructions for use:</h1>
+      <br>
+      <p>Enter instructions here</p>
+    </div>
     <script src="jqueries.js"></script>
-    <script src="graphs.js"></script>
     <script src="main.js"></script>
   </body>
 </html>

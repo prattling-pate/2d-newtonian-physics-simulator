@@ -36,6 +36,8 @@ class Vector2 {
     this.y = inp;
   }
 
+  // VECTOR ARITHMETIC METHODS -----
+
   getMag() {
     return Math.sqrt(this.x ** 2 + this.y ** 2);
   }
@@ -73,7 +75,7 @@ class Position extends Vector2 {
   constructor(x, y) {
     super(x, y);
   }
-
+  // uses equation s = vt to calculate the vector change in position
   update(velocity, RATE) {
     this.x += velocity.getX() * RATE;
     this.y += velocity.getY() * RATE;
@@ -85,6 +87,7 @@ class Velocity extends Vector2 {
     super(x, y);
   }
 
+  // use equation v=at to find vector change in velocity
   update(acceleration, RATE) {
     this.x += acceleration.getX() * RATE;
     this.y += acceleration.getY() * RATE;
@@ -95,14 +98,15 @@ class Acceleration extends Vector2 {
   constructor(x, y) {
     super(x, y);
   }
-
+  
+  // uses Newton's generalised second law F=ma to find new acceleration of object given its resultant force and mass (a = F/m)
   update(object) {
     this.x = object.resolveVectors().getX() / object.getMass();
     this.y = object.resolveVectors().getY() / object.getMass();
   }
 }
 
-// class outlining the generic object
+// class outlining the generic object boilerplate
 
 class Object {
   constructor(
@@ -117,6 +121,7 @@ class Object {
     this.velocity = velocity;
     this.position = position;
     this.initialPosition = position;
+    this.timeSinceSpawned = 0;
   }
 
   getForces() {
@@ -157,7 +162,7 @@ class Object {
   }
 
   getDisplacement() {
-    return (self.position - self.initialPosition);
+    return self.position - self.initialPosition;
   }
 
   updateAll() {
@@ -165,8 +170,8 @@ class Object {
     this.acceleration.update(this);
     this.velocity.update(this.acceleration, constants["TimeScale"]);
     this.position.update(this.velocity, constants["TimeScale"]);
-    // sort out impulse buffer eventually
     this.forces[2] = new Vector2(0, 0);
+    this.timeSinceSpawned += constants["TimeScale"];
   }
 
   addWeight() {
@@ -245,7 +250,9 @@ class Object {
       ((this.hitbox[2] > other.hitbox[3] && this.hitbox[3] < other.hitbox[3]) ||
         (this.hitbox[2] > other.hitbox[2] && this.hitbox[3] < other.hitbox[2]))
     ) {
-      this.fixSamePointProblem(other);
+      if (other instanceof Object) {
+        this.fixSamePointProblem(other);
+      }
       return true;
     }
     return false;
@@ -450,12 +457,10 @@ class Rectangle extends Object {
 
 class Mouse {
   constructor() {
-    this.position = new Position(0, 0);
+    this.position = new Position();
     // have to use the same .hitbox property structure to not have to code a new function for detecting whether mouse is in an object
     this.hitbox = [0, 0, 0, 0];
-    this.leftClickDragging = false;
-    this.prevPos = new Position(0, 0);
-    this.newPos = new Position(0, 0);
+    this.prevPos = new Position();
     this.inputPrimed = false;
     this.inputtedObject = null;
     this.leftClicked = false;
@@ -466,15 +471,19 @@ class Mouse {
   }
 
   addForceOnObject(other) {
-    // whenever mouse is dragged off of canvas the input method breaks, can fix with oob detection
     if (this.isInObject(other) && this.leftClicked && !this.inputPrimed) {
       // cannot directly assign this.pos as it tracks the property for some reason then
       this.prevPos = new Position(this.position.x, this.position.y);
       this.leftClicked = false;
       this.inputPrimed = true;
       this.inputtedObject = other;
-    } else if (this.leftClicked && this.inputPrimed) {
+    } else if (
+      !this.isInObject(other) &&
+      this.leftClicked &&
+      this.inputPrimed
+    ) {
       const diffPos = this.position.sub(this.prevPos);
+      this.prevPos = new Position();
       this.inputtedObject.forces[2] = diffPos.mult(-10000);
       this.leftClicked = false;
       this.inputPrimed = false;
@@ -512,23 +521,167 @@ class Mouse {
   }
 }
 
-// GLOBALS
+// graph class which stores information about data and methods related to drawing graphs
+
+class Graph {
+  constructor(width, height, axisY, axisX, scale, originPosition) {
+    this.width = width;
+    this.height = height;
+    this.axisX = axisX;
+    this.axisY = axisY;
+    this.scale = scale;
+    this.originPosition = originPosition; // indicates the quadrant of the canvas the graph resides in
+    this.data = []; // data property is a linear dynamic queue, allows old datapoints to be taken from graph while new ones are untouched
+  }
+
+  drawGraph(ctx, width, height) {
+    // object storing the origin position for each sector
+    const originCentre = this.originPosition;
+    // drawing the graph axis
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = "black";
+    ctx.beginPath();
+    ctx.moveTo(originCentre[0] - width * 0.25, originCentre[1]);
+    ctx.lineTo(originCentre[0] + width * 0.25, originCentre[1]);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(originCentre[0] - width * 0.25, originCentre[1] - height * 0.25);
+    ctx.lineTo(originCentre[0] - width * 0.25, originCentre[1] + height * 0.25);
+    ctx.stroke();
+    // drawing boundaries between graphs
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(originCentre[0] - width * 0.25, originCentre[1] - height * 0.25);
+    ctx.lineTo(originCentre[0] + width * 0.25, originCentre[1] - height * 0.25);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(originCentre[0] + width * 0.25, originCentre[1] - height * 0.25);
+    ctx.lineTo(originCentre[0] + width * 0.25, originCentre[1] + height * 0.25);
+    ctx.stroke();
+  }
+
+  // figure out how to do scaling
+  plotData(ctx, width, height, objectData, time) {
+    const information = {
+      Displacement: objectData.getDisplacement(),
+      Velocity: objectData.getVelocity(),
+      Acceleration: objectData.getAcceleration(),
+      "Kinetic Energy": objectData.getKineticEnergy(),
+    };
+    const toPlot = information[this.axisY];
+    ctx.beginPath();
+    ctx.strokeRect(
+      this.originPosition[0] - 0.25 * width + time * this.scale,
+      this.originPosition[1] + toPlot,
+      1,
+      1
+    );
+  }
+
+  // data queue methods
+
+  enqueueData(data) {
+    this.data.push(data);
+  }
+
+  dequeueData() {
+    this.data.shift();
+  }
+
+  getDataQueueLength() {
+    return this.data.length;
+  }
+}
+
+// GLOBALS--------------
 
 const mouse = new Mouse();
 var constants = getConstants();
 var objects;
+var time;
 
-// CORE FUNCTIONS
+// CORE FUNCTIONS--------
 
 // function which initializes the simulation
 function init() {
+  time = 0;
   objects = [];
-  const c = document.getElementById("Simulation");
-  const ctx = c.getContext("2d");
+  const sim = document.getElementById("Simulation");
+  const ctxSim = sim.getContext("2d");
+  const graphsCanvas = document.getElementById("Graphs");
+  const ctxGraphs = graphsCanvas.getContext("2d");
   const height = 480; // Resolution/dimensions of canvas displayed in.
   const width = 640;
-  // let collisions = {};
-  clock(ctx, width, height);
+  const graphs = [
+    new Graph(width / 2, height / 2, "Displacement", "Time", 1, [
+      width * 0.25,
+      height * 0.25,
+    ]),
+    new Graph(width / 2, height / 2, "Velocity", "Time", 1, [
+      width * 0.75,
+      height * 0.25,
+    ]),
+    new Graph(width / 2, height / 2, "Acceleration", "Time", 1, [
+      width * 0.25,
+      height * 0.75,
+    ]),
+    new Graph(width / 2, height / 2, "Kinetic Energy", "Time", 1, [
+      width * 0.75,
+      height * 0.75,
+    ]),
+  ];
+  clock(ctxSim, ctxGraphs, graphs, width, height);
+}
+
+// this function runs the update every 10ms using an interval function, this interval loops the update function which updates the positions of all balls in the animation.
+function clock(ctxSim, ctxGraphs, graphs, width, height) {
+  window.interval = setInterval(
+    update,
+    10,
+    ctxSim,
+    ctxGraphs,
+    graphs,
+    width,
+    height,
+  );
+}
+
+// function which draws the simulations current frame using the canvas drawing functions.
+function update(ctxSim, ctxGraphs, graphs, width, height) {
+  // simulation drawing---------------------
+  ctxSim.fillStyle = "#89CFF0";
+  ctxSim.fillRect(0, 0, width, height);
+  ctxSim.fillStyle = "#964B00";
+  ctxSim.fillRect(0, RESOLUTION[1] * (8 / 9), width, RESOLUTION[1]);
+  for (const object of objects) {
+    object.addWeight();
+    object.groundCeilingCollision();
+    object.sideCollision();
+    object.updateAll();
+    object.updateHitbox();
+    drawObject(ctxSim, object);
+  }
+  // checks for other object collisions, source of most lag O(n^2) time complexity
+  for (const object1 of objects) {
+    for (const object2 of objects) {
+      if (object1.isCollision(object2)) {
+        object1.otherObjectCollision(object2);
+      }
+    }
+  }
+
+  if (document.getElementById("force-enabled").checked)
+    for (const object of objects) {
+      mouse.addForceOnObject(object);
+    }
+
+  // graph drawing -----------------------------
+  ctxGraphs.fillStyle = "#FFFFFF";
+  ctxGraphs.fillRect(0, 0, width, height);
+  for (const graph of graphs) {
+    graph.drawGraph(ctxGraphs, width, height);
+  }
+
 }
 
 // adding object function which grabs from the input fields on the html page to create an object of the given parameters.
@@ -575,74 +728,35 @@ function addInputObject() {
   objects.push(newObj);
 }
 
-// function which draws the simulations current frame using the canvas drawing functions.
-function update(ctx, width, height) {
-  // collisions = {};
-  ctx.fillStyle = "#89CFF0";
-  ctx.fillRect(0, 0, width, height);
-  ctx.fillStyle = "#964B00";
-  ctx.fillRect(0, RESOLUTION[1] * (8 / 9), width, RESOLUTION[1]);
-  for (const object of objects) {
-    object.addWeight();
-    object.groundCeilingCollision();
-    object.sideCollision();
-    object.updateAll();
-    object.updateHitbox();
-    drawObject(ctx, object);
-  }
-
-  // checks for other object collisions, source of most lag O(n^2) time complexity
-  for (const object1 of objects) {
-    for (const object2 of objects) {
-      if (
-        object1.isCollision(object2) 
-        // && !collisions.hasOwnProperty(object1) &&
-        // !collisions.hasOwnProperty(object2)
-      ) {
-        object1.otherObjectCollision(object2);
-        // collisions[object1] = true;
-        // collisions[object2] = true;
-      }
-    }
-  }
-  for (const object of objects) {
-    mouse.addForceOnObject(object);
-  }
-}
-
 // this functions draws the given object, differentiating between methods of drawing using the object.shape property of the object class.
-function drawObject(ctx, object) {
-  ctx.fillStyle = object.getColour();
+function drawObject(ctxSim, object) {
+  ctxSim.fillStyle = object.getColour();
   if (object.getShape() == "circle") {
-    ctx.beginPath();
-    ctx.arc(
+    ctxSim.beginPath();
+    ctxSim.arc(
       object.getPosition().getX(),
       object.getPosition().getY(),
       object.getRadius(),
       0,
       2 * Math.PI
     );
-    ctx.closePath();
-    ctx.fill();
+    ctxSim.closePath();
+    ctxSim.fill();
   } else if (object.getShape() == "rectangle") {
-    ctx.beginPath();
-    ctx.rect(
+    ctxSim.beginPath();
+    ctxSim.rect(
       object.getCorner().getX(),
       object.getCorner().getY(),
       object.getWidth(),
       object.getHeight()
     );
-    ctx.closePath();
-    ctx.fill();
+    ctxSim.closePath();
+    ctxSim.fill();
   }
 }
 
-// this function runs the update every 10ms using an interval function, this interval loops the update function which updates the positions of all balls in the animation.
-function clock(ctx, width, height) {
-  window.interval = setInterval(update, 10, ctx, width, height);
-}
+// PRESET HANDLING FUNCTIONS------
 
-// preset handling function
 function createPresetSituation() {
   const preset = document.getElementById("presets").value;
   if (preset != "none") {
@@ -651,26 +765,51 @@ function createPresetSituation() {
   }
 }
 
+function setInputFieldsToNewConstants(E, G, T, P, input) {
+  console.log(G.toString());
+  T *= 10;
+  document.getElementById("restit").value = E.toString();
+  document.getElementById("gravity").value = G.toString();
+  document.getElementById("scale").value = T.toString();
+  document.getElementById("densityOA").value = P.toString();
+  document.getElementById("force-enabled").checked = input;
+}
+
 function presetConstants(preset) {
+  let E;
+  let G;
+  let T;
+  let P;
   switch (preset) {
-    case ("diffusion"):
-      window.constants = {
-        CoeffRest: 1,
-        GravitationalFieldStrength: 0,
-        TimeScale: 0.1,
-        DensityOfAir: 0,
-      };
+    case "diffusion":
+      E = 1;
+      G = 0;
+      T = 0.1;
+      P = 0;
+      input = false;
       break;
     default:
+      E = 1;
+      G = 9.81;
+      T = 0.1;
+      P = 1.225;
+      input = true;
       break;
   }
+  window.constants = {
+    CoeffRest: E,
+    GravitationalFieldStrength: G,
+    TimeScale: T,
+    DensityOfAir: P,
+  };
+  setInputFieldsToNewConstants(E, G, T, P, input);
 }
 
 function getPresetObjectList(preset) {
   // object filled with lists of objects which will be added to current object list to be drawn according to each preset.
   let presetObjectList = [];
   switch (preset) {
-    case ("diffusion"):
+    case "diffusion":
       for (let i = 0; i < 100; i++) {
         // randomly decides if the y velocity will be upwards or downwards.
         let sign = generateRandomSign();
@@ -694,10 +833,6 @@ function getPresetObjectList(preset) {
       for (let i = 0; i < 100; i++) {
         // randomly decides if the y velocity will be upwards or downwards.
         let sign = generateRandomSign();
-        const k = new Position(
-          generateRandomFloat(0.75 * RESOLUTION[0], RESOLUTION[0]),
-          (((8 / 9) * RESOLUTION[1]) / 100) * i
-        );
         presetObjectList.push(
           new Circle(
             5,
@@ -708,10 +843,12 @@ function getPresetObjectList(preset) {
               sign * generateRandomFloat(0, 50)
             ),
             new Acceleration(),
-            k
+            new Position(
+              generateRandomFloat(0.75 * RESOLUTION[0], RESOLUTION[0]),
+              (((8 / 9) * RESOLUTION[1]) / 100) * i
+            )
           )
         );
-        console.log(k);
       }
       break;
     case "other":
@@ -722,7 +859,7 @@ function getPresetObjectList(preset) {
   return presetObjectList;
 }
 
-// INPUT HANDLING FUNCTIONS
+// INPUT HANDLING FUNCTIONS------
 
 // adding object function which adds a list of objects, used to handle the creation of preset scenarios.
 function addPresetObjects(preset) {
@@ -730,6 +867,7 @@ function addPresetObjects(preset) {
   objects = presetObjects;
 }
 
+// random sign (+/-) generation based of random float generation
 function generateRandomSign() {
   let sign;
   if (Math.random() < 0.5) {
@@ -740,6 +878,7 @@ function generateRandomSign() {
   return sign;
 }
 
+// random float generation based off of lower and upper bound
 function generateRandomFloat(lower, upper) {
   return lower + Math.random() * (upper - lower);
 }
@@ -797,10 +936,10 @@ function pauseSim() {
     clearInterval(window.interval);
   } else {
     const c = document.getElementById("Simulation");
-    const ctx = c.getContext("2d");
+    const ctxSim = c.getContext("2d");
     const height = 480; // Resolution/dimensions of canvas displayed in.
     const width = 640;
-    clock(ctx, width, height);
+    clock(ctxSim, width, height);
   }
 }
 
@@ -818,8 +957,8 @@ function tgl() {
 function reInit() {
   clearInterval(window.interval);
   const c = document.getElementById("Simulation");
-  ctx = c.getContext("2d");
-  ctx.clearRect(0, 0, 640, 480);
+  ctxSim = c.getContext("2d");
+  ctxSim.clearRect(0, 0, 640, 480);
   init();
 }
 
@@ -851,5 +990,6 @@ document.addEventListener("mouseup", onMouseClick);
 window.onload = init;
 
 // notes:
+// bugs with user input of force on objects, again :(.
 // Create presets and an interesting default option or something... - talk to monsiour adams
 // then add the graphs (sadge) - all on one canvas if possible (try to create seperate file for this script)
