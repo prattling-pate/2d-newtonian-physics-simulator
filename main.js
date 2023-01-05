@@ -122,6 +122,7 @@ class Object {
     this.position = position;
     this.initialPosition = position;
     this.timeSinceSpawned = 0;
+    this.objectTracked = false;
   }
 
   getForces() {
@@ -139,6 +140,10 @@ class Object {
   setVelocity(x, y) {
     this.velocity.setX(x);
     this.velocity.setY(y);
+  }
+
+  getAcceleration() {
+    return this.acceleration;
   }
 
   getPosition() {
@@ -162,7 +167,11 @@ class Object {
   }
 
   getDisplacement() {
-    return self.position - self.initialPosition;
+    return this.position.sub(this.initialPosition);
+  }
+
+  getTime() {
+    return this.timeSinceSpawned;
   }
 
   updateAll() {
@@ -361,6 +370,7 @@ class Object {
     const otherFinalVelocityYComp =
       otherFinalVelocity.getMag() *
       otherFinalVelocity.getCosAngle(new Vector2(0, 1));
+    // maybe add coefficient of restitution to this equation after creating a function which fixes the problem of object getting stuck in each other post collision (similar to side collision logic)
     this.setVelocity(thisFinalVelocityXComp, thisFinalVelocityYComp);
     otherObject.setVelocity(otherFinalVelocityXComp, otherFinalVelocityYComp);
   }
@@ -458,12 +468,18 @@ class Rectangle extends Object {
 class Mouse {
   constructor() {
     this.position = new Position();
-    // have to use the same .hitbox property structure to not have to code a new function for detecting whether mouse is in an object
-    this.hitbox = [0, 0, 0, 0];
-    this.prevPos = new Position();
+    this.hitbox = [0, 0, 0, 0]; // have to use the same .hitbox property structure to not have to code a new function for detecting whether mouse is in an object
+    this.prevPos = new Position(); // denotes previous position of mouse when left click is first pressed
     this.inputPrimed = false;
     this.inputtedObject = null;
     this.leftClicked = false;
+    this.trackedObject = null;
+  }
+
+  // add code which allows user to switch object via right clicking using eventlistener functions.
+
+  setTrackedObject (other) {
+    this.trackedObject = other;
   }
 
   isInObject(other) {
@@ -524,7 +540,7 @@ class Mouse {
 // graph class which stores information about data and methods related to drawing graphs
 
 class Graph {
-  constructor(width, height, axisY, axisX, scale, originPosition) {
+  constructor(width, height, axisY, axisX="Time", scale=[1,1], originPosition) {
     this.width = width;
     this.height = height;
     this.axisX = axisX;
@@ -532,6 +548,7 @@ class Graph {
     this.scale = scale;
     this.originPosition = originPosition; // indicates the quadrant of the canvas the graph resides in
     this.data = []; // data property is a linear dynamic queue, allows old datapoints to be taken from graph while new ones are untouched
+    this.maxQueueLength = 750;
   }
 
   drawGraph(ctx, width, height) {
@@ -561,27 +578,65 @@ class Graph {
   }
 
   // figure out how to do scaling
-  plotData(ctx, width, height, objectData, time) {
+  plotData(ctx, width, height, objectData) {
     const information = {
-      Displacement: objectData.getDisplacement(),
-      Velocity: objectData.getVelocity(),
-      Acceleration: objectData.getAcceleration(),
+      "Displacement": objectData.getDisplacement().getX(),
+      "Velocity": objectData.getVelocity().getX(),
+      "Acceleration": objectData.getAcceleration().getX(),
       "Kinetic Energy": objectData.getKineticEnergy(),
+      "Time": objectData.getTime()
     };
-    const toPlot = information[this.axisY];
-    ctx.beginPath();
-    ctx.strokeRect(
-      this.originPosition[0] - 0.25 * width + time * this.scale,
-      this.originPosition[1] + toPlot,
-      1,
-      1
-    );
+    const toPlot = information[this.axisY]; // for now in KJ
+    const timeOfPlot = information["Time"]
+    this.maintainDataQueue();
+    this.enqueueData([timeOfPlot,toPlot]);
+    let position;
+    for (const dataPoint of this.data){
+      ctx.beginPath();
+      position = this.translateToCanvasPlane(dataPoint, width);
+      if (this.isDataPointInBounds(position, height)){
+        ctx.strokeRect(
+          position[0],
+          position[1],
+          0.1,
+          0.1
+        );
+      }
+    }
+  }
+
+  translateToCanvasPlane(data, width) {
+    const position = [(this.originPosition[0] - 0.25 * width + data[0] * this.scale[0]), (this.originPosition[1] - data[1] * this.scale[1])]
+    return position
+  }
+
+  isDataPointInBounds(dataPoint, height) {
+    if (this.originPosition[1] - 0.25 * height <  dataPoint[1] && this.originPosition[1] + 0.25 * height > dataPoint[1]) {
+      return true;
+    }
+    return false;
   }
 
   // data queue methods
 
-  enqueueData(data) {
-    this.data.push(data);
+  maintainDataQueue() {
+    // if the data queue hits an abitrary maximum length the first data point is dequeued and then all points are moved back by one timeframe back on the plot.
+    if (this.isDataQueueFull()) {
+      this.dequeueData();
+      const timeFrame = this.data[1][0] - this.data[0][0];
+      // moves back all data points by one data point
+      for (let i = 0; i < this.getDataQueueLength();i++) {
+        this.data[i][0] -= timeFrame;
+      }
+    }
+  }
+
+  isDataQueueFull() {
+    return (this.getDataQueueLength() == this.maxQueueLength);
+  }
+
+  enqueueData(dataInput) {
+    this.data.push(dataInput);
   }
 
   dequeueData() {
@@ -598,13 +653,11 @@ class Graph {
 const mouse = new Mouse();
 var constants = getConstants();
 var objects;
-var time;
 
 // CORE FUNCTIONS--------
 
 // function which initializes the simulation
 function init() {
-  time = 0;
   objects = [];
   const sim = document.getElementById("Simulation");
   const ctxSim = sim.getContext("2d");
@@ -613,19 +666,19 @@ function init() {
   const height = 480; // Resolution/dimensions of canvas displayed in.
   const width = 640;
   const graphs = [
-    new Graph(width / 2, height / 2, "Displacement", "Time", 1, [
+    new Graph(width / 2, height / 2, "Displacement", "Time", [1,1], [
       width * 0.25,
       height * 0.25,
     ]),
-    new Graph(width / 2, height / 2, "Velocity", "Time", 1, [
+    new Graph(width / 2, height / 2, "Velocity", "Time", [1,1], [
       width * 0.75,
       height * 0.25,
     ]),
-    new Graph(width / 2, height / 2, "Acceleration", "Time", 1, [
+    new Graph(width / 2, height / 2, "Acceleration", "Time", [1,1], [
       width * 0.25,
       height * 0.75,
     ]),
-    new Graph(width / 2, height / 2, "Kinetic Energy", "Time", 1, [
+    new Graph(width / 2, height / 2, "Kinetic Energy", "Time", [1,1/10000], [
       width * 0.75,
       height * 0.75,
     ]),
@@ -653,13 +706,20 @@ function update(ctxSim, ctxGraphs, graphs, width, height) {
   ctxSim.fillRect(0, 0, width, height);
   ctxSim.fillStyle = "#964B00";
   ctxSim.fillRect(0, RESOLUTION[1] * (8 / 9), width, RESOLUTION[1]);
+
+  // if the user has not selected an object to track by default the first object created is tracked, provided no object is selected.
+  if (objects.length > 0 && this.trackedObject == null) {
+    mouse.setTrackedObject(objects[0]);
+    objects[0].objectTracked = true;
+  }
+
   for (const object of objects) {
     object.addWeight();
     object.groundCeilingCollision();
     object.sideCollision();
     object.updateAll();
     object.updateHitbox();
-    drawObject(ctxSim, object);
+    drawObject(ctxSim, object); // turn into a method later on then encapsulate all of this loop in a single method
   }
   // checks for other object collisions, source of most lag O(n^2) time complexity
   for (const object1 of objects) {
@@ -670,16 +730,21 @@ function update(ctxSim, ctxGraphs, graphs, width, height) {
     }
   }
 
-  if (document.getElementById("force-enabled").checked)
+  if (document.getElementById("force-enabled").checked){
     for (const object of objects) {
       mouse.addForceOnObject(object);
     }
-
+  }
   // graph drawing -----------------------------
+
   ctxGraphs.fillStyle = "#FFFFFF";
   ctxGraphs.fillRect(0, 0, width, height);
   for (const graph of graphs) {
+    // fetching tracked object data
     graph.drawGraph(ctxGraphs, width, height);
+    if (mouse.trackedObject != null){
+      graph.plotData(ctxGraphs, width, height, mouse.trackedObject)
+    }
   }
 
 }
@@ -725,12 +790,20 @@ function addInputObject() {
       position
     );
   }
-  objects.push(newObj);
+  const n = parseInt(document.getElementById("n-objects").value);
+  for (let i=0; i<n; i++) {
+    objects.push(newObj);
+  }
 }
 
 // this functions draws the given object, differentiating between methods of drawing using the object.shape property of the object class.
 function drawObject(ctxSim, object) {
-  ctxSim.fillStyle = object.getColour();
+  if (!object.objectTracked){
+    ctxSim.fillStyle = object.getColour();
+  }
+  else {
+    ctxSim.fillStyle = "#FFF04D";
+  }
   if (object.getShape() == "circle") {
     ctxSim.beginPath();
     ctxSim.arc(
@@ -766,7 +839,6 @@ function createPresetSituation() {
 }
 
 function setInputFieldsToNewConstants(E, G, T, P, input) {
-  console.log(G.toString());
   T *= 10;
   document.getElementById("restit").value = E.toString();
   document.getElementById("gravity").value = G.toString();
@@ -937,9 +1009,29 @@ function pauseSim() {
   } else {
     const c = document.getElementById("Simulation");
     const ctxSim = c.getContext("2d");
+    const canvasGraph = document.getElementById("Graphs");
+    const ctxGraphs = canvasGraph.getContext("2d");
     const height = 480; // Resolution/dimensions of canvas displayed in.
     const width = 640;
-    clock(ctxSim, width, height);
+    const graphs = [
+      new Graph(width / 2, height / 2, "Displacement", "Time", 1, [
+        width * 0.25,
+        height * 0.25,
+      ]),
+      new Graph(width / 2, height / 2, "Velocity", "Time", 1, [
+        width * 0.75,
+        height * 0.25,
+      ]),
+      new Graph(width / 2, height / 2, "Acceleration", "Time", 1, [
+        width * 0.25,
+        height * 0.75,
+      ]),
+      new Graph(width / 2, height / 2, "Kinetic Energy", "Time", 1, [
+        width * 0.75,
+        height * 0.75,
+      ]),
+    ];
+    clock(ctxSim, ctxGraphs, graphs, width, height);
   }
 }
 

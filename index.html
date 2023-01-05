@@ -4,35 +4,45 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css"/>
     <title>NEA</title>
   </head>
 
   <body>
     <h1>2D Newtonian motion simulation</h1>
-    <canvas
-      id="Simulation"
-      width="640"
-      height="480"
-      style="border: 5px #000000"
-    ></canvas>
-    <canvas
-      id="Graphs"
-      width="640"
-      height="480"
-      style="border: 5px #000000"
-    ></canvas
-    ><br />
+    <div class="canvas-container">
+      <canvas
+        id="Simulation"
+        width="640"
+        height="480"
+        style="border: 5px #000000"
+      >
+      </canvas>
+      <canvas
+        id="Graphs"
+        width="640"
+        height="480"
+        style="border: 5px #000000"
+      ></canvas>
+    </div>
+    <br />
     <div class="user-inputs">
-      <label for="presets">Presets</label>
-      <select name="presets" id="presets">
-        <option value="none">Select a preset</option>
-        <option value="diffusion">Diffusion</option>
-        <option value="WIP">Ask adams for more suggestions :)</option>
-      </select>
-      <label for="force-enabled">Enable force input?</label>
-      <input type="checkbox" name="force-enabled" id="force-enabled" checked>
-      <button id="preset-btn">Load Preset</button>
+      <div class="preset-options">
+        <label for="presets">Presets</label>
+        <select name="presets" id="presets">
+          <option value="none">Select a preset</option>
+          <option value="diffusion">Diffusion</option>
+          <option value="WIP">Ask adams for more suggestions :)</option>
+        </select>
+        <label for="force-enabled">Enable force input?</label>
+        <input
+          type="checkbox"
+          name="force-enabled"
+          id="force-enabled"
+          checked
+        />
+        <button id="preset-btn">Load Preset</button>
+      </div>
       <div class="constants">
         <label for="G">Gravitational Field Strength:</label>
         <input
@@ -107,7 +117,13 @@
           <input type="number" value="1" min="0" step="0.01" id="height" />m
         </div>
         <label for="density"> Density of object </label>
-        <input value="1" id="density" step="0.01" min="0" type="number" />kgm<sup>-3</sup>
+        <input
+          value="1"
+          id="density"
+          step="0.01"
+          min="0"
+          type="number"
+        />kgm<sup>-3</sup>
         <br />
         <label for="position-x">Initial Position of object</label>
         x=
@@ -168,16 +184,16 @@
         <br />
         <button id="add-object-btn">Add Object</button><br />
       </div>
-      <script
-        src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"
-        type="text/javascript"
-      ></script>
     </div>
     <div class="instructions">
       <h1>Instructions for use:</h1>
-      <br>
+      <br />
       <p>Enter instructions here</p>
     </div>
+    <script
+      src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"
+      type="text/javascript"
+    ></script>
     <script src="jqueries.js"></script>
     <script src="main.js"></script>
   </body>
