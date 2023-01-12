@@ -1,10 +1,9 @@
 # NEA-JS
-JavaScript rewrite of my NEA code up til now
+## JavaScript rewrite of my NEA code up til now
 
-TODO:
-1 - Add vector force input using mouse
+## TODO:
+### 1 - Improve graphing by adding scale options and adding colours and axis details
   have to use a global mouse position sadge :((((((((
-2 - Work on fetching the information of an object by clicking on it.
-  via collision detection system.
-3 - Work on the displacement,velocity and acceleration time graphs.
-  all on one canvas
+### 2 - add input for which object to track for the graphs using html + css.
+### 3 - fix bug where graph pointer is stuck in the middle of the graph after simulation is refreshed.
+### 4 - fix mouse click causing problems - likely recode the force input methods.
