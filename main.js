@@ -38,6 +38,7 @@ class Vector2 {
 
   // VECTOR ARITHMETIC METHODS -----
 
+  // implement fast inverse square root algorithm using bit manip., apparently slower than default method of 1 / Math.sqrt()
   getMag() {
     return Math.sqrt(this.x ** 2 + this.y ** 2);
   }
@@ -540,7 +541,7 @@ class Mouse {
 // graph class which stores information about data and methods related to drawing graphs
 
 class Graph {
-  constructor(width, height, axisY, axisX="Time", scale=[1,1], originPosition) {
+  constructor(width, height, axisY, axisX="Time", scale=new Vector2(1,1), originPosition) {
     this.width = width;
     this.height = height;
     this.axisX = axisX;
@@ -558,22 +559,22 @@ class Graph {
     ctx.lineWidth = 2.5;
     ctx.strokeStyle = "black";
     ctx.beginPath();
-    ctx.moveTo(originCentre[0] - width * 0.25, originCentre[1]);
-    ctx.lineTo(originCentre[0] + width * 0.25, originCentre[1]);
+    ctx.moveTo(originCentre.getX() - width * 0.25, originCentre.getY());
+    ctx.lineTo(originCentre.getX() + width * 0.25, originCentre.getY());
     ctx.stroke();
     ctx.beginPath();
-    ctx.moveTo(originCentre[0] - width * 0.25, originCentre[1] - height * 0.25);
-    ctx.lineTo(originCentre[0] - width * 0.25, originCentre[1] + height * 0.25);
+    ctx.moveTo(originCentre.getX() - width * 0.25, originCentre.getY() - height * 0.25);
+    ctx.lineTo(originCentre.getX()- width * 0.25, originCentre.getY() + height * 0.25);
     ctx.stroke();
     // drawing boundaries between graphs
     ctx.lineWidth = 5;
     ctx.beginPath();
-    ctx.moveTo(originCentre[0] - width * 0.25, originCentre[1] - height * 0.25);
-    ctx.lineTo(originCentre[0] + width * 0.25, originCentre[1] - height * 0.25);
+    ctx.moveTo(originCentre.getX() - width * 0.25, originCentre.getY() - height * 0.25);
+    ctx.lineTo(originCentre.getX() + width * 0.25, originCentre.getY() - height * 0.25);
     ctx.stroke();
     ctx.beginPath();
-    ctx.moveTo(originCentre[0] + width * 0.25, originCentre[1] - height * 0.25);
-    ctx.lineTo(originCentre[0] + width * 0.25, originCentre[1] + height * 0.25);
+    ctx.moveTo(originCentre.getX() + width * 0.25, originCentre.getY() - height * 0.25);
+    ctx.lineTo(originCentre.getX() + width * 0.25, originCentre.getY() + height * 0.25);
     ctx.stroke();
   }
 
@@ -587,31 +588,30 @@ class Graph {
       "Time": objectData.getTime()
     };
     const toPlot = information[this.axisY]; // for now in KJ
-    const timeOfPlot = information["Time"]
+    const timeOfPlot = information["Time"];
     this.maintainDataQueue();
-    this.enqueueData([timeOfPlot,toPlot]);
+    this.enqueueData(new Position(timeOfPlot,toPlot));
     let position;
-    for (const dataPoint of this.data){
+    let positionNext;
+    for (let i = 0 ; i < this.getDataQueueLength() - 1 ; i++){
       ctx.beginPath();
-      position = this.translateToCanvasPlane(dataPoint, width);
-      if (this.isDataPointInBounds(position, height)){
-        ctx.strokeRect(
-          position[0],
-          position[1],
-          0.1,
-          0.1
-        );
+      position = this.translateToCanvasPlane(this.data[i], width);
+      positionNext = this.translateToCanvasPlane(this.data[i+1], width);
+      if (this.isDataPointInBounds(position, height) && this.isDataPointInBounds(positionNext, height)){
+        ctx.moveTo(position.getX(),position.getY());
+        ctx.lineTo(positionNext.getX(),positionNext.getY());
+        ctx.stroke();
       }
     }
   }
 
   translateToCanvasPlane(data, width) {
-    const position = [(this.originPosition[0] - 0.25 * width + data[0] * this.scale[0]), (this.originPosition[1] - data[1] * this.scale[1])]
+    const position = new Position((this.originPosition.getX() - 0.25 * width + data.getX() * this.scale.getX()), (this.originPosition.getY() - data.getY() * this.scale.getY()))
     return position
   }
 
   isDataPointInBounds(dataPoint, height) {
-    if (this.originPosition[1] - 0.25 * height <  dataPoint[1] && this.originPosition[1] + 0.25 * height > dataPoint[1]) {
+    if (this.originPosition.getY() - 0.25 * height <  dataPoint.getY() && this.originPosition.getY() + 0.25 * height > dataPoint.getY()) {
       return true;
     }
     return false;
@@ -623,10 +623,10 @@ class Graph {
     // if the data queue hits an abitrary maximum length the first data point is dequeued and then all points are moved back by one timeframe back on the plot.
     if (this.isDataQueueFull()) {
       this.dequeueData();
-      const timeFrame = this.data[1][0] - this.data[0][0];
+      const timeFrame = this.data[1].getX() - this.data[0].getX();
       // moves back all data points by one data point
       for (let i = 0; i < this.getDataQueueLength();i++) {
-        this.data[i][0] -= timeFrame;
+        this.data[i].setX(this.data[i].getX()-timeFrame);
       }
     }
   }
@@ -666,22 +666,22 @@ function init() {
   const height = 480; // Resolution/dimensions of canvas displayed in.
   const width = 640;
   const graphs = [
-    new Graph(width / 2, height / 2, "Displacement", "Time", [1,1], [
+    new Graph(width / 2, height / 2, "Displacement", "Time", new Vector2(1,1), new Position(
       width * 0.25,
       height * 0.25,
-    ]),
-    new Graph(width / 2, height / 2, "Velocity", "Time", [1,1], [
+    )),
+    new Graph(width / 2, height / 2, "Velocity", "Time", new Vector2(1,1), new Position(
       width * 0.75,
       height * 0.25,
-    ]),
-    new Graph(width / 2, height / 2, "Acceleration", "Time", [1,1], [
+    )),
+    new Graph(width / 2, height / 2, "Acceleration", "Time", new Vector2(1,1), new Position(
       width * 0.25,
       height * 0.75,
-    ]),
-    new Graph(width / 2, height / 2, "Kinetic Energy", "Time", [1,1/10000], [
+    )),
+    new Graph(width / 2, height / 2, "Kinetic Energy", "Time", new Vector2(1,10000**-1), new Position(
       width * 0.75,
       height * 0.75,
-    ]),
+    )),
   ];
   clock(ctxSim, ctxGraphs, graphs, width, height);
 }
@@ -1081,7 +1081,22 @@ document.addEventListener("mouseup", onMouseClick);
 // when the page is loaded the init function is ran.
 window.onload = init;
 
-// notes:
+// bugs:
 // bugs with user input of force on objects, again :(.
-// Create presets and an interesting default option or something... - talk to monsiour adams
-// then add the graphs (sadge) - all on one canvas if possible (try to create seperate file for this script)
+// fix graphs going off of the borders of the graphs, also horrible lag when graphs get full for some reason, rereview code for dataqueues basically.
+
+// TO ADD ========================================================================
+
+// GRAPHS:
+
+// drop down menus to decide on whether to plot the absolute value, x or y components of vectors
+// add axis titles and scales.
+// add an autoscaling algorithm for the graphing -- very optional.
+
+// SIMULATION:
+
+// work on optimizing the algorithms
+//  namely the collision detection and calculating resultant velocities from collision (a lot of cosine operation).
+// add immovable object placement (MAYBE MOUSE INPUT?)
+// add moveable object placement using mouse.
+// add more preset situations.
