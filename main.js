@@ -713,7 +713,7 @@ function init() {
 function clock(ctxSim, ctxGraphs, graphs, width, height) {
   window.interval = setInterval(
     update,
-    10,
+    16.67,
     ctxSim,
     ctxGraphs,
     graphs,
@@ -1105,6 +1105,7 @@ document.addEventListener("mouseup", onMouseClick);
 window.onload = init;
 
 // bugs:
+// when pausing simulation type thrown in graph translation method.
 // bugs with user input of force on objects, again :(.
 // fix graphs going off of the borders of the graphs, also horrible lag when graphs get full for some reason, rereview code for dataqueues basically.
 
