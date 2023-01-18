@@ -548,56 +548,66 @@ class Graph {
     this.axisY = axisY;
     this.scale = scale;
     this.originPosition = originPosition; // indicates the quadrant of the canvas the graph resides in
+    this.previousDataPoint = this.translateToCanvasPlane(new Position());
     this.data = []; // data property is a linear dynamic queue, allows old datapoints to be taken from graph while new ones are untouched
-    this.maxQueueLength = 750;
+    this.maxQueueLength = 100;
   }
 
-  drawGraph(ctx, width, height) {
+  drawGraph(ctx) {
     // object storing the origin position for each sector
     const originCentre = this.originPosition;
     // drawing the graph axis
+    const textPosition = this.translateToCanvasPlane(new Position((1/8) * this.width * 0.25, (1/4) * this.height * 0.25));
+    ctx.font = "30px Arial";
+    ctx.fillText("hello world", textPosition.getX(), textPosition.getY());
     ctx.lineWidth = 2.5;
     ctx.strokeStyle = "black";
     ctx.beginPath();
-    ctx.moveTo(originCentre.getX() - width * 0.25, originCentre.getY());
-    ctx.lineTo(originCentre.getX() + width * 0.25, originCentre.getY());
+    ctx.moveTo(originCentre.getX() - this.width * 0.25, originCentre.getY());
+    ctx.lineTo(originCentre.getX() + this.width * 0.25, originCentre.getY());
     ctx.stroke();
     ctx.beginPath();
-    ctx.moveTo(originCentre.getX() - width * 0.25, originCentre.getY() - height * 0.25);
-    ctx.lineTo(originCentre.getX()- width * 0.25, originCentre.getY() + height * 0.25);
+    ctx.moveTo(originCentre.getX() - this.width * 0.25, originCentre.getY() - this.height * 0.25);
+    ctx.lineTo(originCentre.getX()- this.width * 0.25, originCentre.getY() + this.height * 0.25);
     ctx.stroke();
     // drawing boundaries between graphs
     ctx.lineWidth = 5;
     ctx.beginPath();
-    ctx.moveTo(originCentre.getX() - width * 0.25, originCentre.getY() - height * 0.25);
-    ctx.lineTo(originCentre.getX() + width * 0.25, originCentre.getY() - height * 0.25);
+    ctx.moveTo(originCentre.getX() - this.width * 0.25, originCentre.getY() - this.height * 0.25);
+    ctx.lineTo(originCentre.getX() + this.width * 0.25, originCentre.getY() - this.height * 0.25);
     ctx.stroke();
     ctx.beginPath();
-    ctx.moveTo(originCentre.getX() + width * 0.25, originCentre.getY() - height * 0.25);
-    ctx.lineTo(originCentre.getX() + width * 0.25, originCentre.getY() + height * 0.25);
+    ctx.moveTo(originCentre.getX() + this.width * 0.25, originCentre.getY() - this.height * 0.25);
+    ctx.lineTo(originCentre.getX() + this.width * 0.25, originCentre.getY() + this.height * 0.25);
     ctx.stroke();
   }
 
   // figure out how to do scaling
-  plotData(ctx, width, height, objectData) {
+  // data goes out of bounds due to absolute time being used to plot - just take away some constant i have to figure out
+  plotData(ctx, objectData) {
     const information = {
-      "Displacement": objectData.getDisplacement().getX(),
+      "Displacement": objectData.getDisplacement().getX(), // could use integration but that could be very taxing on the performance
       "Velocity": objectData.getVelocity().getX(),
-      "Acceleration": objectData.getAcceleration().getX(),
-      "Kinetic Energy": objectData.getKineticEnergy(),
+      "Kinetic Energy": objectData.getKineticEnergy(), // for now in 10^4 J
       "Time": objectData.getTime()
     };
-    const toPlot = information[this.axisY]; // for now in KJ
+    let toPlot;
+    if (this.axisY != "Acceleration") {
+      toPlot = information[this.axisY]; 
+    }
+    else {
+      toPlot = information["Velocity"];
+    }
     const timeOfPlot = information["Time"];
     this.maintainDataQueue();
-    this.enqueueData(new Position(timeOfPlot,toPlot));
+    this.enqueueData(new Position(timeOfPlot, toPlot));
     let position;
     let positionNext;
     for (let i = 0 ; i < this.getDataQueueLength() - 1 ; i++){
       ctx.beginPath();
-      position = this.translateToCanvasPlane(this.data[i], width);
-      positionNext = this.translateToCanvasPlane(this.data[i+1], width);
-      if (this.isDataPointInBounds(position, height) && this.isDataPointInBounds(positionNext, height)){
+      position = this.translateToCanvasPlane(this.data[i]);
+      positionNext = this.translateToCanvasPlane(this.data[i+1]);
+      if (this.isDataPointInBounds(position) && this.isDataPointInBounds(positionNext)){
         ctx.moveTo(position.getX(),position.getY());
         ctx.lineTo(positionNext.getX(),positionNext.getY());
         ctx.stroke();
@@ -605,16 +615,28 @@ class Graph {
     }
   }
 
-  translateToCanvasPlane(data, width) {
-    const position = new Position((this.originPosition.getX() - 0.25 * width + data.getX() * this.scale.getX()), (this.originPosition.getY() - data.getY() * this.scale.getY()))
+
+  translateToCanvasPlane(data) {
+    const position = new Position((this.originPosition.getX() - 0.25 * this.width + data.getX() * this.scale.getX()), (this.originPosition.getY() - data.getY() * this.scale.getY()))
     return position
   }
 
-  isDataPointInBounds(dataPoint, height) {
-    if (this.originPosition.getY() - 0.25 * height <  dataPoint.getY() && this.originPosition.getY() + 0.25 * height > dataPoint.getY()) {
+  isDataPointInBounds(dataPoint) {
+    if (this.originPosition.getY() - 0.25 * this.height <  dataPoint.getY() && this.originPosition.getY() + 0.25 * this.height > dataPoint.getY()) {
       return true;
     }
     return false;
+  }
+
+  // methods for obtaining other graphs from velocity -- WIP
+
+  // used only by velocity graph to return the queue for the acceleration graph
+  getAcceleration(dataPoint, dataPointNext) {
+    return new Position(dataPoint.getX(), this.differentiate(dataPoint, dataPointNext))
+  }
+
+  differentiate(dataPoint, dataPointNext) {
+    return (dataPointNext.getY() - dataPoint.getY())/(dataPointNext.getX() - dataPoint.getX())
   }
 
   // data queue methods
@@ -622,8 +644,9 @@ class Graph {
   maintainDataQueue() {
     // if the data queue hits an abitrary maximum length the first data point is dequeued and then all points are moved back by one timeframe back on the plot.
     if (this.isDataQueueFull()) {
+      // should implement a static list of size max, with each positions.x being the index*timeScale. A problem will 100% all the memory movement. Could instead implement circular.
       this.dequeueData();
-      const timeFrame = this.data[1].getX() - this.data[0].getX();
+      const timeFrame = 0.1
       // moves back all data points by one data point
       for (let i = 0; i < this.getDataQueueLength();i++) {
         this.data[i].setX(this.data[i].getX()-timeFrame);
@@ -632,7 +655,7 @@ class Graph {
   }
 
   isDataQueueFull() {
-    return (this.getDataQueueLength() == this.maxQueueLength);
+    return (this.getDataQueueLength() >= this.maxQueueLength);
   }
 
   enqueueData(dataInput) {
@@ -666,19 +689,19 @@ function init() {
   const height = 480; // Resolution/dimensions of canvas displayed in.
   const width = 640;
   const graphs = [
-    new Graph(width / 2, height / 2, "Displacement", "Time", new Vector2(1,1), new Position(
+    new Graph(width, height, "Displacement", "Time", new Vector2(1,1), new Position(
       width * 0.25,
       height * 0.25,
     )),
-    new Graph(width / 2, height / 2, "Velocity", "Time", new Vector2(1,1), new Position(
+    new Graph(width, height, "Velocity", "Time", new Vector2(1,1), new Position(
       width * 0.75,
       height * 0.25,
     )),
-    new Graph(width / 2, height / 2, "Acceleration", "Time", new Vector2(1,1), new Position(
+    new Graph(width, height, "Acceleration", "Time", new Vector2(1,1), new Position(
       width * 0.25,
       height * 0.75,
     )),
-    new Graph(width / 2, height / 2, "Kinetic Energy", "Time", new Vector2(1,10000**-1), new Position(
+    new Graph(width, height, "Kinetic Energy", "Time", new Vector2(1,10**-4), new Position(
       width * 0.75,
       height * 0.75,
     )),
@@ -741,9 +764,9 @@ function update(ctxSim, ctxGraphs, graphs, width, height) {
   ctxGraphs.fillRect(0, 0, width, height);
   for (const graph of graphs) {
     // fetching tracked object data
-    graph.drawGraph(ctxGraphs, width, height);
+    graph.drawGraph(ctxGraphs);
     if (mouse.trackedObject != null){
-      graph.plotData(ctxGraphs, width, height, mouse.trackedObject)
+      graph.plotData(ctxGraphs, mouse.trackedObject)
     }
   }
 
@@ -1096,7 +1119,7 @@ window.onload = init;
 // SIMULATION:
 
 // work on optimizing the algorithms
-//  namely the collision detection and calculating resultant velocities from collision (a lot of cosine operation).
+//   namely the collision detection and calculating resultant velocities from collision (a lot of cosine operation).
 // add immovable object placement (MAYBE MOUSE INPUT?)
 // add moveable object placement using mouse.
 // add more preset situations.
