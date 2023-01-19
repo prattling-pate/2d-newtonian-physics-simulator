@@ -557,9 +557,7 @@ class Graph {
     // object storing the origin position for each sector
     const originCentre = this.originPosition;
     // drawing the graph axis
-    const textPosition = this.translateToCanvasPlane(new Position((1/8) * this.width * 0.25, (1/4) * this.height * 0.25));
-    ctx.font = "30px Arial";
-    ctx.fillText("hello world", textPosition.getX(), textPosition.getY());
+    const textPosition = this.translateToCanvasPlane(new Position((1/8) * this.width * 0.25, (1/4) * this.height * 0.75));
     ctx.lineWidth = 2.5;
     ctx.strokeStyle = "black";
     ctx.beginPath();
@@ -580,6 +578,9 @@ class Graph {
     ctx.moveTo(originCentre.getX() + this.width * 0.25, originCentre.getY() - this.height * 0.25);
     ctx.lineTo(originCentre.getX() + this.width * 0.25, originCentre.getY() + this.height * 0.25);
     ctx.stroke();
+    ctx.fontStyle = "30px Calibri";
+    ctx.fillStyle = "black";
+    ctx.fillText(this.axisY, textPosition.getX(), textPosition.getY());
   }
 
   // figure out how to do scaling
@@ -713,7 +714,7 @@ function init() {
 function clock(ctxSim, ctxGraphs, graphs, width, height) {
   window.interval = setInterval(
     update,
-    16.67,
+    (1/30)*1000,
     ctxSim,
     ctxGraphs,
     graphs,
@@ -1037,22 +1038,22 @@ function pauseSim() {
     const height = 480; // Resolution/dimensions of canvas displayed in.
     const width = 640;
     const graphs = [
-      new Graph(width / 2, height / 2, "Displacement", "Time", 1, [
+      new Graph(width, height, "Displacement", "Time", new Vector2(1,1), new Position(
         width * 0.25,
         height * 0.25,
-      ]),
-      new Graph(width / 2, height / 2, "Velocity", "Time", 1, [
+      )),
+      new Graph(width, height, "Velocity", "Time", new Vector2(1,1), new Position(
         width * 0.75,
         height * 0.25,
-      ]),
-      new Graph(width / 2, height / 2, "Acceleration", "Time", 1, [
+      )),
+      new Graph(width, height, "Acceleration", "Time", new Vector2(1,1), new Position(
         width * 0.25,
         height * 0.75,
-      ]),
-      new Graph(width / 2, height / 2, "Kinetic Energy", "Time", 1, [
+      )),
+      new Graph(width, height, "Kinetic Energy", "Time", new Vector2(1,1/10000), new Position(
         width * 0.75,
         height * 0.75,
-      ]),
+      ))
     ];
     clock(ctxSim, ctxGraphs, graphs, width, height);
   }
@@ -1105,7 +1106,6 @@ document.addEventListener("mouseup", onMouseClick);
 window.onload = init;
 
 // bugs:
-// when pausing simulation type thrown in graph translation method.
 // bugs with user input of force on objects, again :(.
 // fix graphs going off of the borders of the graphs, also horrible lag when graphs get full for some reason, rereview code for dataqueues basically.
 
@@ -1124,3 +1124,12 @@ window.onload = init;
 // add immovable object placement (MAYBE MOUSE INPUT?)
 // add moveable object placement using mouse.
 // add more preset situations.
+
+// Presets (Mr Adams, Helpful for showing helpful teaching):
+// 3 (or 2) Balls decreasing size on top of each other, falling freely.
+// 1:1 mass, 1:2 mass, 1:1 mass but with velocity 2:1. Simple ratios of masses and velocities in the same plane, without gravity.
+// Atmosphere simulation - particles under gravity with different masses with elastic collision.
+// Check how long it takes in diffusion for all particles to be in the canvas 0.99 by 0.99 then 0.98 by 0.98 then decreasing by 0.01, need meaning scales. (silly)
+// 
+
+// Suggested to add databases to store the graphed values of some simulations to analyse data, adds use of databases.
