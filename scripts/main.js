@@ -79,6 +79,7 @@ function update(ctxSim, ctxGraphs, graphs, width, height) {
 			mouse.addForceOnObject(object);
 		}
 	}
+	
 	// graph drawing -----------------------------
 
 	ctxGraphs.fillStyle = "#FFFFFF";

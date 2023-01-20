@@ -429,7 +429,7 @@ class GraphQueue {
 			this.backPointer++;
 			return null;
 		}
-        this.frontPointer++;
+		this.frontPointer++;
 		this.data.push(newData);
 	}
 
@@ -438,16 +438,20 @@ class GraphQueue {
 	}
 
 	translateRelativeIndexToAbsoluteIndex(index) {
-        const newIndex = (this.backPointer + index) % this.maximumLength;
+		const newIndex = (this.backPointer + index) % this.maximumLength;
 		return newIndex;
 	}
 
-    shiftItemXAxisLeft(){
-        const timeStep = this.data[this.backpointer+1]-this.data[this.backpointer];
-        for (let i = 0; i < this.maximumLength; i++){
-            this.data[this.translateRelativeIndexToAbsoluteIndex(i)].setX(this.data.getX() - timeStep);
-        }
-    }
+	getLength() {
+		return this.data.length;
+	}
+
+	shiftItemXAxisLeft() {
+		const timeStep = this.data[this.backpointer + 1] - this.data[this.backpointer];
+		for (let i = 0; i < this.maximumLength; i++) {
+			this.data[this.translateRelativeIndexToAbsoluteIndex(i)].setX(this.data.getX() - timeStep);
+		}
+	}
 }
 
 // graph class which stores information about data and methods related to drawing graphs
@@ -503,15 +507,16 @@ class Graph {
 		} else {
 			toPlot = information["Velocity"];
 		}
-		const timeOfPlot = information["Time"];
-		this.maintainDataQueue();
-		this.enqueueData(new Position(timeOfPlot, toPlot));
+		const timeOfPlot = information["Time"]
+		this.queue.enqueueData(new Position(timeOfPlot, toPlot));
 		let position;
 		let positionNext;
-		for (let i = 0; i < this.getDataQueueLength() - 1; i++) {
+		let index;
+		for (let i = 0; i < this.queue.getLength() - 1; i++) {
+			index = this.queue.translateRelativeIndexToAbsoluteIndex(i);
 			ctx.beginPath();
-			position = this.translateDataToCanvasPlane(this.data[i]);
-			positionNext = this.translateDataToCanvasPlane(this.data[i + 1]);
+			position = this.translateDataToCanvasPlane(this.queue.data[index]); // <- crashes
+			positionNext = this.translateDataToCanvasPlane(this.queue.data[index + 1]);
 			if (this.isDataPointInBounds(position) && this.isDataPointInBounds(positionNext)) {
 				ctx.moveTo(position.getX(), position.getY());
 				ctx.lineTo(positionNext.getX(), positionNext.getY());
@@ -545,34 +550,4 @@ class Graph {
 		return (dataPointNext.getY() - dataPoint.getY()) / (dataPointNext.getX() - dataPoint.getX());
 	}
 
-	// data queue methods
-
-	maintainDataQueue() {
-		// if the data queue hits an abitrary maximum length the first data point is dequeued and then all points are moved back by one timeframe back on the plot.
-		if (this.isDataQueueFull()) {
-			// should implement a static list of size max, with each positions.x being the index*timeScale. A problem will 100% all the memory movement. Could instead implement circular.
-			this.dequeueData();
-			const timeStep = this.data[1].getX() - this.data[0].getX();
-			// moves back all data points by one data point
-			for (let i = 0; i < this.getDataQueueLength(); i++) {
-				this.data[i].setX(this.data[i].getX() - timeStep * this.scale.getX());
-			}
-		}
-	}
-
-	isDataQueueFull() {
-		return this.getDataQueueLength() >= this.maxQueueLength;
-	}
-
-	enqueueData(dataInput) {
-		this.data.push(dataInput);
-	}
-
-	dequeueData() {
-		this.data.shift();
-	}
-
-	getDataQueueLength() {
-		return this.data.length;
-	}
 }
