@@ -413,6 +413,43 @@ class Mouse {
 	}
 }
 
+// need to implement
+class GraphQueue {
+	constructor(maximumLength) {
+		this.data = [];
+		this.frontPointer = -1;
+		this.backPointer = 0;
+		this.maximumLength = maximumLength;
+	}
+
+	enqueueData(newData) {
+		if (this.isFull()) {
+			this.data[this.backPointer] = newData;
+			this.frontPointer = this.backPointer;
+			this.backPointer++;
+			return null;
+		}
+        this.frontPointer++;
+		this.data.push(newData);
+	}
+
+	isFull() {
+		return (this.backPointer + 1) % this.maximumLength == this.frontPointer;
+	}
+
+	translateRelativeIndexToAbsoluteIndex(index) {
+        const newIndex = (this.backPointer + index) % this.maximumLength;
+		return newIndex;
+	}
+
+    shiftItemXAxisLeft(){
+        const timeStep = this.data[this.backpointer+1]-this.data[this.backpointer];
+        for (let i = 0; i < this.maximumLength; i++){
+            this.data[this.translateRelativeIndexToAbsoluteIndex(i)].setX(this.data.getX() - timeStep);
+        }
+    }
+}
+
 // graph class which stores information about data and methods related to drawing graphs
 
 class Graph {
@@ -423,9 +460,14 @@ class Graph {
 		this.axisY = axisY;
 		this.scale = scale;
 		this.originPosition = originPosition; // indicates the quadrant of the canvas the graph resides in
-		this.previousDataPoint = this.translateToCanvasPlane(new Position());
-		this.data = []; // data property is a linear dynamic queue, allows old datapoints to be taken from graph while new ones are untouched
-		this.maxQueueLength = 100;
+		this.queue = new GraphQueue(100); // data property is a linear dynamic queue, allows old datapoints to be taken from graph while new ones are untouched
+	}
+
+	drawLine(ctx, initialPosition, finalPosition) {
+		ctx.beginPath();
+		ctx.moveTo(initialPosition.getX(), initialPosition.getY());
+		ctx.lineTo(finalPosition.getX(), finalPosition.getY());
+		ctx.stroke();
 	}
 
 	drawGraph(ctx) {
@@ -434,27 +476,15 @@ class Graph {
 		// drawing the graph axis
 		ctx.lineWidth = 2.5;
 		ctx.strokeStyle = "black";
-		ctx.beginPath();
-		ctx.moveTo(originCentre.getX() - this.width * 0.25, originCentre.getY());
-		ctx.lineTo(originCentre.getX() + this.width * 0.25, originCentre.getY());
-		ctx.stroke();
-		ctx.beginPath();
-		ctx.moveTo(originCentre.getX() - this.width * 0.25, originCentre.getY() - this.height * 0.25);
-		ctx.lineTo(originCentre.getX() - this.width * 0.25, originCentre.getY() + this.height * 0.25);
-		ctx.stroke();
+		this.drawLine(ctx, new Position(originCentre.getX() - this.width * 0.25, originCentre.getY()), new Position(originCentre.getX() + this.width * 0.25, originCentre.getY()));
+		this.drawLine(ctx, new Position(originCentre.getX() - this.width * 0.25, originCentre.getY() - this.height * 0.25), new Position(originCentre.getX() - this.width * 0.25, originCentre.getY() + this.height * 0.25));
 		// drawing boundaries between graphs
 		ctx.lineWidth = 5;
-		ctx.beginPath();
-		ctx.moveTo(originCentre.getX() - this.width * 0.25, originCentre.getY() - this.height * 0.25);
-		ctx.lineTo(originCentre.getX() + this.width * 0.25, originCentre.getY() - this.height * 0.25);
-		ctx.stroke();
-		ctx.beginPath();
-		ctx.moveTo(originCentre.getX() + this.width * 0.25, originCentre.getY() - this.height * 0.25);
-		ctx.lineTo(originCentre.getX() + this.width * 0.25, originCentre.getY() + this.height * 0.25);
-		ctx.stroke();
+		this.drawLine(ctx, new Position(originCentre.getX() - this.width * 0.25, originCentre.getY() - this.height * 0.25), new Position(originCentre.getX() + this.width * 0.25, originCentre.getY() - this.height * 0.25));
+		this.drawLine(ctx, new Position(originCentre.getX() + this.width * 0.25, originCentre.getY() - this.height * 0.25), new Position(originCentre.getX() + this.width * 0.25, originCentre.getY() + this.height * 0.25));
 		ctx.fontStyle = "30px Calibri";
 		ctx.fillStyle = "black";
-		const textPosition = this.translateToCanvasPlane(new Position((1 / 8) * this.width * 0.25, this.height * 0.25));
+		const textPosition = new Position(originCentre.getX() - this.width * 0.24, originCentre.getY() - this.height * (1.75 / 8));
 		ctx.fillText(this.axisY, textPosition.getX(), textPosition.getY());
 	}
 
@@ -480,8 +510,8 @@ class Graph {
 		let positionNext;
 		for (let i = 0; i < this.getDataQueueLength() - 1; i++) {
 			ctx.beginPath();
-			position = this.translateToCanvasPlane(this.data[i]);
-			positionNext = this.translateToCanvasPlane(this.data[i + 1]);
+			position = this.translateDataToCanvasPlane(this.data[i]);
+			positionNext = this.translateDataToCanvasPlane(this.data[i + 1]);
 			if (this.isDataPointInBounds(position) && this.isDataPointInBounds(positionNext)) {
 				ctx.moveTo(position.getX(), position.getY());
 				ctx.lineTo(positionNext.getX(), positionNext.getY());
@@ -490,8 +520,8 @@ class Graph {
 		}
 	}
 
-	// translates local graph coordinates to the canvas coordinates system.
-	translateToCanvasPlane(data) {
+	// translates data point to the canvas coordinates system.
+	translateDataToCanvasPlane(data) {
 		const position = new Position(this.originPosition.getX() - 0.25 * this.width + data.getX() * this.scale.getX(), this.originPosition.getY() - data.getY() * this.scale.getY());
 		return position;
 	}
@@ -522,10 +552,10 @@ class Graph {
 		if (this.isDataQueueFull()) {
 			// should implement a static list of size max, with each positions.x being the index*timeScale. A problem will 100% all the memory movement. Could instead implement circular.
 			this.dequeueData();
-			const timeFrame = 0.1;
+			const timeStep = this.data[1].getX() - this.data[0].getX();
 			// moves back all data points by one data point
 			for (let i = 0; i < this.getDataQueueLength(); i++) {
-				this.data[i].setX(this.data[i].getX() - timeFrame);
+				this.data[i].setX(this.data[i].getX() - timeStep * this.scale.getX());
 			}
 		}
 	}

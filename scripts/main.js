@@ -1,10 +1,12 @@
 // default settings when the simulation is ran
 const Settings = {
-	Resolution: [640, 480],
+	"Resolution": [640, 480],
 	"Force Scalar": 5,
 	"Size Scalar": 20,
 	"Buffer Frames": 0,
 };
+
+// CONSTANTS
 
 const RESOLUTION = Settings["Resolution"];
 const SIZESCALE = Settings["Size Scalar"];
@@ -31,7 +33,7 @@ function init() {
 		new Graph(width, height, "Displacement", "Time", new Vector2(1, 1), new Position(width * 0.25, height * 0.25)),
 		new Graph(width, height, "Velocity", "Time", new Vector2(1, 1), new Position(width * 0.75, height * 0.25)),
 		new Graph(width, height, "Acceleration", "Time", new Vector2(1, 1), new Position(width * 0.25, height * 0.75)),
-		new Graph(width, height, "Kinetic Energy", "Time", new Vector2(1, 10 ** -4), new Position(width * 0.75, height * 0.75)),
+		new Graph(width, height, "Kinetic Energy", "Time", new Vector2(1, 1/10000), new Position(width * 0.75, height * 0.75)),
 	];
 	clock(ctxSim, ctxGraphs, graphs, width, height);
 }
@@ -294,10 +296,10 @@ function pauseSim() {
 		const height = 480; // Resolution/dimensions of canvas displayed in.
 		const width = 640;
 		const graphs = [
-			new Graph(width / 2, height / 2, "Displacement", "Time", 1, [width * 0.25, height * 0.25]),
-			new Graph(width / 2, height / 2, "Velocity", "Time", 1, [width * 0.75, height * 0.25]),
-			new Graph(width / 2, height / 2, "Acceleration", "Time", 1, [width * 0.25, height * 0.75]),
-			new Graph(width / 2, height / 2, "Kinetic Energy", "Time", 1, [width * 0.75, height * 0.75]),
+			new Graph(width, height, "Displacement", "Time", new Vector2(1,1), new Position(width * 0.25, height * 0.25)),
+			new Graph(width, height, "Velocity", "Time", new Vector2(1,1), new Position(width * 0.75, height * 0.25)),
+			new Graph(width, height, "Acceleration", "Time", new Vector2(1,1), new Position(width * 0.25, height * 0.75)),
+			new Graph(width, height, "Kinetic Energy", "Time", new Vector2(1,1/10000), new Position(width * 0.75, height * 0.75)),
 		];
 		clock(ctxSim, ctxGraphs, graphs, width, height);
 	}
@@ -313,7 +315,6 @@ function tgl() {
 	}
 }
 
-// function which reinitilaizes the
 function reInit() {
 	clearInterval(window.interval);
 	const c = document.getElementById("Simulation");
@@ -344,33 +345,24 @@ document.addEventListener("mouseup", onMouseClick);
 window.onload = init;
 
 // bugs:
-// when pausing simulation type thrown in graph translation method.
 // bugs with user input of force on objects, again :(.
 // fix graphs going off of the borders of the graphs, also horrible lag when graphs get full for some reason, rereview code for dataqueues basically.
 
 // TO ADD ========================================================================
 
-// GRAPHS:
 
-// drop down menus to decide on whether to plot the absolute value, x or y components of vectors
-// add axis titles and scales.
-// add an autoscaling algorithm for the graphing -- very optional.
-
-// SIMULATION:
-
-// work on optimizing the algorithms
-//   namely the collision detection and calculating resultant velocities from collision (a lot of cosine operation).
-// add immovable object placement (MAYBE MOUSE INPUT?)
-// add moveable object placement using mouse.
-// add more preset situations.
-
+// TOP PRIORITY AFTER BUGS ARE FIXED
 // Presets (Mr Adams, Helpful for showing helpful teaching):
 // 3 (or 2) Balls decreasing size on top of each other, falling freely.
 // 1:1 mass, 1:2 mass, 1:1 mass but with velocity 2:1. Simple ratios of masses and velocities in the same plane, without gravity.
 // Atmosphere simulation - particles under gravity with different masses with elastic collision.
 // Check how long it takes in diffusion for all particles to be in the canvas 0.99 by 0.99 then 0.98 by 0.98 then decreasing by 0.01, need meaning scales. (silly)
-//
 
-// add auto scaler to graph using highest datapoint recorded (within reason) as the max y axis value.
 
-// Suggested to add databases to store the graphed values of some simulations to analyse data, adds use of databases.
+//SECOND PRIORITY (DO AT HOME I NEED DUAL MONITOR FOR THIS)
+// GRAPHS:
+// drop down menus to decide on whether to plot the absolute value, x or y components of vectors
+// add axis titles and scales.
+// add an autoscaling algorithm for the graphing.	
+
+// ADD ERROR HANDLING (I DONT KNOW WHAT KIND, MAYBE TRY CHECKING IF THE NEGATIVE DISCRIMINANT ERROR STILL EXISTS IN THIS)
