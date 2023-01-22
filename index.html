@@ -1,114 +1,127 @@
 <!DOCTYPE html>
 <html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="stylesheet" href="style.css" />
+		<title>NEA</title>
+		<script src="./modules/jquery.js"></script>
+		<script src="./scripts/classes.js"></script>
+	</head>
 
-<head>
-	<meta charset="UTF-8" />
-	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
-	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<link rel="stylesheet" href="style.css" />
-	<title>NEA</title>
-	<script src="./modules/jquery.js"></script>
-	<script src="./modules/classes.js"></script>
-</head>
-
-<body>
-	<h1>2D Newtonian motion simulation</h1>
-	<!-- 
-      Create canvas' for simulator and the data logger
-    	-->
-	<div class="canvas-container">
-		<canvas id="Simulation" width="640" height="480" style="border: 5px #000000"> </canvas>
-		<canvas id="Graphs" width="640" height="480" style="border: 5px #000000"></canvas>
-	</div>
-	<br />
-	<!-- 
-      All following elements are to do with user input fields and text
-     	-->
-	<div class="user-inputs">
-		<div class="preset-options">
-			<label for="presets">Presets</label>
-			<select name="presets" id="presets">
-				<option value="none">Select a preset</option>
-				<option value="diffusion">Diffusion</option>
-				<option value="WIP">Ask adams for more suggestions :)</option>
-			</select>
-			<label for="force-enabled">Enable force input?</label>
-			<input type="checkbox" name="force-enabled" id="force-enabled" checked />
-			<button id="preset-btn">Load Preset</button>
-		</div>
-		<div class="constants">
-			<label for="G">Gravitational Field Strength:</label>
-			<input type="number" name="G" value="9.81" min="0" step="0.001" id="gravity" />ms<sup>2</sup><br />
-			<label for="densityOA">Density Of Air:</label>
-			<input type="number" name="D_A" value="1.225" min="0" step="0.001" id="densityOA" />
-			kgm<sup>-3</sup><br />
-			<label for="RATE">Time Scale:</label>
-			<input type="number" name="RATE" value="1" min="0" step="0.001" id="scale" />
-			s<sup>-1</sup><br />
-			<label for="restit">Coefficient of Restitution</label>
-			<input type="number" name="E" value="1" min="0" step="0.001" id="restit" /><br />
-		</div>
-		<button id="refresh-btn">Refresh constants</button>
-		<button id="refresh-sim">Refresh simulation</button>
-		<button id="pause-btn" value="OFF" onclick="tgl();">Pause simulation</button>
-		<br />
-		<div class="object-inputs">
-			<label for="n-objects">Number of objects to add</label>
-			<input type="number" value="1" min="0" step="1" id="n-objects" />
-			<label for="object-type">Type of object</label>
-			<select name="Object type" id="object-type" class="obj-type">
-				<option value="circle" type="text">Circle</option>
-				<option value="rectangle" type="text">Rectangle</option>
-			</select>
-			<br />
-			<label for="colour">Colour of object</label>
-			<select name="colour" id="colour">
-				<option value="#FF0000" type="text">Red</option>
-				<option value="#FFFFFF" type="text">White</option>
-				<option value="#000000" type="text">Black</option>
-			</select>
-			<br />
-			<div class="radius-input">
-				<label for="radius">Input radius</label>
-				<input type="number" value="1" min="0" step="0.01" id="radius" />
+	<body>
+		<h1>2D Newtonian motion simulation</h1>
+		<div class="column">
+			<canvas id="Simulation" width="640" height="480" style="border: 5px #000000"> </canvas>
+			<div class="user-inputs">
+				<div class="preset-options">
+					<label for="presets">Presets</label>
+					<select id="presets">
+						<option value="none">Select a preset</option>
+						<option value="diffusion">Diffusion</option>
+						<option value="WIP">Ask adams for more suggestions :)</option>
+					</select>
+					<label for="force-enabled">Enable force input?</label>
+					<input type="checkbox" id="force-enabled" checked />
+					<button id="preset-btn">Load Preset</button>
+				</div>
+				<div class="constants">
+					<label for="G">Gravitational Field Strength:</label>
+					<input type="number" value="9.81" min="0" step="0.001" id="gravity" />ms<sup>2</sup><br />
+					<label for="densityOA">Density Of Air:</label>
+					<input type="number" value="1.225" min="0" step="0.001" id="densityOA" />
+					kgm<sup>-3</sup><br />
+					<label for="RATE">Time Scale:</label>
+					<input type="number" value="1" min="0" step="0.001" id="scale" />
+					s<sup>-1</sup><br />
+					<label for="restit">Coefficient of Restitution</label>
+					<input type="number" value="1" min="0" step="0.001" id="restit" /><br />
+				</div>
+				<button id="refresh-btn">Refresh constants</button>
+				<button id="refresh-sim">Refresh simulation</button>
+				<button id="pause-btn" value="OFF" onclick="tgl();">Pause simulation</button>
+				<br />
+				<div class="object-inputs">
+					<label for="n-objects">Number of objects to add</label>
+					<input type="number" value="1" min="0" step="1" id="n-objects" />
+					<label for="object-type">Type of object</label>
+					<select id="object-type" class="obj-type">
+						<option value="circle" type="text">Circle</option>
+						<option value="rectangle" type="text">Rectangle</option>
+					</select>
+					<br />
+					<label for="colour">Colour of object</label>
+					<select id="colour">
+						<option value="#FF0000" type="text">Red</option>
+						<option value="#FFFFFF" type="text">White</option>
+						<option value="#000000" type="text">Black</option>
+					</select>
+					<br />
+					<div class="radius-input">
+						<label for="radius">Input radius</label>
+						<input type="number" value="1" min="0" step="0.01" id="radius" />
+					</div>
+					<div class="rect-input">
+						<label for="width">Input width</label>
+						<input type="number" value="1" min="0" step="0.01" id="width" />m,
+						<label for="height">Input height</label>
+						<input type="number" value="1" min="0" step="0.01" id="height" />m
+					</div>
+					<label for="density"> Density of object </label>
+					<input value="1" id="density" step="0.01" min="0" type="number" />kgm<sup>-3</sup>
+					<br />
+					<label for="position-x">Initial Position of object</label>
+					x=
+					<input value="0" step="0.01" min="0" max="640" id="position-x" type="number" />m, y= <input value="0" step="0.01" min="0" max="426" id="position-y" type="number" />m
+					<br />
+					<label for="velocity-x">Initial Velocity of object</label>
+					x=
+					<input value="0" step="0.01" min="-200" max="200" id="velocity-x" type="number" />ms<sup>-1</sup> , y= <input value="0" step="0.01" min="-200" max="200" id="velocity-y" type="number" />ms<sup>-1</sup>
+					<br />
+					<label for="acc-x">Initial Acceleration of object</label>
+					x=
+					<input value="0" step="0.01" min="-200" max="200" id="acc-x" type="number" />ms<sup>-2</sup> , y= <input value="0" step="0.01" min="-200" max="200" id="acc-y" type="number" />ms<sup>-2</sup>
+					<br />
+					<button id="add-object-btn">Add Object</button><br />
+				</div>
 			</div>
-			<div class="rect-input">
-				<label for="width">Input width</label>
-				<input type="number" value="1" min="0" step="0.01" id="width" />m,
-				<label for="height">Input height</label>
-				<input type="number" value="1" min="0" step="0.01" id="height" />m
-			</div>
-			<label for="density"> Density of object </label>
-			<input value="1" id="density" step="0.01" min="0" type="number" />kgm<sup>-3</sup>
-			<br />
-			<label for="position-x">Initial Position of object</label>
-			x=
-			<input value="0" step="0.01" min="0" max="640" id="position-x" type="number" />m, y= <input value="0"
-				step="0.01" min="0" max="426" id="position-y" type="number" />m
-			<br />
-			<label for="velocity-x">Initial Velocity of object</label>
-			x=
-			<input value="0" step="0.01" min="-200" max="200" id="velocity-x" type="number" />ms<sup>-1</sup> , y=
-			<input value="0" step="0.01" min="-200" max="200" id="velocity-y" type="number" />ms<sup>-1</sup>
-			<br />
-			<label for="acc-x">Initial Acceleration of object</label>
-			x=
-			<input value="0" step="0.01" min="-200" max="200" id="acc-x" type="number" />ms<sup>-2</sup> , y= <input
-				value="0" step="0.01" min="-200" max="200" id="acc-y" type="number" />ms<sup>-2</sup>
-			<br />
-			<button id="add-object-btn">Add Object</button><br />
 		</div>
-	</div>
-	<!-- 
-      The following is is the documentation for the use of the webapp
-     -->
-	<div class="instructions">
-		<h1>Instructions for use:</h1>
-		<br />
-		<p>Enter instructions here</p>
-	</div>
-	<script src="./scripts/jquery_handling.js"></script>
-	<script src="./scripts/main.js"></script>
-</body>
-
+		<div class="column">
+			<canvas id="Graphs" width="640" height="480" style="border: 5px #000000"></canvas>
+			<div class="graph-inputs">
+				<div class="top-graph-inputs">
+					<label for="displacement-scale-x">X scaling for displacement graph</label><br />
+					<input type="number" id="displacement-scale-x" /><br />
+					<label for="displacement-scale-y">Y scaling for displacement graph</label><br />
+					<input type="number" id="displacement-scale-y" /><br />
+				</div>
+				<div class="velocity-inputs">
+					<label for="velocity-scale-x">X scaling for velocity graph</label><br />
+					<input type="number" id="velocity-scale-x" /><br />
+					<label for="velocity-scale-y">Y scaling for velocity graph</label><br />
+					<input type="number" id="velocity-scale-y" /><br />
+				</div>
+				<div class="acceleration-inputs">
+					<label for="acceleration-scale-x">X scaling for acceleration graph</label><br />
+					<input type="number" id="acceleration-scale-x" /><br />
+					<label for="acceleration-scale-y">Y scaling for acceleration graph</label><br />
+					<input type="number" id="acceleration-scale-y" /><br />
+				</div>
+				<label for="kinetic-energy-scale-x">X scaling for kinetic energy graph</label><br />
+				<input type="number" id="kinetic-energy-scale-x" /><br />
+				<label for="kinetic-energy-scale-y">Y scaling for kinetic energy graph</label><br />
+				<input type="number" id="kinetic-energy-scale-y" /><br />
+			</div>
+		</div>
+		<div class="column">
+			<div class="instructions">
+				<h1>Instructions for use:</h1>
+				<br />
+				<p>Enter instructions here</p>
+			</div>
+		</div>
+		<script src="./scripts/jquery_handling.js"></script>
+		<script src="./scripts/main.js"></script>
+	</body>
 </html>

@@ -220,7 +220,7 @@ class Object {
 	// fixes problem of object phasing out of simulation due to taking up the same point in 2d space.
 	fixSamePointProblem(other) {
 		if (this.position == other.getPosition()) {
-			this.position.setX(this.position.getX() + 1);
+			this.position.setX(this.position.getX() + this.radius);
 		}
 	}
 
@@ -262,6 +262,7 @@ class Object {
 			thisFinalVelocityCentrePlane = (-b + Math.sqrt(b ** 2 - 4 * a * c)) / (2 * a);
 			otherFinalVelocityCentrePlane = (sumMomentum - this.mass * thisFinalVelocityCentrePlane) / otherObject.getMass();
 		} else {
+			alert("Negative discriminant error")
 			thisFinalVelocityCentrePlane = this.velocity.getMag() * thisCosCentrePlane;
 			otherFinalVelocityCentrePlane = otherObject.getVelocity().getMag() * otherCosCentrePlane;
 		}
@@ -413,46 +414,56 @@ class Mouse {
 	}
 }
 
-// need to implement
 class GraphQueue {
 	constructor(maximumLength) {
-		this.data = [];
 		this.frontPointer = -1;
-		this.backPointer = 0;
+		this.backPointer = -1;
 		this.maximumLength = maximumLength;
+		this.data = [];
 	}
 
 	enqueueData(newData) {
 		if (this.isFull()) {
-			this.data[this.backPointer] = newData;
-			this.frontPointer = this.backPointer;
-			this.backPointer++;
+			this.dequeueData();
+		}
+		this.backPointer = (this.backPointer + 1) % this.maximumLength;
+		this.data[this.backPointer] = newData;
+		if (this.frontPointer == -1) {
+			this.frontPointer = 0;
+		}
+	}
+
+	dequeueData() {
+		if (this.isEmpty()) {
 			return null;
 		}
-		this.frontPointer++;
-		this.data.push(newData);
+		if (this.frontPointer == this.backPointer) {
+			this.frontPointer = -1;
+			this.backPointer = -1;
+			return null;
+		}
+		this.frontPointer = (this.frontPointer + 1) % this.maximumLength;
 	}
 
 	isFull() {
 		return (this.backPointer + 1) % this.maximumLength == this.frontPointer;
 	}
 
-	translateRelativeIndexToAbsoluteIndex(index) {
-		const newIndex = (this.backPointer + index) % this.maximumLength;
-		return newIndex;
+	isEmpty() {
+		return this.frontPointer == -1;
 	}
 
 	getLength() {
 		return this.data.length;
 	}
 
-	shiftItemXAxisLeft() {
-		const timeStep = this.data[this.backpointer + 1] - this.data[this.backpointer];
-		for (let i = 0; i < this.maximumLength; i++) {
-			this.data[this.translateRelativeIndexToAbsoluteIndex(i)].setX(this.data.getX() - timeStep);
-		}
+	// translates from absolute index to an index position relative to the pointer positions in the
+	getQueueIndex(index) {
+		const newIndex = (this.frontPointer + index) % this.maximumLength;
+		return newIndex;
 	}
 }
+
 
 // graph class which stores information about data and methods related to drawing graphs
 
@@ -464,7 +475,8 @@ class Graph {
 		this.axisY = axisY;
 		this.scale = scale;
 		this.originPosition = originPosition; // indicates the quadrant of the canvas the graph resides in
-		this.queue = new GraphQueue(100); // data property is a linear dynamic queue, allows old datapoints to be taken from graph while new ones are untouched
+		this.queue = new GraphQueue(2500); // queue property is a circular queue, allows old datapoints to be taken from graph while new ones are untouched.
+		// the length of the queue should be variable during runtime as x scale changes
 	}
 
 	drawLine(ctx, initialPosition, finalPosition) {
@@ -476,19 +488,26 @@ class Graph {
 
 	drawGraph(ctx) {
 		// object storing the origin position for each sector
-		const originCentre = this.originPosition;
+		const lineCoordinates = { 
+			middleLeft: new Position(this.originPosition.getX() - this.width * 0.25, this.originPosition.getY()), 
+			middleRight: new Position(this.originPosition.getX() + this.width * 0.25, this.originPosition.getY()),
+			topLeft: new Position(this.originPosition.getX() - this.width * 0.25, this.originPosition.getY() - this.height * 0.25), 
+			topRight: new Position(this.originPosition.getX() + this.width * 0.25, this.originPosition.getY() - this.height * 0.25),
+			bottomRight: new Position(this.originPosition.getX() + this.width * 0.25, this.originPosition.getY() + this.height * 0.25),
+			bottomLeft: new Position(this.originPosition.getX() - this.width * 0.25, this.originPosition.getY() + this.height * 0.25)
+		};
 		// drawing the graph axis
 		ctx.lineWidth = 2.5;
 		ctx.strokeStyle = "black";
-		this.drawLine(ctx, new Position(originCentre.getX() - this.width * 0.25, originCentre.getY()), new Position(originCentre.getX() + this.width * 0.25, originCentre.getY()));
-		this.drawLine(ctx, new Position(originCentre.getX() - this.width * 0.25, originCentre.getY() - this.height * 0.25), new Position(originCentre.getX() - this.width * 0.25, originCentre.getY() + this.height * 0.25));
+		this.drawLine(ctx, lineCoordinates.middleLeft, lineCoordinates.middleRight);
+		this.drawLine(ctx, lineCoordinates.topLeft, lineCoordinates.topRight);
 		// drawing boundaries between graphs
 		ctx.lineWidth = 5;
-		this.drawLine(ctx, new Position(originCentre.getX() - this.width * 0.25, originCentre.getY() - this.height * 0.25), new Position(originCentre.getX() + this.width * 0.25, originCentre.getY() - this.height * 0.25));
-		this.drawLine(ctx, new Position(originCentre.getX() + this.width * 0.25, originCentre.getY() - this.height * 0.25), new Position(originCentre.getX() + this.width * 0.25, originCentre.getY() + this.height * 0.25));
+		this.drawLine(ctx, lineCoordinates.topLeft, lineCoordinates.bottomLeft);
+		this.drawLine(ctx, lineCoordinates.topRight, lineCoordinates.bottomRight);
 		ctx.fontStyle = "30px Calibri";
 		ctx.fillStyle = "black";
-		const textPosition = new Position(originCentre.getX() - this.width * 0.24, originCentre.getY() - this.height * (1.75 / 8));
+		const textPosition = new Position(this.originPosition.getX() - this.width * 0.24, this.originPosition.getY() - this.height * (1.75 / 8));
 		ctx.fillText(this.axisY, textPosition.getX(), textPosition.getY());
 	}
 
@@ -505,35 +524,48 @@ class Graph {
 		if (this.axisY != "Acceleration") {
 			toPlot = information[this.axisY];
 		} else {
-			toPlot = information["Velocity"];
+			toPlot = information.Velocity;
 		}
-		const timeOfPlot = information["Time"]
-		this.queue.enqueueData(new Position(timeOfPlot, toPlot));
+		const timeAtAxis = information.Time.toFixed(3);
+		this.queue.enqueueData(toPlot);
 		let position;
 		let positionNext;
 		let index;
+		let indexNext;
+		const timeStepString = document.getElementById("scale").value
+		const timeStep = (parseFloat(timeStepString)/10).toFixed(3); // rounded to 3 dp.
 		for (let i = 0; i < this.queue.getLength() - 1; i++) {
-			index = this.queue.translateRelativeIndexToAbsoluteIndex(i);
-			ctx.beginPath();
-			position = this.translateDataToCanvasPlane(this.queue.data[index]); // <- crashes
-			positionNext = this.translateDataToCanvasPlane(this.queue.data[index + 1]);
+			index = this.queue.getQueueIndex(i);
+			indexNext = this.queue.getQueueIndex(i+1);
+			position = this.translateDataToCanvasPlane(new Position((i+1)*timeStep, this.queue.data[index]));
+			positionNext = this.translateDataToCanvasPlane(new Position((i+2)*timeStep, this.queue.data[indexNext]));
 			if (this.isDataPointInBounds(position) && this.isDataPointInBounds(positionNext)) {
-				ctx.moveTo(position.getX(), position.getY());
-				ctx.lineTo(positionNext.getX(), positionNext.getY());
-				ctx.stroke();
+				this.drawLine(ctx, position, positionNext);
 			}
 		}
 	}
 
+	automaticallyScaleYAxis(){
+		return null;
+	}
+
 	// translates data point to the canvas coordinates system.
 	translateDataToCanvasPlane(data) {
-		const position = new Position(this.originPosition.getX() - 0.25 * this.width + data.getX() * this.scale.getX(), this.originPosition.getY() - data.getY() * this.scale.getY());
+		const positionX = this.originPosition.getX() - 0.25 * this.width + data.getX() * this.scale.getX();
+		const positionY = this.originPosition.getY() - data.getY() * this.scale.getY();
+		const position = new Position(positionX, positionY);
 		return position;
 	}
 
 	// checks if datapoint is in boundary to be plotted, if not then
 	isDataPointInBounds(dataPoint) {
-		if (this.originPosition.getY() - 0.25 * this.height < dataPoint.getY() && this.originPosition.getY() + 0.25 * this.height > dataPoint.getY()) {
+		const boundaries = {
+			lowerYBoundary: this.originPosition.getY() - 0.25 * this.height,
+			upperYBoundary : this.originPosition.getY() + 0.25 * this.height,
+			lowerXBoundary : this.originPosition.getX() - 0.25 * this.width,
+			upperXBoundary : this.originPosition.getX() + 0.25 * this.width};
+		if ((boundaries.lowerYBoundary < dataPoint.getY()) && (boundaries.upperYBoundary > dataPoint.getY())
+		 && (boundaries.lowerXBoundary < dataPoint.getX()) && (boundaries.upperXBoundary > dataPoint.getX())) {
 			return true;
 		}
 		return false;
@@ -549,5 +581,4 @@ class Graph {
 	differentiate(dataPoint, dataPointNext) {
 		return (dataPointNext.getY() - dataPoint.getY()) / (dataPointNext.getX() - dataPoint.getX());
 	}
-
 }

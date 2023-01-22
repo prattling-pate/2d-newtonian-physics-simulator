@@ -7,6 +7,10 @@
     font-family: "Trebuchet MS", sans-serif;
   }
 
+  .graph-inputs {
+    width: 250px;
+  }
+
   .constants {
     border: 1px solid black;
     width: 550px;
@@ -17,6 +21,11 @@
     width: 550px;
   }
 
-  .canvas-container {
+  .column {
+    display: inline-grid;
+    float: left;
+  }
+
+  .simulation-canvas-containter {
     display: inline-block;
   }
