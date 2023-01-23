@@ -17,6 +17,7 @@ const FORCESCALE = Settings["Force Scalar"];
 const mouse = new Mouse();
 var constants = getConstants();
 var objects;
+var graphs;
 
 // CORE FUNCTIONS--------
 
@@ -29,22 +30,22 @@ function init() {
 	const ctxGraphs = graphsCanvas.getContext("2d");
 	const height = 480; // Resolution/dimensions of canvas displayed in.
 	const width = 640;
-	const graphs = [
+	graphs = [
 		new Graph(width, height, "Displacement", "Time", new Position(width * 0.25, height * 0.25)),
 		new Graph(width, height, "Velocity", "Time", new Position(width * 0.75, height * 0.25)),
 		new Graph(width, height, "Acceleration", "Time", new Position(width * 0.25, height * 0.75)),
 		new Graph(width, height, "Kinetic Energy", "Time", new Position(width * 0.75, height * 0.75)),
 	];
-	clock(ctxSim, ctxGraphs, graphs, width, height);
+	clock(ctxSim, ctxGraphs, width, height);
 }
 
 // this function runs the update every 10ms using an interval function, this interval loops the update function which updates the positions of all balls in the animation.
-function clock(ctxSim, ctxGraphs, graphs, width, height) {
-	window.interval = setInterval(update, 16.67, ctxSim, ctxGraphs, graphs, width, height);
+function clock(ctxSim, ctxGraphs, width, height) {
+	window.interval = setInterval(update, 16.67, ctxSim, ctxGraphs, width, height);
 }
 
 // function which draws the simulations current frame using the canvas drawing functions.
-function update(ctxSim, ctxGraphs, graphs, width, height) {
+function update(ctxSim, ctxGraphs, width, height) {
 	// simulation drawing---------------------
 	ctxSim.fillStyle = "#89CFF0";
 	ctxSim.fillRect(0, 0, width, height);
@@ -91,30 +92,31 @@ function update(ctxSim, ctxGraphs, graphs, width, height) {
 			mouse.addForceOnObject(object);
 		}
 	}
-	
+}
+
+function getInputtedObject() {
+	let newObj;
+	const shape = document.getElementById("object-type").value;
+	const colour = document.getElementById("colour").value;
+	const density = getElementFloatValue("density");
+	const position = new Position(getElementFloatValue("position-x"), RESOLUTION[1] - (getElementFloatValue("position-y")+(1/9)*RESOLUTION[1]));
+	const velocity = new Velocity(getElementFloatValue("velocity-x"), -getElementFloatValue("velocity-y"));
+	const acceleration = new Acceleration(getElementFloatValue("acceleration-x"), -getElementFloatValue("acceleration-y"));
+	if (shape == "circle") {
+		const radius = getElementFloatValue("radius");
+		newObj = new Circle(radius, density, colour, velocity, acceleration, position);
+	} else {
+		const width = getElementFloatValue("width");
+		const height = getElementFloatValue("height");
+		newObj = new Rectangle(height, width, density, colour, velocity, acceleration, position);
+	}
+	return newObj;
 }
 
 // adding object function which grabs from the input fields on the html page to create an object of the given parameters.
 function addInputObject() {
-	let newObj;
-	const shape = document.getElementById("object-type").value;
-	const colour = document.getElementById("colour").value;
-	const density = parseFloat(document.getElementById("density").value);
-	const position = new Position(parseFloat(document.getElementById("position-x").value), parseFloat(document.getElementById("position-y").value));
-	const velocity = new Velocity(parseFloat(document.getElementById("velocity-x").value), parseFloat(document.getElementById("velocity-y").value));
-	const acceleration = new Acceleration(parseFloat(document.getElementById("acc-x").value), parseFloat(document.getElementById("acc-y").value));
-	if (shape == "circle") {
-		const radius = parseFloat(document.getElementById("radius").value);
-		newObj = new Circle(radius, density, colour, velocity, acceleration, position);
-	} else {
-		const width = parseFloat(document.getElementById("width").value);
-		const height = parseFloat(document.getElementById("height").value);
-		newObj = new Rectangle(height, width, density, colour, velocity, acceleration, position);
-	}
-	const n = parseInt(document.getElementById("n-objects").value);
-	for (let i = 0; i < n; i++) {
-		objects.push(newObj);
-	}
+	const newObject = getInputtedObject();
+	objects.push(newObject);
 }
 
 // this functions draws the given object, differentiating between methods of drawing using the object.shape property of the object class.
@@ -156,34 +158,22 @@ function setInputFieldsToNewConstants(E, G, T, P, input) {
 	document.getElementById("force-enabled").checked = input;
 }
 
+
+
 function presetConstants(preset) {
-	let E;
-	let G;
-	let T;
-	let P;
-	switch (preset) {
-		case "diffusion":
-			E = 1;
-			G = 0;
-			T = 0.1;
-			P = 0;
-			input = false;
-			break;
-		default:
-			E = 1;
-			G = 9.81;
-			T = 0.1;
-			P = 1.225;
-			input = true;
-			break;
-	}
-	window.constants = {
-		CoeffRest: E,
-		GravitationalFieldStrength: G,
-		TimeScale: T,
-		DensityOfAir: P,
+	const presetConstants = {
+		diffusion: [1, 0, 0.1, 0, false],
+		"atmospheric-diffusion": [1, 9.81, 0.1, 0, false],
+		default: [1, 9.81, 0.1, 1.225, true]
 	};
-	setInputFieldsToNewConstants(E, G, T, P, input);
+	const constants = presetConstants[preset];
+	window.constants = {
+		CoeffRest: constants[0],
+		GravitationalFieldStrength: constants[1],
+		TimeScale: constants[2],
+		DensityOfAir: constants[3],
+	};
+	setInputFieldsToNewConstants(constants[0], constants[1], constants[2], constants[3], constants[4]);
 }
 
 function getPresetObjectList(preset) {
@@ -207,6 +197,29 @@ function getPresetObjectList(preset) {
 			}
 			break;
 		case "atmospheric-diffusion":
+			const possibleMasses = [5,10,15]; 
+			let sign;
+			for (let i = 0; i < 66; i++) {
+				// randomly decides if the y velocity will be upwards or downwards.
+				sign = generateRandomSign();
+				presetObjectList.push(
+					new Circle(5, possibleMasses[0], "red", new Velocity(sign * generateRandomFloat(0, 50), sign * generateRandomFloat(0, 50)), new Acceleration(), new Position(generateRandomFloat(0, RESOLUTION[0]), generateRandomFloat(0, RESOLUTION[1])))
+				);
+			}
+			for (let i = 0; i < 66; i++) {
+				// randomly decides if the y velocity will be upwards or downwards.
+				sign = generateRandomSign();
+				presetObjectList.push(
+					new Circle(5, possibleMasses[1], "blue", new Velocity(sign * generateRandomFloat(0, 50), sign * generateRandomFloat(0, 50)), new Acceleration(), new Position(generateRandomFloat(0, RESOLUTION[0]), generateRandomFloat(0, RESOLUTION[1])))
+				);
+			}
+			for (let i = 0; i < 66; i++) {
+				// randomly decides if the y velocity will be upwards or downwards.
+				sign = generateRandomSign();
+				presetObjectList.push(
+					new Circle(5, possibleMasses[2], "green", new Velocity(sign * generateRandomFloat(0, 50), sign * generateRandomFloat(0, 50)), new Acceleration(), new Position(generateRandomFloat(0, RESOLUTION[0]), generateRandomFloat(0, RESOLUTION[1])))
+				);
+			}
 			break;
 		case "1:1-mass-collision":
 			break;
@@ -266,10 +279,10 @@ function onMouseClick(event) {
 
 // Grabs the values from each input field in order to update the constants array to user selected values.
 function getConstants() {
-	const G = parseFloat(document.getElementById("gravity").value);
-	const DENSITYOFAIR = parseFloat(document.getElementById("densityOA").value);
-	const RATE = parseFloat(document.getElementById("scale").value / 10);
-	const E = parseFloat(document.getElementById("restit").value);
+	const G = getElementFloatValue("gravity");
+	const DENSITYOFAIR = getElementFloatValue("densityOA");
+	const RATE = getElementFloatValue("scale") / 10;
+	const E = getElementFloatValue("restit");
 	const constants = {
 		CoeffRest: E,
 		GravitationalFieldStrength: G,
@@ -297,13 +310,36 @@ function pauseSim() {
 		const ctxGraphs = canvasGraph.getContext("2d");
 		const height = 480; // Resolution/dimensions of canvas displayed in.
 		const width = 640;
-		const graphs = [
-			new Graph(width, height, "Displacement", "Time", new Position(width * 0.25, height * 0.25)),
-			new Graph(width, height, "Velocity", "Time", new Position(width * 0.75, height * 0.25)),
-			new Graph(width, height, "Acceleration", "Time", new Position(width * 0.25, height * 0.75)),
-			new Graph(width, height, "Kinetic Energy", "Time", new Position(width * 0.75, height * 0.75)),
-		];
-		clock(ctxSim, ctxGraphs, graphs, width, height);
+		clock(ctxSim, ctxGraphs, width, height);
+	}
+}
+
+ function getElementFloatValue(elementName) {
+	const valueString = document.getElementById(elementName).value;
+	const valueFloat = parseFloat(valueString);
+	return valueFloat;
+}
+
+function refreshGraphScaling() {
+	let isAutoScalingY = false;
+	if (document.getElementById("auto-scale-y").checked){
+		isAutoScalingY = true;
+	}
+	const information = {
+		Displacement: new Vector2(getElementFloatValue("displacement-scale-x"), getElementFloatValue("displacement-scale-y")),
+		Velocity: new Vector2(getElementFloatValue("velocity-scale-x"), getElementFloatValue("velocity-scale-y")),
+		Acceleration: new Vector2(getElementFloatValue("acceleration-scale-x"), getElementFloatValue("acceleration-scale-y")),
+		"Kinetic Energy": new Vector2(getElementFloatValue("kinetic-energy-scale-x"), getElementFloatValue("kinetic-energy-scale-y"))};
+	let scales;
+	for (const graph of graphs) {
+		scales = information[graph.getAxisY()];
+		if (!(isAutoScalingY)){
+			graph.setScale(scales.getX(), scales.getY());
+		}
+		else {
+			graph.setAutomaticScale();
+			graph.setScale(x=scales.getX())
+		}
 	}
 }
 
@@ -337,6 +373,8 @@ document.getElementById("refresh-sim").addEventListener("click", reInit);
 
 document.getElementById("add-object-btn").addEventListener("click", addInputObject);
 
+document.getElementById("refresh-scaling-btn").addEventListener("click", refreshGraphScaling);
+
 document.addEventListener("mousemove", updateMousePos);
 
 document.addEventListener("mousedown", onMouseClick);
@@ -346,9 +384,10 @@ document.addEventListener("mouseup", onMouseClick);
 // when the page is loaded the init function is ran.
 window.onload = init;
 
+// CHECK IF THE AUTOSCALES ACTUALLY WORKS AS THE PROGRAM RUNS :)
+
 // bugs:
 // bugs with user input of force on objects, again :(.
-// fix graphs going off of the borders of the graphs, also horrible lag when graphs get full for some reason, rereview code for dataqueues basically.
 
 // TO ADD ========================================================================
 
@@ -368,3 +407,5 @@ window.onload = init;
 // add an autoscaling algorithm for the graphing.	
 
 // ADD ERROR HANDLING (I DONT KNOW WHAT KIND, MAYBE TRY CHECKING IF THE NEGATIVE DISCRIMINANT ERROR STILL EXISTS IN THIS)
+
+// The sim freezes when refreshing graph, use breakpoints to find the issue (prob wrong assignment or something).

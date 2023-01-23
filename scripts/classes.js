@@ -419,7 +419,21 @@ class GraphQueue {
 		this.frontPointer = -1;
 		this.backPointer = -1;
 		this.maximumLength = maximumLength;
+		this.largestPresentValue = [0,-1]; // [largest stored value, index in graph of this value]
 		this.data = [];
+	}
+
+	getLargestPresentValue() {
+		return this.largestPresentValue[0];
+	}
+
+	updateLargestPresentValue() {
+		const largestValue = this.largestPresentValue[0];
+		const indexOfValue = this.largestPresentValue[1];
+		if (this.data[this.backPointer] > largestValue && this.data[indexOfValue] == largestValue) {
+			this.largestPresentValue[0] = this.data[this.backPointer];
+			this.largestPresentValue[1] = this.backPointer;
+		}
 	}
 
 	enqueueData(newData) {
@@ -437,12 +451,14 @@ class GraphQueue {
 		if (this.isEmpty()) {
 			return null;
 		}
+		const removedPointer = this.frontPointer;
 		if (this.frontPointer == this.backPointer) {
 			this.frontPointer = -1;
 			this.backPointer = -1;
-			return null;
+			return removedPointer;
 		}
 		this.frontPointer = (this.frontPointer + 1) % this.maximumLength;
+		return removedPointer;
 	}
 
 	isFull() {
@@ -455,6 +471,23 @@ class GraphQueue {
 
 	getLength() {
 		return this.data.length;
+	}
+
+	adjustPointerPositions() {
+		this.frontPointer--;
+	}
+
+	setLength(newLength) {
+		this.maximumLength = newLength;
+		let pointerToPop;
+		while (newLength < this.data.length) {
+			pointerToPop=this.dequeueData();
+			this.data.pop(pointerToPop);
+			this.adjustPointerPositions();
+		}
+		while (newLength > this.data.length) {
+			this.data.splice(this.backPointer+1, 0);
+		}
 	}
 
 	// translates from absolute index to an index position relative to the pointer positions in the
@@ -473,19 +506,26 @@ class Graph {
 		this.height = height;
 		this.axisX = axisX;
 		this.axisY = axisY;
-		this.scale = scale;
+		this.scale = new Vector2(1, 1);
 		this.largestValueRecorded = 0;
 		this.originPosition = originPosition; // indicates the quadrant of the canvas the graph resides in
 		this.queue = new GraphQueue(this.findGraphQueueLength()); // queue property is a circular queue, allows old datapoints to be taken from graph while new ones are untouched.
 		// the length of the queue should be variable during runtime as x scale changes
 	}
 
+	getAxisY(){
+		return this.axisY;
+	}
+
 	// uses simple inverse proportionality after finding 2500 length is good for timescale of 0.1.
 	findGraphQueueLength(){
-		const distanceBetweenPointsInXAxis = 250/this.getXStepInPlot();
+		const timeStep = this.getXStepInPlot();
+		const distancePerPoint = this.scaleInXAxis(timeStep);
+		const distanceBetweenPointsInXAxis = 250/distancePerPoint;
 		return distanceBetweenPointsInXAxis;
 	}
 
+	// move to main.js when creating the self contained module.
 	drawLine(ctx, initialPosition, finalPosition) {
 		ctx.beginPath();
 		ctx.moveTo(initialPosition.getX(), initialPosition.getY());
@@ -495,15 +535,8 @@ class Graph {
 
 	// retrieves the amount the x axis increases by per datapoint depending on the graph using user-defined values for scaling.
 	getXStepInPlot() {
-		const information = {
-			Displacement: parseFloat(document.getElementById("displacement-scale-x").value),
-			Velocity: parseFloat(document.getElementById("velocity-scale-x").value),
-			"Kinetic Energy": parseFloat(document.getElementById("kinetic-energy-scale-x").value),
-			Acceleration: parseFloat(document.getElementById("acceleration-scale-x").value)
-		};
-		const timeScale = information[this.axisY];
 		const timeStepString = document.getElementById("scale").value;
-		const timeStep = (timeScale*parseFloat(timeStepString)).toFixed(3); // rounded to 3 dp.
+		const timeStep = (parseFloat(timeStepString)).toFixed(3); // rounded to 3 dp.
 		return timeStep;
 	}
 
@@ -548,9 +581,9 @@ class Graph {
 			toPlot = information.Velocity;
 		}
 		const timeAtAxis = information.Time.toFixed(3);
-		this.updateLargestRecordedValue(toPlot);
 		toPlot = this.scaleInYAxis(toPlot);
 		this.queue.enqueueData(toPlot);
+		this.queue.updateLargestPresentValue();
 		let position;
 		let positionNext;
 		let index;
@@ -565,62 +598,42 @@ class Graph {
 		}
 	}
 
-	updateLargestRecordedValue(newData) {
-		if (this.largestValueRecorded > Math.abs(newData)){
+	setScale(x=0,y=0) {
+		if (x==0 && y==0){
+			alert("Cannot set scales to 0")
 			return null;
 		}
-		this.largestValueRecorded = newData;
+		if (x!=0){
+			this.scale.setX(x);
+			this.queue.setLength(this.findGraphQueueLength())
+		}
+		if (y!=0){
+			this.scale.setY(y);
+		}
 	}
 
 	scaleInYAxis(dataPoint){
-		let yScaleFactor;
-		if (document.getElementById("auto-scale-y").checked){
-			yScaleFactor = this.getAutomaticScaleYAxis();
-		}
-		else {
-			yScaleFactor = this.getManualScaleYAxis();
-		}
-		return dataPoint*yScaleFactor;
+		return dataPoint*this.scale.getY();
 	}
 
-	// gets the linear scaling factor to the y axis depending on the graph.
-	getManualScaleYAxis() {
-		const information = {
-			Displacement: parseFloat(document.getElementById("displacement-scale-y").value),
-			Velocity: parseFloat(document.getElementById("velocity-scale-y").value),
-			"Kinetic Energy": parseFloat(document.getElementById("kinetic-energy-scale-y").value),
-			Acceleration: parseFloat(document.getElementById("acceleration-scale-y").value)
-		};
-		const yScalingFactor = information[this.axisY];
-		return yScalingFactor;
+	scaleInXAxis(dataPoint) {
+		return dataPoint*this.scale.getX();
 	}
 
 	// use linear interpolation to find a scaling factor for plotted values according to the largest recorded value (using direct proportion).
-	getAutomaticScaleYAxis() {
-		const yScalingFactor = 120 / this.largestValueRecorded;
-		return yScalingFactor;
+	setAutomaticScale() {
+		const yScalingFactor = 120 / this.queue.getLargestPresentValue();
+		this.setScale(yScalingFactor);
 	}
 
 	// translates data point to the canvas coordinates system.
 	translateDataToCanvasPlane(data) {
-		const positionX = this.originPosition.getX() - 0.25 * this.width + data.getX();
-		const positionY = this.originPosition.getY() - data.getY();
+		data.setX(this.scaleInXAxis(data.getX()));
+		data.setY(this.scaleInYAxis(data.getY()));
+		let positionX = this.originPosition.getX() - 0.25 * this.width + data.getX();
+		let positionY = this.originPosition.getY() - data.getY();
 		const position = new Position(positionX, positionY);
 		return position;
-	}
-
-	// checks if datapoint is in boundary to be plotted, if not then
-	isDataPointInBounds(dataPoint) {
-		const boundaries = {
-			lowerYBoundary: this.originPosition.getY() - 0.25 * this.height,
-			upperYBoundary : this.originPosition.getY() + 0.25 * this.height,
-			lowerXBoundary : this.originPosition.getX() - 0.25 * this.width,
-			upperXBoundary : this.originPosition.getX() + 0.25 * this.width};
-		if ((boundaries.lowerYBoundary < dataPoint.getY()) && (boundaries.upperYBoundary > dataPoint.getY())
-		 && (boundaries.lowerXBoundary < dataPoint.getX()) && (boundaries.upperXBoundary > dataPoint.getX())) {
-			return true;
-		}
-		return false;
 	}
 
 	// methods for obtaining other graphs from velocity -- WIP
