@@ -23,7 +23,6 @@
 
   .column {
     display: inline-grid;
-    float: left;
   }
 
   .simulation-canvas-containter {

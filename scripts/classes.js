@@ -91,7 +91,7 @@ class Acceleration extends Vector2 {
 
 // class outlining the generic object boilerplate
 
-class Object {
+class MyObject {
 	constructor(colour = "black", velocity = new Velocity(), acceleration = new Acceleration(), position = new Position()) {
 		this.colour = colour;
 		this.forces = [new Vector2(0, 0), new Vector2(0, 0), new Vector2(0, 0)];
@@ -287,7 +287,7 @@ class Object {
 
 // classes extending the object class to specific shapes which can be drawn.
 
-class Circle extends Object {
+class Circle extends MyObject {
 	constructor(radius, density, colour, velocity, acceleration, position) {
 		super(colour, velocity, acceleration, position);
 		this.shape = "circle";
@@ -313,7 +313,7 @@ class Circle extends Object {
 	}
 }
 
-class Rectangle extends Object {
+class Rectangle extends MyObject {
 	constructor(height, width, density, colour, velocity, acceleration, position) {
 		super(colour, velocity, acceleration, position);
 		this.height = height;
@@ -468,15 +468,22 @@ class GraphQueue {
 // graph class which stores information about data and methods related to drawing graphs
 
 class Graph {
-	constructor(width, height, axisY, axisX = "Time", scale = new Vector2(1, 1), originPosition) {
+	constructor(width, height, axisY, axisX = "Time", originPosition) {
 		this.width = width;
 		this.height = height;
 		this.axisX = axisX;
 		this.axisY = axisY;
 		this.scale = scale;
+		this.largestValueRecorded = 0;
 		this.originPosition = originPosition; // indicates the quadrant of the canvas the graph resides in
-		this.queue = new GraphQueue(2500); // queue property is a circular queue, allows old datapoints to be taken from graph while new ones are untouched.
+		this.queue = new GraphQueue(this.findGraphQueueLength()); // queue property is a circular queue, allows old datapoints to be taken from graph while new ones are untouched.
 		// the length of the queue should be variable during runtime as x scale changes
+	}
+
+	// uses simple inverse proportionality after finding 2500 length is good for timescale of 0.1.
+	findGraphQueueLength(){
+		const distanceBetweenPointsInXAxis = 250/this.getXStepInPlot();
+		return distanceBetweenPointsInXAxis;
 	}
 
 	drawLine(ctx, initialPosition, finalPosition) {
@@ -484,6 +491,20 @@ class Graph {
 		ctx.moveTo(initialPosition.getX(), initialPosition.getY());
 		ctx.lineTo(finalPosition.getX(), finalPosition.getY());
 		ctx.stroke();
+	}
+
+	// retrieves the amount the x axis increases by per datapoint depending on the graph using user-defined values for scaling.
+	getXStepInPlot() {
+		const information = {
+			Displacement: parseFloat(document.getElementById("displacement-scale-x").value),
+			Velocity: parseFloat(document.getElementById("velocity-scale-x").value),
+			"Kinetic Energy": parseFloat(document.getElementById("kinetic-energy-scale-x").value),
+			Acceleration: parseFloat(document.getElementById("acceleration-scale-x").value)
+		};
+		const timeScale = information[this.axisY];
+		const timeStepString = document.getElementById("scale").value;
+		const timeStep = (timeScale*parseFloat(timeStepString)).toFixed(3); // rounded to 3 dp.
+		return timeStep;
 	}
 
 	drawGraph(ctx) {
@@ -527,32 +548,63 @@ class Graph {
 			toPlot = information.Velocity;
 		}
 		const timeAtAxis = information.Time.toFixed(3);
+		this.updateLargestRecordedValue(toPlot);
+		toPlot = this.scaleInYAxis(toPlot);
 		this.queue.enqueueData(toPlot);
 		let position;
 		let positionNext;
 		let index;
 		let indexNext;
-		const timeStepString = document.getElementById("scale").value
-		const timeStep = (parseFloat(timeStepString)/10).toFixed(3); // rounded to 3 dp.
+		const timeStep = this.getXStepInPlot();
 		for (let i = 0; i < this.queue.getLength() - 1; i++) {
 			index = this.queue.getQueueIndex(i);
 			indexNext = this.queue.getQueueIndex(i+1);
-			position = this.translateDataToCanvasPlane(new Position((i+1)*timeStep, this.queue.data[index]));
-			positionNext = this.translateDataToCanvasPlane(new Position((i+2)*timeStep, this.queue.data[indexNext]));
-			if (this.isDataPointInBounds(position) && this.isDataPointInBounds(positionNext)) {
-				this.drawLine(ctx, position, positionNext);
-			}
+			position = this.translateDataToCanvasPlane(new Position((i)*timeStep, this.queue.data[index]));
+			positionNext = this.translateDataToCanvasPlane(new Position((i+1)*timeStep, this.queue.data[indexNext]));
+			this.drawLine(ctx, position, positionNext);
 		}
 	}
 
-	automaticallyScaleYAxis(){
-		return null;
+	updateLargestRecordedValue(newData) {
+		if (this.largestValueRecorded > Math.abs(newData)){
+			return null;
+		}
+		this.largestValueRecorded = newData;
+	}
+
+	scaleInYAxis(dataPoint){
+		let yScaleFactor;
+		if (document.getElementById("auto-scale-y").checked){
+			yScaleFactor = this.getAutomaticScaleYAxis();
+		}
+		else {
+			yScaleFactor = this.getManualScaleYAxis();
+		}
+		return dataPoint*yScaleFactor;
+	}
+
+	// gets the linear scaling factor to the y axis depending on the graph.
+	getManualScaleYAxis() {
+		const information = {
+			Displacement: parseFloat(document.getElementById("displacement-scale-y").value),
+			Velocity: parseFloat(document.getElementById("velocity-scale-y").value),
+			"Kinetic Energy": parseFloat(document.getElementById("kinetic-energy-scale-y").value),
+			Acceleration: parseFloat(document.getElementById("acceleration-scale-y").value)
+		};
+		const yScalingFactor = information[this.axisY];
+		return yScalingFactor;
+	}
+
+	// use linear interpolation to find a scaling factor for plotted values according to the largest recorded value (using direct proportion).
+	getAutomaticScaleYAxis() {
+		const yScalingFactor = 120 / this.largestValueRecorded;
+		return yScalingFactor;
 	}
 
 	// translates data point to the canvas coordinates system.
 	translateDataToCanvasPlane(data) {
-		const positionX = this.originPosition.getX() - 0.25 * this.width + data.getX() * this.scale.getX();
-		const positionY = this.originPosition.getY() - data.getY() * this.scale.getY();
+		const positionX = this.originPosition.getX() - 0.25 * this.width + data.getX();
+		const positionY = this.originPosition.getY() - data.getY();
 		const position = new Position(positionX, positionY);
 		return position;
 	}

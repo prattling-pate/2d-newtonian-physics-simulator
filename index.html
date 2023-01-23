@@ -43,8 +43,6 @@
 				<button id="pause-btn" value="OFF" onclick="tgl();">Pause simulation</button>
 				<br />
 				<div class="object-inputs">
-					<label for="n-objects">Number of objects to add</label>
-					<input type="number" value="1" min="0" step="1" id="n-objects" />
 					<label for="object-type">Type of object</label>
 					<select id="object-type" class="obj-type">
 						<option value="circle" type="text">Circle</option>
@@ -90,28 +88,32 @@
 		<div class="column">
 			<canvas id="Graphs" width="640" height="480" style="border: 5px #000000"></canvas>
 			<div class="graph-inputs">
-				<div class="top-graph-inputs">
-					<label for="displacement-scale-x">X scaling for displacement graph</label><br />
-					<input type="number" id="displacement-scale-x" /><br />
+				<label for="auto-scale-y">Auto-scale Y axis?</label>
+				<input class="auto-scale-div" id="auto-scale-y" type="checkbox" checked /><br />
+				<label for="displacement-scale-x">X scaling for displacement graph</label><br />
+				<input type="number" id="displacement-scale-x" value="1"/><br />
+				<div class="y-inputs">
 					<label for="displacement-scale-y">Y scaling for displacement graph</label><br />
-					<input type="number" id="displacement-scale-y" /><br />
+					<input type="number" id="displacement-scale-y" value="1"/><br />
 				</div>
-				<div class="velocity-inputs">
-					<label for="velocity-scale-x">X scaling for velocity graph</label><br />
-					<input type="number" id="velocity-scale-x" /><br />
+				<label for="velocity-scale-x">X scaling for velocity graph</label><br />
+				<input type="number" id="velocity-scale-x" value="1"/><br />
+				<div class="y-inputs">
 					<label for="velocity-scale-y">Y scaling for velocity graph</label><br />
-					<input type="number" id="velocity-scale-y" /><br />
+					<input type="number" id="velocity-scale-y" value="1"/><br />
 				</div>
-				<div class="acceleration-inputs">
-					<label for="acceleration-scale-x">X scaling for acceleration graph</label><br />
-					<input type="number" id="acceleration-scale-x" /><br />
+				<label for="acceleration-scale-x">X scaling for acceleration graph</label><br />
+				<input type="number" id="acceleration-scale-x" value="1"/><br />
+				<div class="y-inputs">
 					<label for="acceleration-scale-y">Y scaling for acceleration graph</label><br />
-					<input type="number" id="acceleration-scale-y" /><br />
+					<input type="number" id="acceleration-scale-y" value="1"/><br />
 				</div>
 				<label for="kinetic-energy-scale-x">X scaling for kinetic energy graph</label><br />
-				<input type="number" id="kinetic-energy-scale-x" /><br />
-				<label for="kinetic-energy-scale-y">Y scaling for kinetic energy graph</label><br />
-				<input type="number" id="kinetic-energy-scale-y" /><br />
+				<input type="number" id="kinetic-energy-scale-x" value="1"/><br />
+				<div class="y-inputs">
+					<label for="kinetic-energy-scale-y">Y scaling for kinetic energy graph</label><br />
+					<input type="number" id="kinetic-energy-scale-y" value="1"/><br />
+				</div>
 			</div>
 		</div>
 		<div class="column">

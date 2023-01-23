@@ -30,10 +30,10 @@ function init() {
 	const height = 480; // Resolution/dimensions of canvas displayed in.
 	const width = 640;
 	const graphs = [
-		new Graph(width, height, "Displacement", "Time", new Vector2(1, 1), new Position(width * 0.25, height * 0.25)),
-		new Graph(width, height, "Velocity", "Time", new Vector2(1, 1), new Position(width * 0.75, height * 0.25)),
-		new Graph(width, height, "Acceleration", "Time", new Vector2(1, 1), new Position(width * 0.25, height * 0.75)),
-		new Graph(width, height, "Kinetic Energy", "Time", new Vector2(1, 1/10000), new Position(width * 0.75, height * 0.75)),
+		new Graph(width, height, "Displacement", "Time", new Position(width * 0.25, height * 0.25)),
+		new Graph(width, height, "Velocity", "Time", new Position(width * 0.75, height * 0.25)),
+		new Graph(width, height, "Acceleration", "Time", new Position(width * 0.25, height * 0.75)),
+		new Graph(width, height, "Kinetic Energy", "Time", new Position(width * 0.75, height * 0.75)),
 	];
 	clock(ctxSim, ctxGraphs, graphs, width, height);
 }
@@ -55,6 +55,18 @@ function update(ctxSim, ctxGraphs, graphs, width, height) {
 	if (objects.length > 0 && this.trackedObject == null) {
 		mouse.setTrackedObject(objects[0]);
 		objects[0].objectTracked = true;
+	}
+
+	// graph drawing -----------------------------
+
+	ctxGraphs.fillStyle = "#FFFFFF";
+	ctxGraphs.fillRect(0, 0, width, height);
+	for (const graph of graphs) {
+		// fetching tracked object data
+		graph.drawGraph(ctxGraphs);
+		if (mouse.trackedObject != null) {
+			graph.plotData(ctxGraphs, mouse.trackedObject);
+		}
 	}
 
 	for (const object of objects) {
@@ -80,17 +92,6 @@ function update(ctxSim, ctxGraphs, graphs, width, height) {
 		}
 	}
 	
-	// graph drawing -----------------------------
-
-	ctxGraphs.fillStyle = "#FFFFFF";
-	ctxGraphs.fillRect(0, 0, width, height);
-	for (const graph of graphs) {
-		// fetching tracked object data
-		graph.drawGraph(ctxGraphs);
-		if (mouse.trackedObject != null) {
-			graph.plotData(ctxGraphs, mouse.trackedObject);
-		}
-	}
 }
 
 // adding object function which grabs from the input fields on the html page to create an object of the given parameters.
@@ -297,10 +298,10 @@ function pauseSim() {
 		const height = 480; // Resolution/dimensions of canvas displayed in.
 		const width = 640;
 		const graphs = [
-			new Graph(width, height, "Displacement", "Time", new Vector2(1,1), new Position(width * 0.25, height * 0.25)),
-			new Graph(width, height, "Velocity", "Time", new Vector2(1,1), new Position(width * 0.75, height * 0.25)),
-			new Graph(width, height, "Acceleration", "Time", new Vector2(1,1), new Position(width * 0.25, height * 0.75)),
-			new Graph(width, height, "Kinetic Energy", "Time", new Vector2(1,1/10000), new Position(width * 0.75, height * 0.75)),
+			new Graph(width, height, "Displacement", "Time", new Position(width * 0.25, height * 0.25)),
+			new Graph(width, height, "Velocity", "Time", new Position(width * 0.75, height * 0.25)),
+			new Graph(width, height, "Acceleration", "Time", new Position(width * 0.25, height * 0.75)),
+			new Graph(width, height, "Kinetic Energy", "Time", new Position(width * 0.75, height * 0.75)),
 		];
 		clock(ctxSim, ctxGraphs, graphs, width, height);
 	}
