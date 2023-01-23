@@ -419,7 +419,7 @@ class GraphQueue {
 		this.frontPointer = -1;
 		this.backPointer = -1;
 		this.maximumLength = maximumLength;
-		this.largestPresentValue = [0,-1]; // [largest stored value, index in graph of this value]
+		this.largestPresentValue = [0,0]; // [largest stored value, index in graph of this value]
 		this.data = [];
 	}
 
@@ -430,8 +430,8 @@ class GraphQueue {
 	updateLargestPresentValue() {
 		const largestValue = this.largestPresentValue[0];
 		const indexOfValue = this.largestPresentValue[1];
-		if (this.data[this.backPointer] > largestValue && this.data[indexOfValue] == largestValue) {
-			this.largestPresentValue[0] = this.data[this.backPointer];
+		if (this.data[this.backPointer][1] > largestValue || this.data[indexOfValue][1] != largestValue) {
+			this.largestPresentValue[0] = this.data[this.backPointer][1];
 			this.largestPresentValue[1] = this.backPointer;
 		}
 	}
@@ -486,7 +486,7 @@ class GraphQueue {
 			this.adjustPointerPositions();
 		}
 		while (newLength > this.data.length) {
-			this.data.splice(this.backPointer+1, 0);
+			this.data.splice(this.backPointer+1, 0, [0,0]);
 		}
 	}
 
@@ -510,7 +510,7 @@ class Graph {
 		this.largestValueRecorded = 0;
 		this.originPosition = originPosition; // indicates the quadrant of the canvas the graph resides in
 		this.queue = new GraphQueue(this.findGraphQueueLength()); // queue property is a circular queue, allows old datapoints to be taken from graph while new ones are untouched.
-		// the length of the queue should be variable during runtime as x scale changes
+		// queue contains lists (so 2d lists) containing data to be plotted [scaled, unscaled].
 	}
 
 	getAxisY(){
@@ -565,14 +565,12 @@ class Graph {
 		ctx.fillText(this.axisY, textPosition.getX(), textPosition.getY());
 	}
 
-	// figure out how to do scaling
-	// data goes out of bounds due to absolute time being used to plot - just take away some constant i have to figure out
 	plotData(ctx, objectData) {
 		const information = {
 			Displacement: objectData.getDisplacement().getX(), // could use integration but that could be very taxing on the performance
 			Velocity: objectData.getVelocity().getX(),
 			"Kinetic Energy": objectData.getKineticEnergy(), // for now in 10^4 J
-			Time: objectData.getTime(),
+			Time: objectData.getTime()
 		};
 		let toPlot;
 		if (this.axisY != "Acceleration") {
@@ -581,8 +579,8 @@ class Graph {
 			toPlot = information.Velocity;
 		}
 		const timeAtAxis = information.Time.toFixed(3);
-		toPlot = this.scaleInYAxis(toPlot);
-		this.queue.enqueueData(toPlot);
+		const toPlotScaled = this.scaleInYAxis(toPlot);
+		this.queue.enqueueData([toPlotScaled, toPlot]);
 		this.queue.updateLargestPresentValue();
 		let position;
 		let positionNext;
@@ -592,8 +590,8 @@ class Graph {
 		for (let i = 0; i < this.queue.getLength() - 1; i++) {
 			index = this.queue.getQueueIndex(i);
 			indexNext = this.queue.getQueueIndex(i+1);
-			position = this.translateDataToCanvasPlane(new Position((i)*timeStep, this.queue.data[index]));
-			positionNext = this.translateDataToCanvasPlane(new Position((i+1)*timeStep, this.queue.data[indexNext]));
+			position = this.translateDataToCanvasPlane(new Position((i)*timeStep, this.queue.data[index][0]));
+			positionNext = this.translateDataToCanvasPlane(new Position((i+1)*timeStep, this.queue.data[indexNext][0]));
 			this.drawLine(ctx, position, positionNext);
 		}
 	}
@@ -601,15 +599,15 @@ class Graph {
 	setScale(x=0,y=0) {
 		if (x==0 && y==0){
 			alert("Cannot set scales to 0")
-			return null;
 		}
-		if (x!=0){
+		else if (x!=0){
 			this.scale.setX(x);
 			this.queue.setLength(this.findGraphQueueLength())
 		}
-		if (y!=0){
+		else if (y!=0){
 			this.scale.setY(y);
 		}
+		this.updateQueueScale()
 	}
 
 	scaleInYAxis(dataPoint){
@@ -620,10 +618,20 @@ class Graph {
 		return dataPoint*this.scale.getX();
 	}
 
+	updateQueueScale() {
+		for (let i = 0; i < this.queue.getLength(); i++) {
+			this.queue.data[i][0]=this.queue.data[i][1]*this.scale.getY();
+		}
+	}
+
 	// use linear interpolation to find a scaling factor for plotted values according to the largest recorded value (using direct proportion).
 	setAutomaticScale() {
-		const yScalingFactor = 120 / this.queue.getLargestPresentValue();
-		this.setScale(yScalingFactor);
+		if (this.queue.getLargestPresentValue() == 0){
+			return null;
+		}
+		const yScalingFactor = 120 / this.queue.getLargestPresentValue(); // not perfect - find new equation/relationship.
+		this.setScale(0,yScalingFactor);
+		
 	}
 
 	// translates data point to the canvas coordinates system.
