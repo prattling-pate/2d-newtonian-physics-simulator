@@ -607,7 +607,7 @@ class Graph {
 		else if (y!=0){
 			this.scale.setY(y);
 		}
-		this.updateQueueScale()
+		this.updateQueueScale();
 	}
 
 	scaleInYAxis(dataPoint){
@@ -630,6 +630,7 @@ class Graph {
 			return null;
 		}
 		const yScalingFactor = 120 / this.queue.getLargestPresentValue(); // not perfect - find new equation/relationship.
+		console.log(this.queue.getLargestPresentValue());
 		this.setScale(0,yScalingFactor);
 		
 	}
