@@ -93,21 +93,42 @@
 		<canvas id="Graphs" width="640" height="480" style="border: 5px #000000"></canvas>
 		<div class="graph-inputs">
 			<label for="auto-scale-y">Auto-scale Y axis?</label>
-			<input class="auto-scale-div" id="auto-scale-y" type="checkbox" checked /><br />
+			<input class="auto-scale-div" id="auto-scale-y" type="checkbox" checked />
+			<button id="refresh-scaling-btn">Refresh graph scales</button><br />
 			<label for="displacement-scale-x">X scaling for displacement graph</label><br />
 			<input type="number" id="displacement-scale-x" value="1" /><br />
+			<label for="displacement-component">Select Component of displacement to graph</label><br />
+			<select id="displacement-component">
+				<option value="abs">Magnitude</option>
+				<option value="x">X component</option>
+				<option value="y">Y component</option>
+			</select><br />
 			<div class="y-inputs">
 				<label for="displacement-scale-y">Y scaling for displacement graph</label><br />
 				<input type="number" id="displacement-scale-y" value="1" /><br />
 			</div>
 			<label for="velocity-scale-x">X scaling for velocity graph</label><br />
-			<input type="number" id="velocity-scale-x" value="1" /><br />
+			<input type="number" id="velocity-scale-x" value="1" /><br>
+			<label for="velocity-component">Select Component of velocity to graph</label><br />
+			<select id="velocity-component">
+				<option value="abs">Magnitude</option>
+				<option value="x">X component</option>
+				<option value="y">Y component</option>
+			</select>
+			<br />
+
 			<div class="y-inputs">
 				<label for="velocity-scale-y">Y scaling for velocity graph</label><br />
 				<input type="number" id="velocity-scale-y" value="1" /><br />
 			</div>
 			<label for="acceleration-scale-x">X scaling for acceleration graph</label><br />
-			<input type="number" id="acceleration-scale-x" value="1" /><br />
+			<input type="number" id="acceleration-scale-x" value="1" /><br>
+			<label for="acceleration-component">Select Component of acceleration to graph</label><br />
+			<select id="acceleration-component">
+				<option value="abs">Magnitude</option>
+				<option value="x">X component</option>
+				<option value="y">Y component</option>
+			</select><br />
 			<div class="y-inputs">
 				<label for="acceleration-scale-y">Y scaling for acceleration graph</label><br />
 				<input type="number" id="acceleration-scale-y" value="1" /><br />
@@ -119,7 +140,7 @@
 				<input type="number" id="kinetic-energy-scale-y" value="1" /><br />
 			</div>
 			<br>
-			<button id="refresh-scaling-btn">Refresh graph scales</button>
+
 		</div>
 	</div>
 	<div class="column">

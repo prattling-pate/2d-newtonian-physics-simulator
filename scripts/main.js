@@ -299,6 +299,7 @@ function updateConstants() {
 
 // the function called by the pause button when it is clicked, clears the interval when the button is toggled on when clicked, starts it again when toggled off when clicked.
 // this stops and starts the animation of canvas.
+// possibly change to a boolean denoting a paused sim and paused graph which skips the refresh frame for the canvas' allowing them to still have user input.
 function pauseSim() {
 	const btn = document.getElementById("pause-btn");
 	if (btn.value == "ON") {
@@ -384,8 +385,6 @@ document.addEventListener("mouseup", onMouseClick);
 // when the page is loaded the init function is ran.
 window.onload = init;
 
-// CHECK IF THE AUTOSCALES ACTUALLY WORKS AS THE PROGRAM RUNS :)
-
 // bugs:
 // bugs with user input of force on objects, again :(.
 
@@ -396,7 +395,6 @@ window.onload = init;
 // Presets (Mr Adams, Helpful for showing helpful teaching):
 // 3 (or 2) Balls decreasing size on top of each other, falling freely.
 // 1:1 mass, 1:2 mass, 1:1 mass but with velocity 2:1. Simple ratios of masses and velocities in the same plane, without gravity.
-// Atmosphere simulation - particles under gravity with different masses with elastic collision.
 // Check how long it takes in diffusion for all particles to be in the canvas 0.99 by 0.99 then 0.98 by 0.98 then decreasing by 0.01, need meaning scales. (silly)
 
 
@@ -407,5 +405,3 @@ window.onload = init;
 // add an autoscaling algorithm for the graphing.	
 
 // ADD ERROR HANDLING (I DONT KNOW WHAT KIND, MAYBE TRY CHECKING IF THE NEGATIVE DISCRIMINANT ERROR STILL EXISTS IN THIS)
-
-// The sim freezes when refreshing graph, use breakpoints to find the issue (prob wrong assignment or something).

@@ -430,7 +430,7 @@ class GraphQueue {
 	updateLargestPresentValue() {
 		const largestValue = this.largestPresentValue[0];
 		const indexOfValue = this.largestPresentValue[1];
-		if (this.data[this.backPointer][1] > largestValue || this.data[indexOfValue][1] != largestValue) {
+		if (Math.abs(this.data[this.backPointer][1]) > Math.abs(largestValue) || this.data[indexOfValue][1] != largestValue) {
 			this.largestPresentValue[0] = this.data[this.backPointer][1];
 			this.largestPresentValue[1] = this.backPointer;
 		}
@@ -506,6 +506,8 @@ class Graph {
 		this.height = height;
 		this.axisX = axisX;
 		this.axisY = axisY;
+		this.unitsY = this.getYUnits();
+		this.axisYComponent = 'x';
 		this.scale = new Vector2(1, 1);
 		this.largestValueRecorded = 0;
 		this.originPosition = originPosition; // indicates the quadrant of the canvas the graph resides in
@@ -515,6 +517,28 @@ class Graph {
 
 	getAxisY(){
 		return this.axisY;
+	}
+
+	// accepts discrete 'x', 'y' and 'abs' values
+	setAxisYComponent(newComponent) {
+		const acceptableComponents = {
+			'x': 0,
+			'y': 0,
+			'abs': 0
+		};
+		if (Object.hasown(acceptableComponents, newComponent)){
+			this.axisYComponent = newComponent;
+		}
+	}
+
+	getYUnits() {
+		const units = {
+			"Kinetic Energy": "J",
+			"Displacement": "m",
+			"Velocity": "m/s",
+			"Acceleration": "m/s^2"
+		}
+		return "("+units[this.axisY]+")";
 	}
 
 	// uses simple inverse proportionality after finding 2500 length is good for timescale of 0.1.
@@ -561,25 +585,42 @@ class Graph {
 		this.drawLine(ctx, lineCoordinates.topRight, lineCoordinates.bottomRight);
 		ctx.fontStyle = "30px Calibri";
 		ctx.fillStyle = "black";
-		const textPosition = new Position(this.originPosition.getX() - this.width * 0.24, this.originPosition.getY() - this.height * (1.75 / 8));
-		ctx.fillText(this.axisY, textPosition.getX(), textPosition.getY());
+		const yAxisTitlePosition = this.translateDataToCanvasPlane(new Position(10, 100));
+		ctx.fillText(this.axisY + " " + this.unitsY, yAxisTitlePosition.getX(), yAxisTitlePosition.getY());
+		const xAxisTitlePosition = this.translateDataToCanvasPlane(new Position(280, 10));
+		ctx.fillText(this.axisX + " (s)", xAxisTitlePosition.getX(), xAxisTitlePosition.getY());
+	}
+
+	getDataPoint(objectData, component) {
+		const information = {
+			Displacement: objectData.getDisplacement(), // could use integration but that could be very taxing on the performance
+			Velocity: objectData.getVelocity(),
+			Acceleration: objectData.getVelocity(),
+			"Kinetic Energy": objectData.getKineticEnergy(), // for now in 10^4 J
+		};
+		let toPlot = information[this.axisY];
+		if (this.axisY == "Kinetic Energy"){
+			return toPlot;
+		}
+		switch(this.axisYComponent){
+			case "x":
+				toPlot = toPlot.getX();
+				break;
+			case "y":
+				toPlot = toPlot.getY();
+				break;
+			case "abs":
+				toPlot = toPlot.getMag();
+				break;
+		}
+		return toPlot;
 	}
 
 	plotData(ctx, objectData) {
-		const information = {
-			Displacement: objectData.getDisplacement().getX(), // could use integration but that could be very taxing on the performance
-			Velocity: objectData.getVelocity().getX(),
-			"Kinetic Energy": objectData.getKineticEnergy(), // for now in 10^4 J
-			Time: objectData.getTime()
-		};
-		let toPlot;
-		if (this.axisY != "Acceleration") {
-			toPlot = information[this.axisY];
-		} else {
-			toPlot = information.Velocity;
-		}
-		const timeAtAxis = information.Time.toFixed(3);
-		const toPlotScaled = this.scaleInYAxis(toPlot);
+		const toPlot = this.getDataPoint(objectData);
+		const timeAtAxis = objectData.getTime().toFixed(3);
+		let toPlotScaled = this.scaleInYAxis(toPlot);
+		toPlotScaled = this.putDataPointInBounds(toPlotScaled);
 		this.queue.enqueueData([toPlotScaled, toPlot]);
 		this.queue.updateLargestPresentValue();
 		let position;
@@ -621,6 +662,8 @@ class Graph {
 	updateQueueScale() {
 		for (let i = 0; i < this.queue.getLength(); i++) {
 			this.queue.data[i][0]=this.queue.data[i][1]*this.scale.getY();
+			this.queue.data[i][0]=this.putDataPointInBounds(this.queue.data[i][0]);
+
 		}
 	}
 
@@ -630,19 +673,28 @@ class Graph {
 			return null;
 		}
 		const yScalingFactor = 120 / this.queue.getLargestPresentValue(); // not perfect - find new equation/relationship.
-		console.log(this.queue.getLargestPresentValue());
 		this.setScale(0,yScalingFactor);
-		
 	}
 
-	// translates data point to the canvas coordinates system.
+	// translates cartesian data point to the canvas coordinates system.
 	translateDataToCanvasPlane(data) {
-		data.setX(this.scaleInXAxis(data.getX()));
-		data.setY(this.scaleInYAxis(data.getY()));
 		let positionX = this.originPosition.getX() - 0.25 * this.width + data.getX();
 		let positionY = this.originPosition.getY() - data.getY();
 		const position = new Position(positionX, positionY);
 		return position;
+	}
+
+	// if y data point is outside of the bounds of the graph the point will be replaced by the largest representable point on the graph.
+	// how do i denote a value is out of range?
+	putDataPointInBounds(dataPoint) {
+		const graphHeight = 120;
+		if ((graphHeight < dataPoint) ) {
+			return 120;
+		}
+		if ((-graphHeight > dataPoint)){
+			return -120;
+		}
+		return dataPoint;
 	}
 
 	// methods for obtaining other graphs from velocity -- WIP
@@ -656,3 +708,5 @@ class Graph {
 		return (dataPointNext.getY() - dataPoint.getY()) / (dataPointNext.getX() - dataPoint.getX());
 	}
 }
+
+// set each graphs component using an event listener and the setter method (try to begin the self-containment of this module).
