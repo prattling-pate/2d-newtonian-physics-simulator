@@ -339,9 +339,30 @@ function refreshGraphScaling() {
 		}
 		else {
 			graph.setAutomaticScale();
-			graph.setScale(x=scales.getX())
+			graph.setScale(x=scales.getX());
 		}
 	}
+}
+
+function refreshGraphComponents() {
+	const displacementComponent =  document.getElementById("displacement-component").value;
+	const velocityComponent = document.getElementById("velocity-component").value;
+	const accelerationComponent = document.getElementById("acceleration-component").value;
+	const components = {
+		Displacement: displacementComponent,
+		Velocity: velocityComponent,
+		Acceleration: accelerationComponent
+	};
+	let componentToSet;
+	for (const graph of graphs) {
+		componentToSet = components[graph.getAxisY()];
+		graph.setAxisYComponent(componentToSet);
+	}
+}
+
+function refreshGraph() {
+	refreshGraphScaling();
+	refreshGraphComponents();
 }
 
 // Toggles the pause button between ON and OFF states, allows for the pauseSim() function to decide when to stop and start the interval function.
@@ -374,7 +395,7 @@ document.getElementById("refresh-sim").addEventListener("click", reInit);
 
 document.getElementById("add-object-btn").addEventListener("click", addInputObject);
 
-document.getElementById("refresh-scaling-btn").addEventListener("click", refreshGraphScaling);
+document.getElementById("refresh-scaling-btn").addEventListener("click", refreshGraph);
 
 document.addEventListener("mousemove", updateMousePos);
 

@@ -461,6 +461,12 @@ class GraphQueue {
 		return removedPointer;
 	}
 
+	clearQueue() {
+		for (let i = 0; i < this.data.length; i++) {
+			this.dequeueData();
+		}
+	}
+
 	isFull() {
 		return (this.backPointer + 1) % this.maximumLength == this.frontPointer;
 	}
@@ -486,7 +492,7 @@ class GraphQueue {
 			this.adjustPointerPositions();
 		}
 		while (newLength > this.data.length) {
-			this.data.splice(this.backPointer+1, 0, [0,0]);
+			this.data.splice(this.backPointer+1, 0, [0,0,false]);
 		}
 	}
 
@@ -507,7 +513,7 @@ class Graph {
 		this.axisX = axisX;
 		this.axisY = axisY;
 		this.unitsY = this.getYUnits();
-		this.axisYComponent = 'x';
+		this.axisYComponent = 'abs';
 		this.scale = new Vector2(1, 1);
 		this.largestValueRecorded = 0;
 		this.originPosition = originPosition; // indicates the quadrant of the canvas the graph resides in
@@ -521,14 +527,8 @@ class Graph {
 
 	// accepts discrete 'x', 'y' and 'abs' values
 	setAxisYComponent(newComponent) {
-		const acceptableComponents = {
-			'x': 0,
-			'y': 0,
-			'abs': 0
-		};
-		if (Object.hasown(acceptableComponents, newComponent)){
-			this.axisYComponent = newComponent;
-		}
+		this.queue.clearQueue();
+		this.axisYComponent = newComponent;
 	}
 
 	getYUnits() {
@@ -550,7 +550,8 @@ class Graph {
 	}
 
 	// move to main.js when creating the self contained module.
-	drawLine(ctx, initialPosition, finalPosition) {
+	drawLine(ctx, initialPosition, finalPosition, colour) {
+		ctx.fillStyle = colour;
 		ctx.beginPath();
 		ctx.moveTo(initialPosition.getX(), initialPosition.getY());
 		ctx.lineTo(finalPosition.getX(), finalPosition.getY());
@@ -591,7 +592,7 @@ class Graph {
 		ctx.fillText(this.axisX + " (s)", xAxisTitlePosition.getX(), xAxisTitlePosition.getY());
 	}
 
-	getDataPoint(objectData, component) {
+	getDataPoint(objectData) {
 		const information = {
 			Displacement: objectData.getDisplacement(), // could use integration but that could be very taxing on the performance
 			Velocity: objectData.getVelocity(),
@@ -599,41 +600,53 @@ class Graph {
 			"Kinetic Energy": objectData.getKineticEnergy(), // for now in 10^4 J
 		};
 		let toPlot = information[this.axisY];
-		if (this.axisY == "Kinetic Energy"){
-			return toPlot;
-		}
-		switch(this.axisYComponent){
-			case "x":
-				toPlot = toPlot.getX();
-				break;
-			case "y":
-				toPlot = toPlot.getY();
-				break;
-			case "abs":
-				toPlot = toPlot.getMag();
-				break;
+		if (this.axisY != "Kinetic Energy"){
+			const components = {
+				x: toPlot.getX(),
+				y: toPlot.getY(),
+				abs: toPlot.getMag()
+			};
+			toPlot = components[this.axisYComponent];
 		}
 		return toPlot;
+	}
+
+	isPointOutOfBounds(toPlotScaled) {
+		if (Math.abs(toPlotScaled) > 120){
+			return true;
+		}
+		return false;
+	}
+
+	// look at colour to make it easier to see the scale over it
+	getColourOfDataPoint(outOfBounds) {
+		if (outOfBounds) {
+			return "red";
+		}
+		return "black";
 	}
 
 	plotData(ctx, objectData) {
 		const toPlot = this.getDataPoint(objectData);
 		const timeAtAxis = objectData.getTime().toFixed(3);
 		let toPlotScaled = this.scaleInYAxis(toPlot);
-		toPlotScaled = this.putDataPointInBounds(toPlotScaled);
-		this.queue.enqueueData([toPlotScaled, toPlot]);
+		toPlotScaled= this.putDataPointInBounds(toPlotScaled);
+		const outOfBounds = this.isPointOutOfBounds(toPlotScaled);
+		this.queue.enqueueData([toPlotScaled, toPlot, outOfBounds]);
 		this.queue.updateLargestPresentValue();
 		let position;
 		let positionNext;
 		let index;
 		let indexNext;
+		let colour;
 		const timeStep = this.getXStepInPlot();
 		for (let i = 0; i < this.queue.getLength() - 1; i++) {
 			index = this.queue.getQueueIndex(i);
 			indexNext = this.queue.getQueueIndex(i+1);
 			position = this.translateDataToCanvasPlane(new Position((i)*timeStep, this.queue.data[index][0]));
 			positionNext = this.translateDataToCanvasPlane(new Position((i+1)*timeStep, this.queue.data[indexNext][0]));
-			this.drawLine(ctx, position, positionNext);
+			colour = this.getColourOfDataPoint(this.queue.data[indexNext][2]);
+			this.drawLine(ctx, position, positionNext, colour);
 		}
 	}
 
