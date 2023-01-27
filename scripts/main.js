@@ -142,6 +142,9 @@ function drawObject(ctxSim, object) {
 // PRESET HANDLING FUNCTIONS------
 
 function createPresetSituation() {
+	for (const graph of graphs) {
+		graph.queue.clearQueue();
+	}
 	const preset = document.getElementById("presets").value;
 	if (preset != "none") {
 		addPresetObjects(preset);

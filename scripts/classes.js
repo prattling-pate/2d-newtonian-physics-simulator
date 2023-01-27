@@ -414,6 +414,8 @@ class Mouse {
 	}
 }
 
+// graph queue for data based off circular queue implementation
+// stores data in a 2 dimensional array, [[scaledData, unscaledData, OutOfBounds?],...]
 class GraphQueue {
 	constructor(maximumLength) {
 		this.frontPointer = -1;
@@ -476,7 +478,7 @@ class GraphQueue {
 	}
 
 	getLength() {
-		return this.data.length;
+		return this.undoQueueIndex(this.backPointer) - this.undoQueueIndex(this.frontPointer) + 1;
 	}
 
 	adjustPointerPositions() {
@@ -492,7 +494,7 @@ class GraphQueue {
 			this.adjustPointerPositions();
 		}
 		while (newLength > this.data.length) {
-			this.data.splice(this.backPointer+1, 0, [0,0,false]);
+			this.data.splice(this.backPointer+1, 0, [0,0,false,0]);
 		}
 	}
 
@@ -501,11 +503,16 @@ class GraphQueue {
 		const newIndex = (this.frontPointer + index) % this.maximumLength;
 		return newIndex;
 	}
+
+	// returns the list index of the given index given its location in the queue.
+	// used graphing software to find this function using mapping + plotting a graph.
+	undoQueueIndex(index) {
+		return (index - this.frontPointer + this.maximumLength)%(this.maximumLength);
+	}
 }
 
 
 // graph class which stores information about data and methods related to drawing graphs
-
 class Graph {
 	constructor(width, height, axisY, axisX = "Time", originPosition) {
 		this.width = width;
@@ -632,13 +639,9 @@ class Graph {
 		let toPlotScaled = this.scaleInYAxis(toPlot);
 		toPlotScaled= this.putDataPointInBounds(toPlotScaled);
 		const outOfBounds = this.isPointOutOfBounds(toPlotScaled);
-		this.queue.enqueueData([toPlotScaled, toPlot, outOfBounds]);
+		this.queue.enqueueData([toPlotScaled, toPlot, outOfBounds, timeAtAxis]);
 		this.queue.updateLargestPresentValue();
-		let position;
-		let positionNext;
-		let index;
-		let indexNext;
-		let colour;
+		let position; let positionNext; let index; let indexNext; let colour;
 		const timeStep = this.getXStepInPlot();
 		for (let i = 0; i < this.queue.getLength() - 1; i++) {
 			index = this.queue.getQueueIndex(i);
@@ -647,6 +650,18 @@ class Graph {
 			positionNext = this.translateDataToCanvasPlane(new Position((i+1)*timeStep, this.queue.data[indexNext][0]));
 			colour = this.getColourOfDataPoint(this.queue.data[indexNext][2]);
 			this.drawLine(ctx, position, positionNext, colour);
+			if ((i+50) % 100 == 0){
+				ctx.fillStyle = "black";
+				// draws the x axis scales
+				ctx.fillText(this.queue.data[index][3], position.getX(), this.originPosition.getY() + 20);
+			}
+		}
+		let yValueScale;
+		const xPosOfYScale = this.originPosition.getX() - this.width*0.25;
+		for (let i = 0; i < 12; i++) {
+			yValueScale = Math.trunc(10*(i+1)*this.scale.getY());
+			ctx.fillText(yValueScale, xPosOfYScale, this.originPosition.getY()-(i+1)*10);
+			ctx.fillText(-yValueScale, xPosOfYScale, this.originPosition.getY()+(i+1)*10);
 		}
 	}
 
@@ -710,14 +725,8 @@ class Graph {
 		return dataPoint;
 	}
 
-	// methods for obtaining other graphs from velocity -- WIP
-
-	// used only by velocity graph to return the queue for the acceleration graph
-	getAcceleration(dataPoint, dataPointNext) {
-		return new Position(dataPoint.getX(), this.differentiate(dataPoint, dataPointNext));
-	}
-
-	differentiate(dataPoint, dataPointNext) {
+	// finds the slope (rate of change of the y variable) between two points.
+	differentiate(dataPointY, dataPointNextY) {
 		return (dataPointNext.getY() - dataPoint.getY()) / (dataPointNext.getX() - dataPoint.getX());
 	}
 }
