@@ -1,7 +1,14 @@
 // CLASSES
 
-// main 2 vector class
+// static class containing methods to create random numbers
+// module containing extra math methods not included in the standard Maths library utilized in the web page
+class ExtraMaths {
+	static generateRandomFloat(lower, upper) {
+		return lower + Math.random() * (upper - lower);
+	}
+}
 
+// main 2 vector class
 class Vector2 {
 	constructor(x = 0, y = 0) {
 		this.x = x;
@@ -152,7 +159,7 @@ class MyObject {
 		return this.timeSinceSpawned;
 	}
 
-	updateAll() {
+	updateKinematics() {
 		this.updateDrag(constants["DensityOfAir"]);
 		this.acceleration.update(this);
 		this.velocity.update(this.acceleration, constants["TimeScale"]);
@@ -532,6 +539,10 @@ class Graph {
 		return this.axisY;
 	}
 
+	getAxisYComponent() {
+		return this.axisYComponent;
+	}
+
 	// accepts discrete 'x', 'y' and 'abs' values
 	setAxisYComponent(newComponent) {
 		this.queue.clearQueue();
@@ -558,7 +569,7 @@ class Graph {
 
 	// move to main.js when creating the self contained module.
 	drawLine(ctx, initialPosition, finalPosition, colour) {
-		ctx.fillStyle = colour;
+		ctx.strokeStyle = colour;
 		ctx.beginPath();
 		ctx.moveTo(initialPosition.getX(), initialPosition.getY());
 		ctx.lineTo(finalPosition.getX(), finalPosition.getY());
@@ -657,23 +668,32 @@ class Graph {
 			}
 		}
 		let yValueScale;
-		const xPosOfYScale = this.originPosition.getX() - this.width*0.25;
-		for (let i = 0; i < 12; i++) {
-			yValueScale = Math.trunc(10*(i+1)*this.scale.getY());
-			ctx.fillText(yValueScale, xPosOfYScale, this.originPosition.getY()-(i+1)*10);
-			ctx.fillText(-yValueScale, xPosOfYScale, this.originPosition.getY()+(i+1)*10);
+		const xPosOfYScale = this.originPosition.getX() - this.width*0.225;
+		for (let i = 0; i < 6; i++) {
+			yValueScale = this.roundToSignificantFigures(20*(i+1)*(1/this.scale.getY()), 3);
+			ctx.fillText(yValueScale, xPosOfYScale, this.originPosition.getY()-(i+1)*20);
+			ctx.fillText(-yValueScale, xPosOfYScale, this.originPosition.getY()+(i+1)*20);
 		}
+	}
+
+	roundToSignificantFigures(input, precision) {
+		input = input.toPrecision(precision);
+		if (input < 0) {
+			input = input.toExponential();
+		}
+		return input;
 	}
 
 	setScale(x=0,y=0) {
 		if (x==0 && y==0){
 			alert("Cannot set scales to 0")
+			return null;
 		}
-		else if (x!=0){
+		if (x!=0){
 			this.scale.setX(x);
 			this.queue.setLength(this.findGraphQueueLength())
 		}
-		else if (y!=0){
+		if (y!=0){
 			this.scale.setY(y);
 		}
 		this.updateQueueScale();
@@ -706,8 +726,8 @@ class Graph {
 
 	// translates cartesian data point to the canvas coordinates system.
 	translateDataToCanvasPlane(data) {
-		let positionX = this.originPosition.getX() - 0.25 * this.width + data.getX();
-		let positionY = this.originPosition.getY() - data.getY();
+		const positionX = this.originPosition.getX() - 0.25 * this.width + data.getX();
+		const positionY = this.originPosition.getY() - data.getY();
 		const position = new Position(positionX, positionY);
 		return position;
 	}
@@ -715,7 +735,7 @@ class Graph {
 	// if y data point is outside of the bounds of the graph the point will be replaced by the largest representable point on the graph.
 	// how do i denote a value is out of range?
 	putDataPointInBounds(dataPoint) {
-		const graphHeight = 120;
+		const graphHeight = this.height * 0.5;
 		if ((graphHeight < dataPoint) ) {
 			return 120;
 		}
@@ -727,7 +747,7 @@ class Graph {
 
 	// finds the slope (rate of change of the y variable) between two points.
 	differentiate(dataPointY, dataPointNextY) {
-		return (dataPointNext.getY() - dataPoint.getY()) / (dataPointNext.getX() - dataPoint.getX());
+		return (dataPointNextY - dataPointY) / (this.getXStepInPlot());
 	}
 }
 

@@ -6,6 +6,114 @@ const Settings = {
 	"Buffer Frames": 0,
 };
 
+class CanvasHandler {
+	constructor(canvasId) {
+		this.canvas = document.getElementById(canvasId);
+		this.canvasCtx = this.canvas.getContext('2d');
+		this.width = this.canvas.width;
+		this.height = this.canvas.height;
+		this.running = true;
+	}
+
+	// move to main.js when creating the self contained module.
+	drawLine(initialPosition, finalPosition, colour) {
+		this.canvasCtx.strokeStyle = colour;
+		this.canvasCtx.beginPath();
+		this.canvasCtx.moveTo(initialPosition.getX(), initialPosition.getY());
+		this.canvasCtx.lineTo(finalPosition.getX(), finalPosition.getY());
+		this.canvasCtx.stroke();
+	}
+
+	drawRectangle(topLeftX, topLeftY, width, height, colour) {
+		this.canvasCtx.fillStyle = colour;
+		this.canvasCtx.fillRect(topLeftX, topLeftY, width, height);
+	}
+
+	drawCircle(x, y, radius) {
+		this.canvasCtx.arc(x, y, radius, 0, 2 * Math.PI);
+	}
+
+	drawText(text, x, y, colour) {
+		this.canvasCtx.fillStyle = colour;
+		this.canvasCtx.fillText(text, x, y)
+	}
+}
+
+class Simulation extends CanvasHandler {
+	constructor(canvasId) {
+		super(canvasId);
+		this.objects = [];
+		this.constants = {};
+	}
+
+	addObject() {
+		return null;
+	}
+
+	setConstants() {
+		return null;
+	}
+
+	drawBackground() {
+		this.drawRectangle(0, 0, this.width, this.height, "#89CFF0");
+	}
+
+	drawGround() {
+		this.drawRectangle(0, this.height * (8 / 9), this.width, this.height, "#964B00");
+	}
+
+	drawObject(object) {
+		let objectXPosition;
+		let objectYPosition;
+		let objectColour = object.colour;
+		if (object.objectTracked) {
+			objectColour = "#FFF04D";
+		}
+		if (object.shape == "circle") {
+			objectXPosition = object.position.getX();
+			objectYPosition = object.position.getY();
+			this.drawCircle(objectXPosition, objectYPosition, object.radius);
+		}
+		else {
+			objectXPosition = object.getCorner.getX();
+			objectYPosition = object.getCorner.getY();
+			this.drawRectangle(objectXPosition, objectYPosition, object.width, object.height, object.colour);
+		}
+	}
+
+	moveTimeForward() {
+		for (const object of this.objects) {
+			object.addWeight();
+			object.groundCeilingCollision();
+			object.sideCollision();
+			object.updateKinematics();
+			object.updateHitbox();
+		}
+		for (const object1 of objects) {
+			for (const object2 of objects) {
+				if (object1.isCollision(object2)) {
+					object1.otherObjectCollision(object2);
+				}
+			}
+		}
+	}
+
+	drawFrame() {
+		this.drawBackground();
+		this.drawGround();
+		this.drawObject(object);
+	}
+
+	animate() {
+		this.drawFrame();
+		this.moveTimeForward();
+	}
+}
+
+class GraphDrawer extends CanvasHandler {
+
+}
+
 // CONSTANTS
 
 const RESOLUTION = Settings["Resolution"];
@@ -74,7 +182,7 @@ function update(ctxSim, ctxGraphs, width, height) {
 		object.addWeight();
 		object.groundCeilingCollision();
 		object.sideCollision();
-		object.updateAll();
+		object.updateKinematics();
 		object.updateHitbox();
 		drawObject(ctxSim, object); // turn into a method later on then encapsulate all of this loop in a single method
 	}
@@ -162,7 +270,6 @@ function setInputFieldsToNewConstants(E, G, T, P, input) {
 }
 
 
-
 function presetConstants(preset) {
 	const presetConstants = {
 		diffusion: [1, 0, 0.1, 0, false],
@@ -186,41 +293,35 @@ function getPresetObjectList(preset) {
 		case "diffusion":
 			for (let i = 0; i < 100; i++) {
 				// randomly decides if the y velocity will be upwards or downwards.
-				let sign = generateRandomSign();
 				presetObjectList.push(
-					new Circle(5, 5, "red", new Velocity(sign * generateRandomFloat(0, 50), sign * generateRandomFloat(0, 50)), new Acceleration(), new Position(generateRandomFloat(0, 0.25 * RESOLUTION[0]), (((8 / 9) * RESOLUTION[1]) / 100) * i))
+					new Circle(5, 5, "red", new Velocity(ExtraMaths.generateRandomFloat(-50, 50),  ExtraMaths.generateRandomFloat(-50, 50)), new Acceleration(), new Position(ExtraMaths.generateRandomFloat(0, 0.25 * RESOLUTION[0]), (((8 / 9) * RESOLUTION[1]) / 100) * i))
 				);
 			}
 			for (let i = 0; i < 100; i++) {
 				// randomly decides if the y velocity will be upwards or downwards.
-				let sign = generateRandomSign();
 				presetObjectList.push(
-					new Circle(5, 5, "green", new Velocity(sign * generateRandomFloat(0, 50), sign * generateRandomFloat(0, 50)), new Acceleration(), new Position(generateRandomFloat(0.75 * RESOLUTION[0], RESOLUTION[0]), (((8 / 9) * RESOLUTION[1]) / 100) * i))
+					new Circle(5, 5, "green", new Velocity(ExtraMaths.generateRandomFloat(-50, 50), ExtraMaths.generateRandomFloat(-50, 50)), new Acceleration(), new Position(ExtraMaths.generateRandomFloat(0.75 * RESOLUTION[0], RESOLUTION[0]), (((8 / 9) * RESOLUTION[1]) / 100) * i))
 				);
 			}
 			break;
 		case "atmospheric-diffusion":
 			const possibleMasses = [5,10,15]; 
-			let sign;
 			for (let i = 0; i < 66; i++) {
 				// randomly decides if the y velocity will be upwards or downwards.
-				sign = generateRandomSign();
 				presetObjectList.push(
-					new Circle(5, possibleMasses[0], "red", new Velocity(sign * generateRandomFloat(0, 50), sign * generateRandomFloat(0, 50)), new Acceleration(), new Position(generateRandomFloat(0, RESOLUTION[0]), generateRandomFloat(0, RESOLUTION[1])))
+					new Circle(5, possibleMasses[0], "red", new Velocity(ExtraMaths.generateRandomFloat(-50, 50), ExtraMaths.generateRandomFloat(-50, 50)), new Acceleration(), new Position(ExtraMaths.generateRandomFloat(0, RESOLUTION[0]), generateRandomFloat(0, RESOLUTION[1])))
 				);
 			}
 			for (let i = 0; i < 66; i++) {
 				// randomly decides if the y velocity will be upwards or downwards.
-				sign = generateRandomSign();
 				presetObjectList.push(
-					new Circle(5, possibleMasses[1], "blue", new Velocity(sign * generateRandomFloat(0, 50), sign * generateRandomFloat(0, 50)), new Acceleration(), new Position(generateRandomFloat(0, RESOLUTION[0]), generateRandomFloat(0, RESOLUTION[1])))
+					new Circle(5, possibleMasses[1], "blue", new Velocity(ExtraMaths.generateRandomFloat(-50, 50), ExtraMaths.generateRandomFloat(-50, 50)), new Acceleration(), new Position(ExtraMaths.generateRandomFloat(0, RESOLUTION[0]), ExtraMaths.generateRandomFloat(0, RESOLUTION[1])))
 				);
 			}
 			for (let i = 0; i < 66; i++) {
 				// randomly decides if the y velocity will be upwards or downwards.
-				sign = generateRandomSign();
 				presetObjectList.push(
-					new Circle(5, possibleMasses[2], "green", new Velocity(sign * generateRandomFloat(0, 50), sign * generateRandomFloat(0, 50)), new Acceleration(), new Position(generateRandomFloat(0, RESOLUTION[0]), generateRandomFloat(0, RESOLUTION[1])))
+					new Circle(5, possibleMasses[2], "green", new Velocity(ExtraMaths.generateRandomFloat(-50, 50), ExtraMaths.generateRandomFloat(-50, 50)), new Acceleration(), new Position(ExtraMaths.generateRandomFloat(0, RESOLUTION[0]), ExtraMaths.generateRandomFloat(0, RESOLUTION[1])))
 				);
 			}
 			break;
@@ -240,22 +341,6 @@ function getPresetObjectList(preset) {
 function addPresetObjects(preset) {
 	const presetObjects = getPresetObjectList(preset);
 	objects = presetObjects;
-}
-
-// random sign (+/-) generation based of random float generation
-function generateRandomSign() {
-	let sign;
-	if (Math.random() < 0.5) {
-		sign = -1;
-	} else {
-		sign = 1;
-	}
-	return sign;
-}
-
-// random float generation based off of lower and upper bound
-function generateRandomFloat(lower, upper) {
-	return lower + Math.random() * (upper - lower);
 }
 
 // mouse input function which updates the position attribute of the mouse class used for player input
@@ -359,7 +444,9 @@ function refreshGraphComponents() {
 	let componentToSet;
 	for (const graph of graphs) {
 		componentToSet = components[graph.getAxisY()];
-		graph.setAxisYComponent(componentToSet);
+		if (graph.getAxisYComponent() != componentToSet){
+			graph.setAxisYComponent(componentToSet);
+		}
 	}
 }
 
