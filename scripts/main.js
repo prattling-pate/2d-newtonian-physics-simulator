@@ -6,6 +6,9 @@ const Settings = {
 	"Buffer Frames": 0,
 };
 
+// run the application: fix problems. ask jake and charlie about how to handle presets + input as code will be messy if
+// the global instances of the handlers are constantly accessed
+
 class CanvasHandler {
 	constructor(canvasId) {
 		this.canvas = document.getElementById(canvasId);
@@ -16,7 +19,7 @@ class CanvasHandler {
 	}
 
 	// move to main.js when creating the self contained module.
-	drawLine(initialPosition, finalPosition, colour) {
+	drawLine(initialPosition, finalPosition, colour="black") {
 		this.canvasCtx.strokeStyle = colour;
 		this.canvasCtx.beginPath();
 		this.canvasCtx.moveTo(initialPosition.getX(), initialPosition.getY());
@@ -39,19 +42,32 @@ class CanvasHandler {
 	}
 }
 
-class Simulation extends CanvasHandler {
+class SimulationHandler extends CanvasHandler {
 	constructor(canvasId) {
 		super(canvasId);
 		this.objects = [];
-		this.constants = {};
+		this.objectTracked = false;
+		this.constants = {
+			CoeffRest: 1,
+			GravitationalFieldStrength: 9.81,
+			TimeScale: 0.1,
+			DensityOfAir: 1.225,
+		};
 	}
 
-	addObject() {
-		return null;
+	addObject(newObject) {
+		this.objects.push(newObject);
 	}
 
-	setConstants() {
-		return null;
+	setObjectsList(newList){
+		this.objects = newList;
+	}
+
+	setConstants(E, G, T, P) {
+		this.constants.CoeffRest=E;
+		this.constants.GravitationalFieldStrength=G;
+		this.constants.TimeScale=T;
+		this.constants.DensityOfAir=P;
 	}
 
 	drawBackground() {
@@ -77,20 +93,23 @@ class Simulation extends CanvasHandler {
 		else {
 			objectXPosition = object.getCorner.getX();
 			objectYPosition = object.getCorner.getY();
-			this.drawRectangle(objectXPosition, objectYPosition, object.width, object.height, object.colour);
+			this.drawRectangle(objectXPosition, objectYPosition, object.width, object.height, objectColour);
 		}
 	}
 
 	moveTimeForward() {
+		if (this.objects.length > 0 && !this.objectTracked) {
+			this.objects[0].objectTracked = true;
+		}
 		for (const object of this.objects) {
-			object.addWeight();
-			object.groundCeilingCollision();
-			object.sideCollision();
-			object.updateKinematics();
+			object.addWeight(this.constants.GravitationalFieldStrength);
+			object.groundCeilingCollision(this.constants.CoeffRest, this.constants.TimeScale, this.height);
+			object.sideCollision(this.constants.CoeffRest, this.constants.TimeScale, this.width);
+			object.updateKinematics(this.DensityOfAir, this.TimeScale);
 			object.updateHitbox();
 		}
-		for (const object1 of objects) {
-			for (const object2 of objects) {
+		for (const object1 of this.objects) {
+			for (const object2 of this.objects) {
 				if (object1.isCollision(object2)) {
 					object1.otherObjectCollision(object2);
 				}
@@ -101,105 +120,159 @@ class Simulation extends CanvasHandler {
 	drawFrame() {
 		this.drawBackground();
 		this.drawGround();
-		this.drawObject(object);
+		for (const object of this.objects){
+			this.drawObject(object);
+		}
 	}
 
-	animate() {
+	animateFrame() {
 		this.drawFrame();
 		this.moveTimeForward();
 	}
 }
 
-class GraphDrawer extends CanvasHandler {
+// add this into the code for the interval repetition of the code and see if there are problems.
+// then find ways to implement the event handlers in more oop ways.
 
+class DataLoggerHandler extends CanvasHandler {
+	constructor(canvasId) {
+		super(canvasId);
+		this.graphs = [];
+		this.trackedObject;
+		this.canvasCtx.fontStyle = "30px Calibri";
+	}
+
+	clearGraphQueues(){
+		for (const graph of this.graphs) {
+			graph.clearQueue();
+		}
+	}
+
+	setTrackedObject(object) {
+		this.trackedObject = object;
+	}
+
+	addGraph(yAxis, centrePosition) {
+		const position = {
+			upperLeft: new Position(this.width * 0.25, this.height * 0.25),
+			upperRight: new Position(this.width * 0.75, this.height * 0.25),
+			bottomLeft: new Position(this.width * 0.25, this.height * 0.75),
+			bottomRight: new Position(this.width * 0.75, this.height * 0.75)
+		}
+		const graph = new Graph(this.width, this.height, yAxis, "Time", position[centrePosition])
+		this.graphs.push(graph);
+	}
+
+	drawBackground() {
+		this.drawRectangle(0, 0, this.width, this.height, "white");
+	}
+
+	drawBorders(lineCoordinates) {
+		this.canvasCtx.lineWidth = 5;
+		this.drawLine(lineCoordinates.topLeft, lineCoordinates.bottomLeft, "black");
+		this.drawLine(lineCoordinates.topRight, lineCoordinates.bottomRight, "black");
+	}
+
+	drawAxis(lineCoordinates) {
+		this.canvasCtx.lineWidth = 2.5;
+		this.drawLine(lineCoordinates.middleLeft, lineCoordinates.middleRight, "black");
+		this.drawLine(lineCoordinates.topLeft, lineCoordinates.topRight, "black");
+	}
+
+	drawGraph(graph) {
+		const lineCoordinates = {
+			middleLeft: new Position(graph.originPosition.getX() - graph.width * 0.25, graph.originPosition.getY()), 
+			middleRight: new Position(graph.originPosition.getX() + graph.width * 0.25, graph.originPosition.getY()),
+			topLeft: new Position(graph.originPosition.getX() - graph.width * 0.25, graph.originPosition.getY() - graph.height * 0.25), 
+			topRight: new Position(graph.originPosition.getX() + graph.width * 0.25, graph.originPosition.getY() - graph.height * 0.25),
+			bottomRight: new Position(graph.originPosition.getX() + graph.width * 0.25, graph.originPosition.getY() + graph.height * 0.25),
+			bottomLeft: new Position(graph.originPosition.getX() - graph.width * 0.25, graph.originPosition.getY() + graph.height * 0.25)
+		};
+		
+		// drawing the graph axis
+		this.drawAxis(lineCoordinates);
+		// drawing boundaries between graphs
+		this.drawBorders(lineCoordinates);
+		const yAxisTitlePosition = graph.translateDataToCanvasPlane(new Position(10, 100));
+		this.drawText(graph.axisY + " " + graph.unitsY, yAxisTitlePosition.getX(), yAxisTitlePosition.getY(), "black");
+		const xAxisTitlePosition = graph.translateDataToCanvasPlane(new Position(280, 10));
+		this.drawText(graph.axisX + " (s)", xAxisTitlePosition.getX(), xAxisTitlePosition.getY(), "black");
+		
+	}
+
+	drawScales(graph) {
+		let yValueScale;
+		const xPosOfYScale = graph.originPosition.getX() - graph.width*0.225;
+		for (let i = 0; i < 6; i++) {
+			yValueScale = graph.roundToSignificantFigures(20*(i+1)*(1/graph.scale.getY()), 3);
+			this.drawText(yValueScale, xPosOfYScale, graph.originPosition.getY()-(i+1)*20, "black");
+			this.drawText(-yValueScale, xPosOfYScale, graph.originPosition.getY()+(i+1)*20, "black");
+		}
+	}
+
+	plotData(graph) {
+		let position; let positionNext; let index; let indexNext; let colour;
+		const timeStep = graph.getXStepInPlot();
+		for (let i = 0; i < graph.queue.getLength() - 1; i++) {
+			index = graph.queue.getQueueIndex(i);
+			indexNext = graph.queue.getQueueIndex(i+1);
+			position = graph.translateDataToCanvasPlane(new Position((i)*timeStep, graph.queue.data[index][0]));
+			positionNext = graph.translateDataToCanvasPlane(new Position((i+1)*timeStep, graph.queue.data[indexNext][0]));
+			colour = graph.getColourOfDataPoint(graph.queue.data[indexNext][2]);
+			this.drawLine(position, positionNext, colour);
+			if ((i+50) % 100 == 0){
+				// draws the x axis scales
+				this.drawText(graph.queue.data[index][3], position.getX(), graph.originPosition.getY() + 20, "black");
+			}
+		}
+		this.drawScales(graph);
+	}
+
+	animateFrame() {
+		this.drawBackground();
+		for (const graph of this.graphs) {
+			this.drawGraph(graph);
+			if (this.trackedObject){
+				graph.addData(this.trackedObject);
+				this.plotData(graph);
+			}
+		}
+	}
 }
 
 // CONSTANTS
 
 const RESOLUTION = Settings["Resolution"];
-const SIZESCALE = Settings["Size Scalar"];
-const FORCESCALE = Settings["Force Scalar"];
 
 // GLOBALS--------------
 
 const mouse = new Mouse();
-var constants = getConstants();
-var objects;
-var graphs;
+const simulationHandler = new SimulationHandler("Simulation");
+const dataLoggerHandler = new DataLoggerHandler("Graphs");
+
 
 // CORE FUNCTIONS--------
 
 // function which initializes the simulation
 function init() {
-	objects = [];
-	const sim = document.getElementById("Simulation");
-	const ctxSim = sim.getContext("2d");
-	const graphsCanvas = document.getElementById("Graphs");
-	const ctxGraphs = graphsCanvas.getContext("2d");
-	const height = 480; // Resolution/dimensions of canvas displayed in.
-	const width = 640;
-	graphs = [
-		new Graph(width, height, "Displacement", "Time", new Position(width * 0.25, height * 0.25)),
-		new Graph(width, height, "Velocity", "Time", new Position(width * 0.75, height * 0.25)),
-		new Graph(width, height, "Acceleration", "Time", new Position(width * 0.25, height * 0.75)),
-		new Graph(width, height, "Kinetic Energy", "Time", new Position(width * 0.75, height * 0.75)),
-	];
-	clock(ctxSim, ctxGraphs, width, height);
+	dataLoggerHandler.addGraph("Displacement", "upperLeft");
+	dataLoggerHandler.addGraph("Velocity", "upperRight");
+	dataLoggerHandler.addGraph("Acceleration", "bottomLeft");
+	dataLoggerHandler.addGraph("Kinetic Energy", "bottomRight");
+	clock();
 }
 
 // this function runs the update every 10ms using an interval function, this interval loops the update function which updates the positions of all balls in the animation.
-function clock(ctxSim, ctxGraphs, width, height) {
-	window.interval = setInterval(update, 16.67, ctxSim, ctxGraphs, width, height);
+function clock(refreshRate) {
+	const milliSecondsPerFrame = 1000/refreshRate;
+	window.interval = setInterval(update, milliSecondsPerFrame);
 }
 
 // function which draws the simulations current frame using the canvas drawing functions.
-function update(ctxSim, ctxGraphs, width, height) {
-	// simulation drawing---------------------
-	ctxSim.fillStyle = "#89CFF0";
-	ctxSim.fillRect(0, 0, width, height);
-	ctxSim.fillStyle = "#964B00";
-	ctxSim.fillRect(0, RESOLUTION[1] * (8 / 9), width, RESOLUTION[1]);
-
-	// if the user has not selected an object to track by default the first object created is tracked, provided no object is selected.
-	if (objects.length > 0 && this.trackedObject == null) {
-		mouse.setTrackedObject(objects[0]);
-		objects[0].objectTracked = true;
-	}
-
-	// graph drawing -----------------------------
-
-	ctxGraphs.fillStyle = "#FFFFFF";
-	ctxGraphs.fillRect(0, 0, width, height);
-	for (const graph of graphs) {
-		// fetching tracked object data
-		graph.drawGraph(ctxGraphs);
-		if (mouse.trackedObject != null) {
-			graph.plotData(ctxGraphs, mouse.trackedObject);
-		}
-	}
-
-	for (const object of objects) {
-		object.addWeight();
-		object.groundCeilingCollision();
-		object.sideCollision();
-		object.updateKinematics();
-		object.updateHitbox();
-		drawObject(ctxSim, object); // turn into a method later on then encapsulate all of this loop in a single method
-	}
-	// checks for other object collisions, source of most lag O(n^2) time complexity
-	for (const object1 of objects) {
-		for (const object2 of objects) {
-			if (object1.isCollision(object2)) {
-				object1.otherObjectCollision(object2);
-			}
-		}
-	}
-
-	if (document.getElementById("force-enabled").checked) {
-		for (const object of objects) {
-			mouse.addForceOnObject(object);
-		}
-	}
+function update() {
+	simulationHandler.animateFrame();
+	dataLoggerHandler.setTrackedObject(simulationHandler.objectTracked);
+	dataLoggerHandler.animateFrame();
 }
 
 function getInputtedObject() {
@@ -207,7 +280,7 @@ function getInputtedObject() {
 	const shape = document.getElementById("object-type").value;
 	const colour = document.getElementById("colour").value;
 	const density = getElementFloatValue("density");
-	const position = new Position(getElementFloatValue("position-x"), RESOLUTION[1] - (getElementFloatValue("position-y")+(1/9)*RESOLUTION[1]));
+	const position = new Position(getElementFloatValue("position-x"), simulationHandler.height - (getElementFloatValue("position-y")+(1/9)*simulationHandler.height));
 	const velocity = new Velocity(getElementFloatValue("velocity-x"), -getElementFloatValue("velocity-y"));
 	const acceleration = new Acceleration(getElementFloatValue("acceleration-x"), -getElementFloatValue("acceleration-y"));
 	if (shape == "circle") {
@@ -224,29 +297,8 @@ function getInputtedObject() {
 // adding object function which grabs from the input fields on the html page to create an object of the given parameters.
 function addInputObject() {
 	const newObject = getInputtedObject();
-	objects.push(newObject);
+	simulationHandler.addObject(newObject);
 }
-
-// this functions draws the given object, differentiating between methods of drawing using the object.shape property of the object class.
-function drawObject(ctxSim, object) {
-	if (!object.objectTracked) {
-		ctxSim.fillStyle = object.getColour();
-	} else {
-		ctxSim.fillStyle = "#FFF04D";
-	}
-	if (object.getShape() == "circle") {
-		ctxSim.beginPath();
-		ctxSim.arc(object.getPosition().getX(), object.getPosition().getY(), object.getRadius(), 0, 2 * Math.PI);
-		ctxSim.closePath();
-		ctxSim.fill();
-	} else if (object.getShape() == "rectangle") {
-		ctxSim.beginPath();
-		ctxSim.rect(object.getCorner().getX(), object.getCorner().getY(), object.getWidth(), object.getHeight());
-		ctxSim.closePath();
-		ctxSim.fill();
-	}
-}
-
 // PRESET HANDLING FUNCTIONS------
 
 function createPresetSituation() {
@@ -277,12 +329,7 @@ function presetConstants(preset) {
 		default: [1, 9.81, 0.1, 1.225, true]
 	};
 	const constants = presetConstants[preset];
-	window.constants = {
-		CoeffRest: constants[0],
-		GravitationalFieldStrength: constants[1],
-		TimeScale: constants[2],
-		DensityOfAir: constants[3],
-	};
+	simulationHandler.setConstants(constants[0], constants[1], constants[2], constants[3]);
 	setInputFieldsToNewConstants(constants[0], constants[1], constants[2], constants[3], constants[4]);
 }
 
@@ -294,7 +341,11 @@ function getPresetObjectList(preset) {
 			for (let i = 0; i < 100; i++) {
 				// randomly decides if the y velocity will be upwards or downwards.
 				presetObjectList.push(
-					new Circle(5, 5, "red", new Velocity(ExtraMaths.generateRandomFloat(-50, 50),  ExtraMaths.generateRandomFloat(-50, 50)), new Acceleration(), new Position(ExtraMaths.generateRandomFloat(0, 0.25 * RESOLUTION[0]), (((8 / 9) * RESOLUTION[1]) / 100) * i))
+					new Circle(5, 5, "red", new Velocity(
+						ExtraMaths.generateRandomFloat(-50, 50),  
+						ExtraMaths.generateRandomFloat(-50, 50)), new Acceleration(), 
+						new Position(ExtraMaths.generateRandomFloat(0, 0.25 * RESOLUTION[0]),
+					 	(((8 / 9) * RESOLUTION[1]) / 100) * i))
 				);
 			}
 			for (let i = 0; i < 100; i++) {

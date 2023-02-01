@@ -159,17 +159,17 @@ class MyObject {
 		return this.timeSinceSpawned;
 	}
 
-	updateKinematics() {
-		this.updateDrag(constants["DensityOfAir"]);
+	updateKinematics(densityOfAir, timeStep) {
+		this.updateDrag(densityOfAir);
 		this.acceleration.update(this);
-		this.velocity.update(this.acceleration, constants["TimeScale"]);
-		this.position.update(this.velocity, constants["TimeScale"]);
-		this.forces[2] = new Vector2(0, 0);
-		this.timeSinceSpawned += constants["TimeScale"];
+		this.velocity.update(this.acceleration, timeStep);
+		this.position.update(this.velocity, timeStep);
+		this.forces[2] = new Vector2();
+		this.timeSinceSpawned += timeStep;
 	}
 
-	addWeight() {
-		this.forces[0] = new Vector2(0, this.mass * constants["GravitationalFieldStrength"]);
+	addWeight(gravitationalFieldStrength) {
+		this.forces[0] = new Vector2(0, this.mass * gravitationalFieldStrength);
 	}
 
 	setInputForce(force) {
@@ -177,37 +177,33 @@ class MyObject {
 	}
 
 	resolveVectors() {
-		let totalVect = new Vector2(0, 0);
+		let totalVector = new Vector2(0, 0);
 		for (let i = 0; i < this.forces.length; i++) {
-			totalVect = totalVect.add(this.forces[i]);
+			totalVector = totalVector.add(this.forces[i]);
 		}
-		return totalVect;
+		return totalVector;
 	}
 
-	updateDrag(DENSITYOFAIR) {
-		const dragX = -Math.sign(this.velocity.getX()) * 0.5 * DENSITYOFAIR * this.coeffDrag * this.width * this.velocity.getX() ** 2;
-		const dragY = -Math.sign(this.velocity.getY()) * 0.5 * DENSITYOFAIR * this.coeffDrag * this.height * this.velocity.getY() ** 2;
+	updateDrag(densityOfAir) {
+		const dragX = -Math.sign(this.velocity.getX()) * 0.5 * densityOfAir * this.coeffDrag * this.width * this.velocity.getX() ** 2;
+		const dragY = -Math.sign(this.velocity.getY()) * 0.5 * densityOfAir * this.coeffDrag * this.height * this.velocity.getY() ** 2;
 		this.forces[1] = new Vector2(dragX, dragY);
 	}
 
-	sideCollision() {
-		const E = constants["CoeffRest"];
-		const RATE = constants["TimeScale"];
+	sideCollision(coeffRest, timeStep, planeWidth) {
 		// side collision check (checks if out of bounds on right side or on left side respectively in if statement)
-		if (this.position.getX() + this.velocity.getX() * RATE + this.radius >= RESOLUTION[0] || this.position.getX() + this.velocity.getX() * RATE - this.radius <= 0) {
-			this.velocity.setX(-this.velocity.getX() * E);
+		if (this.position.getX() + this.velocity.getX() * timeStep + this.radius >= planeWidth || this.position.getX() + this.velocity.getX() * timeStep - this.radius <= 0) {
+			this.velocity.setX(-this.velocity.getX() * coeffRest);
 		}
 	}
 
-	groundCeilingCollision() {
-		const E = constants["CoeffRest"];
-		const RATE = constants["TimeScale"];
+	groundCeilingCollision(coeffRest, timeStep, planeHeight) {
 		// ground collision check - statement 1. ceiling collision check - statement 2
-		if (this.position.getY() + this.velocity.getY() * RATE + this.radius >= RESOLUTION[1] * (8 / 9)) {
-			this.position.setY(RESOLUTION[1] * (8 / 9) - this.radius);
-			this.velocity.setY(-this.velocity.getY() * E);
-		} else if (this.position.getY() + this.velocity.getY() * RATE + this.radius <= 0) {
-			this.velocity.setY(-this.velocity.getY() * E);
+		if (this.position.getY() + this.velocity.getY() * timeStep + this.radius >= planeHeight * (8 / 9)) {
+			this.position.setY(planeHeight * (8 / 9) - this.radius);
+			this.velocity.setY(-this.velocity.getY() * coeffRest);
+		} else if (this.position.getY() + this.velocity.getY() * timeStep + this.radius <= 0) {
+			this.velocity.setY(-this.velocity.getY() * coeffRest);
 		}
 	}
 
@@ -216,7 +212,7 @@ class MyObject {
 			((this.hitbox[0] > other.hitbox[1] && this.hitbox[1] < other.hitbox[1]) || (this.hitbox[0] > other.hitbox[0] && this.hitbox[1] < other.hitbox[0])) &&
 			((this.hitbox[2] > other.hitbox[3] && this.hitbox[3] < other.hitbox[3]) || (this.hitbox[2] > other.hitbox[2] && this.hitbox[3] < other.hitbox[2]))
 		) {
-			if (other instanceof Object) {
+			if (other instanceof MyObject) {
 				this.fixSamePointProblem(other);
 			}
 			return true;
@@ -567,47 +563,11 @@ class Graph {
 		return distanceBetweenPointsInXAxis;
 	}
 
-	// move to main.js when creating the self contained module.
-	drawLine(ctx, initialPosition, finalPosition, colour) {
-		ctx.strokeStyle = colour;
-		ctx.beginPath();
-		ctx.moveTo(initialPosition.getX(), initialPosition.getY());
-		ctx.lineTo(finalPosition.getX(), finalPosition.getY());
-		ctx.stroke();
-	}
-
 	// retrieves the amount the x axis increases by per datapoint depending on the graph using user-defined values for scaling.
 	getXStepInPlot() {
 		const timeStepString = document.getElementById("scale").value;
 		const timeStep = (parseFloat(timeStepString)).toFixed(3); // rounded to 3 dp.
 		return timeStep;
-	}
-
-	drawGraph(ctx) {
-		// object storing the origin position for each sector
-		const lineCoordinates = { 
-			middleLeft: new Position(this.originPosition.getX() - this.width * 0.25, this.originPosition.getY()), 
-			middleRight: new Position(this.originPosition.getX() + this.width * 0.25, this.originPosition.getY()),
-			topLeft: new Position(this.originPosition.getX() - this.width * 0.25, this.originPosition.getY() - this.height * 0.25), 
-			topRight: new Position(this.originPosition.getX() + this.width * 0.25, this.originPosition.getY() - this.height * 0.25),
-			bottomRight: new Position(this.originPosition.getX() + this.width * 0.25, this.originPosition.getY() + this.height * 0.25),
-			bottomLeft: new Position(this.originPosition.getX() - this.width * 0.25, this.originPosition.getY() + this.height * 0.25)
-		};
-		// drawing the graph axis
-		ctx.lineWidth = 2.5;
-		ctx.strokeStyle = "black";
-		this.drawLine(ctx, lineCoordinates.middleLeft, lineCoordinates.middleRight);
-		this.drawLine(ctx, lineCoordinates.topLeft, lineCoordinates.topRight);
-		// drawing boundaries between graphs
-		ctx.lineWidth = 5;
-		this.drawLine(ctx, lineCoordinates.topLeft, lineCoordinates.bottomLeft);
-		this.drawLine(ctx, lineCoordinates.topRight, lineCoordinates.bottomRight);
-		ctx.fontStyle = "30px Calibri";
-		ctx.fillStyle = "black";
-		const yAxisTitlePosition = this.translateDataToCanvasPlane(new Position(10, 100));
-		ctx.fillText(this.axisY + " " + this.unitsY, yAxisTitlePosition.getX(), yAxisTitlePosition.getY());
-		const xAxisTitlePosition = this.translateDataToCanvasPlane(new Position(280, 10));
-		ctx.fillText(this.axisX + " (s)", xAxisTitlePosition.getX(), xAxisTitlePosition.getY());
 	}
 
 	getDataPoint(objectData) {
@@ -644,7 +604,7 @@ class Graph {
 		return "black";
 	}
 
-	plotData(ctx, objectData) {
+	addData(objectData) {
 		const toPlot = this.getDataPoint(objectData);
 		const timeAtAxis = objectData.getTime().toFixed(3);
 		let toPlotScaled = this.scaleInYAxis(toPlot);
@@ -652,36 +612,14 @@ class Graph {
 		const outOfBounds = this.isPointOutOfBounds(toPlotScaled);
 		this.queue.enqueueData([toPlotScaled, toPlot, outOfBounds, timeAtAxis]);
 		this.queue.updateLargestPresentValue();
-		let position; let positionNext; let index; let indexNext; let colour;
-		const timeStep = this.getXStepInPlot();
-		for (let i = 0; i < this.queue.getLength() - 1; i++) {
-			index = this.queue.getQueueIndex(i);
-			indexNext = this.queue.getQueueIndex(i+1);
-			position = this.translateDataToCanvasPlane(new Position((i)*timeStep, this.queue.data[index][0]));
-			positionNext = this.translateDataToCanvasPlane(new Position((i+1)*timeStep, this.queue.data[indexNext][0]));
-			colour = this.getColourOfDataPoint(this.queue.data[indexNext][2]);
-			this.drawLine(ctx, position, positionNext, colour);
-			if ((i+50) % 100 == 0){
-				ctx.fillStyle = "black";
-				// draws the x axis scales
-				ctx.fillText(this.queue.data[index][3], position.getX(), this.originPosition.getY() + 20);
-			}
-		}
-		let yValueScale;
-		const xPosOfYScale = this.originPosition.getX() - this.width*0.225;
-		for (let i = 0; i < 6; i++) {
-			yValueScale = this.roundToSignificantFigures(20*(i+1)*(1/this.scale.getY()), 3);
-			ctx.fillText(yValueScale, xPosOfYScale, this.originPosition.getY()-(i+1)*20);
-			ctx.fillText(-yValueScale, xPosOfYScale, this.originPosition.getY()+(i+1)*20);
-		}
 	}
 
 	roundToSignificantFigures(input, precision) {
-		input = input.toPrecision(precision);
-		if (input < 0) {
-			input = input.toExponential();
+		let output = input.toPrecision(precision);
+		if (Math.abs(input) > 1000) {
+			output = output.toExponential();
 		}
-		return input;
+		return output;
 	}
 
 	setScale(x=0,y=0) {
@@ -711,7 +649,6 @@ class Graph {
 		for (let i = 0; i < this.queue.getLength(); i++) {
 			this.queue.data[i][0]=this.queue.data[i][1]*this.scale.getY();
 			this.queue.data[i][0]=this.putDataPointInBounds(this.queue.data[i][0]);
-
 		}
 	}
 
