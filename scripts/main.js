@@ -9,6 +9,8 @@ const Settings = {
 // run the application: fix problems. ask jake and charlie about how to handle presets + input as code will be messy if
 // the global instances of the handlers are constantly accessed
 
+// can makes classes local as not using clearInterval to pause the simulation, use this.running boolean
+
 class CanvasHandler {
 	constructor(canvasId) {
 		this.canvas = document.getElementById(canvasId);
