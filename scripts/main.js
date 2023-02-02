@@ -1,11 +1,3 @@
-// default settings when the simulation is ran
-const Settings = {
-	"Resolution": [640, 480],
-	"Force Scalar": 5,
-	"Size Scalar": 20,
-	"Buffer Frames": 0,
-};
-
 // run the application: fix problems. ask jake and charlie about how to handle presets + input as code will be messy if
 // the global instances of the handlers are constantly accessed
 
@@ -51,12 +43,12 @@ class SimulationHandler extends CanvasHandler {
 	constructor(canvasId) {
 		super(canvasId);
 		this.objects = [];
-		this.objectTracked = false;
+		this.objectTracked;
 		this.constants = {
-			CoeffRest: 1,
-			GravitationalFieldStrength: 9.81,
-			TimeScale: 0.1,
-			DensityOfAir: 1.225,
+			CoeffRest: 0,
+			GravitationalFieldStrength: 0,
+			TimeScale: 0,
+			DensityOfAir: 0,
 		};
 	}
 
@@ -103,8 +95,9 @@ class SimulationHandler extends CanvasHandler {
 	}
 
 	moveTimeForward() {
-		if (this.objects.length > 0 && !this.objectTracked) {
+		if (this.objects.length > 0 && this.objectTracked == undefined) {
 			this.objects[0].objectTracked = true;
+			this.objectTracked = this.objects[0];
 		}
 		for (const object of this.objects) {
 			object.addWeight(this.constants.GravitationalFieldStrength);
@@ -132,7 +125,9 @@ class SimulationHandler extends CanvasHandler {
 
 	animateFrame() {
 		this.drawFrame();
-		this.moveTimeForward();
+		if (this.running){
+			this.moveTimeForward();
+		}
 	}
 }
 
@@ -144,6 +139,7 @@ class DataLoggerHandler extends CanvasHandler {
 		super(canvasId);
 		this.graphs = [];
 		this.trackedObject;
+		this.yAutoScaling = false;
 		this.canvasCtx.fontStyle = "30px Calibri";
 	}
 
@@ -236,18 +232,18 @@ class DataLoggerHandler extends CanvasHandler {
 	animateFrame() {
 		this.drawBackground();
 		for (const graph of this.graphs) {
-			this.drawGraph(graph);
-			if (this.trackedObject){
+			if (this.trackedObject && this.running){
 				graph.addData(this.trackedObject);
-				this.plotData(graph);
 			}
+			this.drawGraph(graph);
+			this.plotData(graph);
 		}
 	}
 }
 
 // CONSTANTS
 
-const RESOLUTION = Settings["Resolution"];
+const RESOLUTION = [640, 480];
 
 // GLOBALS--------------
 
@@ -265,7 +261,9 @@ function init() {
 
 	document.getElementById("add-object-btn").addEventListener("click", () => {
 		const newObject = getInputtedObject();
-		simulationHandler.addObject(newObject)});
+		simulationHandler.addObject(newObject)
+	});
+		
 	document.getElementById("preset-btn").addEventListener("click", () => {
 		for (const graph of dataLoggerHandler.graphs) {
 			graph.queue.clearQueue();
@@ -278,13 +276,67 @@ function init() {
 			simulationHandler.setConstants(newConstants[0], newConstants[1], newConstants[2], newConstants[3]);
 		};
 	});
+
+	document.getElementById("refresh-scaling-btn").addEventListener("click", () => {
+		dataLoggerHandler.yAutoScaling = false;
+		if (document.getElementById("auto-scale-y").checked){
+			dataLoggerHandler.yAutoScaling = true;
+		}
+		const information = {
+			Displacement: new Vector2(getElementFloatValue("displacement-scale-x"), getElementFloatValue("displacement-scale-y")),
+			Velocity: new Vector2(getElementFloatValue("velocity-scale-x"), getElementFloatValue("velocity-scale-y")),
+			Acceleration: new Vector2(getElementFloatValue("acceleration-scale-x"), getElementFloatValue("acceleration-scale-y")),
+			"Kinetic Energy": new Vector2(getElementFloatValue("kinetic-energy-scale-x"), getElementFloatValue("kinetic-energy-scale-y"))};
+		let scales;
+		for (const graph of dataLoggerHandler.graphs) {
+			scales = information[graph.getAxisY()];
+			if (!dataLoggerHandler.yAutoScaling){
+				graph.setScale(scales.getX(), scales.getY());
+			}
+			else {
+				graph.setAutomaticScale();
+				graph.setScale(x=scales.getX());
+			}
+		}
+
+		const displacementComponent =  document.getElementById("displacement-component").value;
+		const velocityComponent = document.getElementById("velocity-component").value;
+		const accelerationComponent = document.getElementById("acceleration-component").value;
+		const components = {
+			Displacement: displacementComponent,
+			Velocity: velocityComponent,
+			Acceleration: accelerationComponent
+		};
+		let componentToSet;
+		for (const graph of dataLoggerHandler.graphs) {
+			componentToSet = components[graph.getAxisY()];
+			if (graph.getAxisYComponent() != componentToSet){
+				graph.setAxisYComponent(componentToSet);
+			}
+		}
+	});
+
+	document.getElementById("refresh-btn").addEventListener("click", () => {
+		simulationHandler.setConstants(getConstants());
+	});
+
+	document.getElementById("pause-btn").addEventListener("click", () => {
+		if (simulationHandler.running) {
+			simulationHandler.running = false;
+			dataLoggerHandler.running = false;
+			return null;
+		}
+		simulationHandler.running = true;
+		dataLoggerHandler.running = true;
+	});
+
 	clock(60, simulationHandler, dataLoggerHandler);
 }
 
 // this function runs the update every 10ms using an interval function, this interval loops the update function which updates the positions of all balls in the animation.
 function clock(refreshRate, simulationHandler, dataLoggerHandler) {
 	const milliSecondsPerFrame = 1000/refreshRate;
-	window.interval = setInterval(update, milliSecondsPerFrame, simulationHandler, dataLoggerHandler);
+	interval = setInterval(update, milliSecondsPerFrame, simulationHandler, dataLoggerHandler);
 }
 
 // function which draws the simulations current frame using the canvas drawing functions.
@@ -315,11 +367,7 @@ function getInputtedObject() {
 
 // PRESET HANDLING FUNCTIONS------
 
-function createPresetSituation() {
-
-}
-
-function setInputFieldsToNewConstants(E, G, T, P, input) {
+function setInputFieldsToNewConstants(E, G, T, P, input=false) {
 	T *= 10;
 	document.getElementById("restit").value = E.toString();
 	document.getElementById("gravity").value = G.toString();
@@ -395,12 +443,6 @@ function getPresetObjectList(preset) {
 
 // INPUT HANDLING FUNCTIONS------
 
-// adding object function which adds a list of objects, used to handle the creation of preset scenarios.
-function addPresetObjects(preset) {
-	;
-	objects = presetObjects;
-}
-
 // mouse input function which updates the position attribute of the mouse class used for player input
 function updateMousePos(event) {
 	const canvas = document.getElementById("Simulation");
@@ -438,89 +480,10 @@ function getConstants() {
 	return constants;
 }
 
-// the global variable constants is updated whenever this function is called, with updated values in the user interface of the web page.
-function updateConstants() {
-	constants = getConstants();
-}
-
-// the function called by the pause button when it is clicked, clears the interval when the button is toggled on when clicked, starts it again when toggled off when clicked.
-// this stops and starts the animation of canvas.
-// possibly change to a boolean denoting a paused sim and paused graph which skips the refresh frame for the canvas' allowing them to still have user input.
-function pauseSim() {
-	const btn = document.getElementById("pause-btn");
-	if (btn.value == "ON") {
-		clearInterval(window.interval);
-	} else {
-		const c = document.getElementById("Simulation");
-		const ctxSim = c.getContext("2d");
-		const canvasGraph = document.getElementById("Graphs");
-		const ctxGraphs = canvasGraph.getContext("2d");
-		const height = 480; // Resolution/dimensions of canvas displayed in.
-		const width = 640;
-		clock(ctxSim, ctxGraphs, width, height);
-	}
-}
-
  function getElementFloatValue(elementName) {
 	const valueString = document.getElementById(elementName).value;
 	const valueFloat = parseFloat(valueString);
 	return valueFloat;
-}
-
-function refreshGraphScaling() {
-	let isAutoScalingY = false;
-	if (document.getElementById("auto-scale-y").checked){
-		isAutoScalingY = true;
-	}
-	const information = {
-		Displacement: new Vector2(getElementFloatValue("displacement-scale-x"), getElementFloatValue("displacement-scale-y")),
-		Velocity: new Vector2(getElementFloatValue("velocity-scale-x"), getElementFloatValue("velocity-scale-y")),
-		Acceleration: new Vector2(getElementFloatValue("acceleration-scale-x"), getElementFloatValue("acceleration-scale-y")),
-		"Kinetic Energy": new Vector2(getElementFloatValue("kinetic-energy-scale-x"), getElementFloatValue("kinetic-energy-scale-y"))};
-	let scales;
-	for (const graph of graphs) {
-		scales = information[graph.getAxisY()];
-		if (!(isAutoScalingY)){
-			graph.setScale(scales.getX(), scales.getY());
-		}
-		else {
-			graph.setAutomaticScale();
-			graph.setScale(x=scales.getX());
-		}
-	}
-}
-
-function refreshGraphComponents() {
-	const displacementComponent =  document.getElementById("displacement-component").value;
-	const velocityComponent = document.getElementById("velocity-component").value;
-	const accelerationComponent = document.getElementById("acceleration-component").value;
-	const components = {
-		Displacement: displacementComponent,
-		Velocity: velocityComponent,
-		Acceleration: accelerationComponent
-	};
-	let componentToSet;
-	for (const graph of graphs) {
-		componentToSet = components[graph.getAxisY()];
-		if (graph.getAxisYComponent() != componentToSet){
-			graph.setAxisYComponent(componentToSet);
-		}
-	}
-}
-
-function refreshGraph() {
-	refreshGraphScaling();
-	refreshGraphComponents();
-}
-
-// Toggles the pause button between ON and OFF states, allows for the pauseSim() function to decide when to stop and start the interval function.
-function tgl() {
-	const btn = document.getElementById("pause-btn");
-	if (btn.value == "ON") {
-		btn.value = "OFF";
-	} else {
-		btn.value = "ON";
-	}
 }
 
 function reInit() {
@@ -533,15 +496,15 @@ function reInit() {
 
 // event listeners for user input ------------
 
-document.getElementById("refresh-btn").addEventListener("click", updateConstants);
 
 
 
-document.getElementById("pause-btn").addEventListener("click", pauseSim);
 
-document.getElementById("refresh-sim").addEventListener("click", reInit);
 
-document.getElementById("refresh-scaling-btn").addEventListener("click", refreshGraph);
+
+// document.getElementById("refresh-sim").addEventListener("click", reInit);
+
+
 
 // when the page is loaded the init function is ran.
 window.onload = init;

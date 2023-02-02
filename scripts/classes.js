@@ -615,10 +615,11 @@ class Graph {
 	}
 
 	roundToSignificantFigures(input, precision) {
-		let output = input.toPrecision(precision);
+		let output = input;
 		if (Math.abs(input) > 1000) {
 			output = output.toExponential();
 		}
+		output = input.toPrecision(precision);
 		return output;
 	}
 
