@@ -34,8 +34,11 @@ class CanvasHandler {
 		this.canvasCtx.fillRect(topLeftX, topLeftY, width, height);
 	}
 
-	drawCircle(x, y, radius) {
+	drawCircle(x, y, radius, colour) {
+		this.canvasCtx.fillStyle = colour;
+		this.canvasCtx.beginPath();
 		this.canvasCtx.arc(x, y, radius, 0, 2 * Math.PI);
+		this.canvasCtx.fill();
 	}
 
 	drawText(text, x, y, colour) {
@@ -90,7 +93,7 @@ class SimulationHandler extends CanvasHandler {
 		if (object.shape == "circle") {
 			objectXPosition = object.position.getX();
 			objectYPosition = object.position.getY();
-			this.drawCircle(objectXPosition, objectYPosition, object.radius);
+			this.drawCircle(objectXPosition, objectYPosition, object.radius, objectColour);
 		}
 		else {
 			objectXPosition = object.getCorner.getX();
@@ -107,7 +110,7 @@ class SimulationHandler extends CanvasHandler {
 			object.addWeight(this.constants.GravitationalFieldStrength);
 			object.groundCeilingCollision(this.constants.CoeffRest, this.constants.TimeScale, this.height);
 			object.sideCollision(this.constants.CoeffRest, this.constants.TimeScale, this.width);
-			object.updateKinematics(this.DensityOfAir, this.TimeScale);
+			object.updateKinematics(this.constants.DensityOfAir, this.constants.TimeScale);
 			object.updateHitbox();
 		}
 		for (const object1 of this.objects) {
@@ -248,30 +251,44 @@ const RESOLUTION = Settings["Resolution"];
 
 // GLOBALS--------------
 
-const mouse = new Mouse();
-const simulationHandler = new SimulationHandler("Simulation");
-const dataLoggerHandler = new DataLoggerHandler("Graphs");
-
 
 // CORE FUNCTIONS--------
 
 // function which initializes the simulation
 function init() {
+	const simulationHandler = new SimulationHandler("Simulation");
+	const dataLoggerHandler = new DataLoggerHandler("Graphs");
 	dataLoggerHandler.addGraph("Displacement", "upperLeft");
 	dataLoggerHandler.addGraph("Velocity", "upperRight");
 	dataLoggerHandler.addGraph("Acceleration", "bottomLeft");
 	dataLoggerHandler.addGraph("Kinetic Energy", "bottomRight");
-	clock();
+
+	document.getElementById("add-object-btn").addEventListener("click", () => {
+		const newObject = getInputtedObject();
+		simulationHandler.addObject(newObject)});
+	document.getElementById("preset-btn").addEventListener("click", () => {
+		for (const graph of dataLoggerHandler.graphs) {
+			graph.queue.clearQueue();
+		}
+		const preset = document.getElementById("presets").value;
+		if (preset != "none") {
+			const presetObjects = getPresetObjectList(preset);
+			simulationHandler.setObjectsList(presetObjects);
+			const newConstants = presetConstants(preset);
+			simulationHandler.setConstants(newConstants[0], newConstants[1], newConstants[2], newConstants[3]);
+		};
+	});
+	clock(60, simulationHandler, dataLoggerHandler);
 }
 
 // this function runs the update every 10ms using an interval function, this interval loops the update function which updates the positions of all balls in the animation.
-function clock(refreshRate) {
+function clock(refreshRate, simulationHandler, dataLoggerHandler) {
 	const milliSecondsPerFrame = 1000/refreshRate;
-	window.interval = setInterval(update, milliSecondsPerFrame);
+	window.interval = setInterval(update, milliSecondsPerFrame, simulationHandler, dataLoggerHandler);
 }
 
 // function which draws the simulations current frame using the canvas drawing functions.
-function update() {
+function update(simulationHandler, dataLoggerHandler) {
 	simulationHandler.animateFrame();
 	dataLoggerHandler.setTrackedObject(simulationHandler.objectTracked);
 	dataLoggerHandler.animateFrame();
@@ -282,7 +299,7 @@ function getInputtedObject() {
 	const shape = document.getElementById("object-type").value;
 	const colour = document.getElementById("colour").value;
 	const density = getElementFloatValue("density");
-	const position = new Position(getElementFloatValue("position-x"), simulationHandler.height - (getElementFloatValue("position-y")+(1/9)*simulationHandler.height));
+	const position = new Position(getElementFloatValue("position-x"), 480 - (getElementFloatValue("position-y")+(1/9)*480));
 	const velocity = new Velocity(getElementFloatValue("velocity-x"), -getElementFloatValue("velocity-y"));
 	const acceleration = new Acceleration(getElementFloatValue("acceleration-x"), -getElementFloatValue("acceleration-y"));
 	if (shape == "circle") {
@@ -296,22 +313,10 @@ function getInputtedObject() {
 	return newObj;
 }
 
-// adding object function which grabs from the input fields on the html page to create an object of the given parameters.
-function addInputObject() {
-	const newObject = getInputtedObject();
-	simulationHandler.addObject(newObject);
-}
 // PRESET HANDLING FUNCTIONS------
 
 function createPresetSituation() {
-	for (const graph of graphs) {
-		graph.queue.clearQueue();
-	}
-	const preset = document.getElementById("presets").value;
-	if (preset != "none") {
-		addPresetObjects(preset);
-		presetConstants(preset);
-	}
+
 }
 
 function setInputFieldsToNewConstants(E, G, T, P, input) {
@@ -331,8 +336,8 @@ function presetConstants(preset) {
 		default: [1, 9.81, 0.1, 1.225, true]
 	};
 	const constants = presetConstants[preset];
-	simulationHandler.setConstants(constants[0], constants[1], constants[2], constants[3]);
 	setInputFieldsToNewConstants(constants[0], constants[1], constants[2], constants[3], constants[4]);
+	return constants;
 }
 
 function getPresetObjectList(preset) {
@@ -392,7 +397,7 @@ function getPresetObjectList(preset) {
 
 // adding object function which adds a list of objects, used to handle the creation of preset scenarios.
 function addPresetObjects(preset) {
-	const presetObjects = getPresetObjectList(preset);
+	;
 	objects = presetObjects;
 }
 
@@ -530,21 +535,13 @@ function reInit() {
 
 document.getElementById("refresh-btn").addEventListener("click", updateConstants);
 
-document.getElementById("preset-btn").addEventListener("click", createPresetSituation);
+
 
 document.getElementById("pause-btn").addEventListener("click", pauseSim);
 
 document.getElementById("refresh-sim").addEventListener("click", reInit);
 
-document.getElementById("add-object-btn").addEventListener("click", addInputObject);
-
 document.getElementById("refresh-scaling-btn").addEventListener("click", refreshGraph);
-
-document.addEventListener("mousemove", updateMousePos);
-
-document.addEventListener("mousedown", onMouseClick);
-
-document.addEventListener("mouseup", onMouseClick);
 
 // when the page is loaded the init function is ran.
 window.onload = init;
