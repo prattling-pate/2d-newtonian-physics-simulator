@@ -1,13 +1,5 @@
 // CLASSES
 
-// static class containing methods to create random numbers
-// module containing extra math methods not included in the standard Maths library utilized in the web page
-class ExtraMaths {
-	static generateRandomFloat(lower, upper) {
-		return lower + Math.random() * (upper - lower);
-	}
-}
-
 // main 2 vector class
 class Vector2 {
 	constructor(x = 0, y = 0) {
@@ -424,7 +416,7 @@ class GraphQueue {
 		this.frontPointer = -1;
 		this.backPointer = -1;
 		this.maximumLength = maximumLength;
-		this.largestPresentValue = [0,0]; // [largest stored value, index in graph of this value]
+		this.largestPresentValue = [0, 0]; // [largest stored value, index in graph of this value]
 		this.data = [];
 	}
 
@@ -492,12 +484,12 @@ class GraphQueue {
 		this.maximumLength = newLength;
 		let pointerToPop;
 		while (newLength < this.data.length) {
-			pointerToPop=this.dequeueData();
+			pointerToPop = this.dequeueData();
 			this.data.pop(pointerToPop);
 			this.adjustPointerPositions();
 		}
 		while (newLength > this.data.length) {
-			this.data.splice(this.backPointer+1, 0, [0,0,false,0]);
+			this.data.splice(this.backPointer + 1, 0, [0, 0, false, 0]);
 		}
 	}
 
@@ -510,7 +502,7 @@ class GraphQueue {
 	// returns the list index of the given index given its location in the queue.
 	// used graphing software to find this function using mapping + plotting a graph.
 	undoQueueIndex(index) {
-		return (index - this.frontPointer + this.maximumLength)%(this.maximumLength);
+		return (index - this.frontPointer + this.maximumLength) % (this.maximumLength);
 	}
 }
 
@@ -531,7 +523,11 @@ class Graph {
 		// queue contains lists (so 2d lists) containing data to be plotted [scaled, unscaled].
 	}
 
-	getAxisY(){
+	clearQueue() {
+		this.queue.clearQueue();
+	}
+
+	getAxisY() {
 		return this.axisY;
 	}
 
@@ -552,14 +548,14 @@ class Graph {
 			"Velocity": "m/s",
 			"Acceleration": "m/s^2"
 		}
-		return "("+units[this.axisY]+")";
+		return "(" + units[this.axisY] + ")";
 	}
 
 	// uses simple inverse proportionality after finding 2500 length is good for timescale of 0.1.
-	findGraphQueueLength(){
+	findGraphQueueLength() {
 		const timeStep = this.getXStepInPlot();
 		const distancePerPoint = this.scaleInXAxis(timeStep);
-		const distanceBetweenPointsInXAxis = 250/distancePerPoint;
+		const distanceBetweenPointsInXAxis = 250 / distancePerPoint;
 		return distanceBetweenPointsInXAxis;
 	}
 
@@ -578,7 +574,7 @@ class Graph {
 			"Kinetic Energy": objectData.getKineticEnergy(), // for now in 10^4 J
 		};
 		let toPlot = information[this.axisY];
-		if (this.axisY != "Kinetic Energy"){
+		if (this.axisY != "Kinetic Energy") {
 			const components = {
 				x: toPlot.getX(),
 				y: toPlot.getY(),
@@ -590,7 +586,7 @@ class Graph {
 	}
 
 	isPointOutOfBounds(toPlotScaled) {
-		if (Math.abs(toPlotScaled) > 120){
+		if (Math.abs(toPlotScaled) > 120) {
 			return true;
 		}
 		return false;
@@ -608,7 +604,7 @@ class Graph {
 		const toPlot = this.getDataPoint(objectData);
 		const timeAtAxis = objectData.getTime().toFixed(3);
 		let toPlotScaled = this.scaleInYAxis(toPlot);
-		toPlotScaled= this.putDataPointInBounds(toPlotScaled);
+		toPlotScaled = this.putDataPointInBounds(toPlotScaled);
 		const outOfBounds = this.isPointOutOfBounds(toPlotScaled);
 		this.queue.enqueueData([toPlotScaled, toPlot, outOfBounds, timeAtAxis]);
 		this.queue.updateLargestPresentValue();
@@ -623,48 +619,48 @@ class Graph {
 		return output;
 	}
 
-	setScale(x=0,y=0) {
-		if (x==0 && y==0){
+	setScale(x = 0, y = 0) {
+		if (x == 0 && y == 0) {
 			alert("Cannot set scales to 0")
 			return null;
 		}
-		if (x!=0){
+		if (x != 0) {
 			this.scale.setX(x);
 			this.queue.setLength(this.findGraphQueueLength())
 		}
-		if (y!=0){
+		if (y != 0) {
 			this.scale.setY(y);
 		}
 		this.updateQueueScale();
 	}
 
-	scaleInYAxis(dataPoint){
-		return dataPoint*this.scale.getY();
+	scaleInYAxis(dataPoint) {
+		return dataPoint * this.scale.getY();
 	}
 
 	scaleInXAxis(dataPoint) {
-		return dataPoint*this.scale.getX();
+		return dataPoint * this.scale.getX();
 	}
 
 	updateQueueScale() {
 		for (let i = 0; i < this.queue.getLength(); i++) {
-			this.queue.data[i][0]=this.queue.data[i][1]*this.scale.getY();
-			this.queue.data[i][0]=this.putDataPointInBounds(this.queue.data[i][0]);
+			this.queue.data[i][0] = this.queue.data[i][1] * this.scale.getY();
+			this.queue.data[i][0] = this.putDataPointInBounds(this.queue.data[i][0]);
 		}
 	}
 
 	// use linear interpolation to find a scaling factor for plotted values according to the largest recorded value (using direct proportion).
 	setAutomaticScale() {
-		if (this.queue.getLargestPresentValue() == 0){
+		if (this.queue.getLargestPresentValue() == 0) {
 			return null;
 		}
 		const yScalingFactor = 120 / this.queue.getLargestPresentValue(); // not perfect - find new equation/relationship.
-		this.setScale(0,yScalingFactor);
+		this.setScale(0, yScalingFactor);
 	}
 
 	// translates cartesian data point to the canvas coordinates system.
 	translateDataToCanvasPlane(data) {
-		const positionX = this.originPosition.getX() - 0.25 * this.width + data.getX();
+		const positionX = this.originPosition.getX() - this.width + data.getX();
 		const positionY = this.originPosition.getY() - data.getY();
 		const position = new Position(positionX, positionY);
 		return position;
@@ -673,11 +669,11 @@ class Graph {
 	// if y data point is outside of the bounds of the graph the point will be replaced by the largest representable point on the graph.
 	// how do i denote a value is out of range?
 	putDataPointInBounds(dataPoint) {
-		const graphHeight = this.height * 0.5;
-		if ((graphHeight < dataPoint) ) {
+		const graphHeight = this.height;
+		if ((graphHeight < dataPoint)) {
 			return 120;
 		}
-		if ((-graphHeight > dataPoint)){
+		if ((-graphHeight > dataPoint)) {
 			return -120;
 		}
 		return dataPoint;

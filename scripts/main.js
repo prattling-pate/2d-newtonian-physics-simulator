@@ -13,7 +13,7 @@ class CanvasHandler {
 	}
 
 	// move to main.js when creating the self contained module.
-	drawLine(initialPosition, finalPosition, colour="black") {
+	drawLine(initialPosition, finalPosition, colour = "black") {
 		this.canvasCtx.strokeStyle = colour;
 		this.canvasCtx.beginPath();
 		this.canvasCtx.moveTo(initialPosition.getX(), initialPosition.getY());
@@ -56,15 +56,15 @@ class SimulationHandler extends CanvasHandler {
 		this.objects.push(newObject);
 	}
 
-	setObjectsList(newList){
+	setObjectsList(newList) {
 		this.objects = newList;
 	}
 
 	setConstants(E, G, T, P) {
-		this.constants.CoeffRest=E;
-		this.constants.GravitationalFieldStrength=G;
-		this.constants.TimeScale=T;
-		this.constants.DensityOfAir=P;
+		this.constants.CoeffRest = E;
+		this.constants.GravitationalFieldStrength = G;
+		this.constants.TimeScale = T;
+		this.constants.DensityOfAir = P;
 	}
 
 	drawBackground() {
@@ -118,14 +118,14 @@ class SimulationHandler extends CanvasHandler {
 	drawFrame() {
 		this.drawBackground();
 		this.drawGround();
-		for (const object of this.objects){
+		for (const object of this.objects) {
 			this.drawObject(object);
 		}
 	}
 
 	animateFrame() {
 		this.drawFrame();
-		if (this.running){
+		if (this.running) {
 			this.moveTimeForward();
 		}
 	}
@@ -143,7 +143,7 @@ class DataLoggerHandler extends CanvasHandler {
 		this.canvasCtx.fontStyle = "30px Calibri";
 	}
 
-	clearGraphQueues(){
+	clearGraphQueues() {
 		for (const graph of this.graphs) {
 			graph.clearQueue();
 		}
@@ -160,7 +160,7 @@ class DataLoggerHandler extends CanvasHandler {
 			bottomLeft: new Position(this.width * 0.25, this.height * 0.75),
 			bottomRight: new Position(this.width * 0.75, this.height * 0.75)
 		}
-		const graph = new Graph(this.width, this.height, yAxis, "Time", position[centrePosition])
+		const graph = new Graph(this.width/2, this.height/4, yAxis, "Time", position[centrePosition])
 		this.graphs.push(graph);
 	}
 
@@ -182,14 +182,14 @@ class DataLoggerHandler extends CanvasHandler {
 
 	drawGraph(graph) {
 		const lineCoordinates = {
-			middleLeft: new Position(graph.originPosition.getX() - graph.width * 0.25, graph.originPosition.getY()), 
-			middleRight: new Position(graph.originPosition.getX() + graph.width * 0.25, graph.originPosition.getY()),
-			topLeft: new Position(graph.originPosition.getX() - graph.width * 0.25, graph.originPosition.getY() - graph.height * 0.25), 
-			topRight: new Position(graph.originPosition.getX() + graph.width * 0.25, graph.originPosition.getY() - graph.height * 0.25),
-			bottomRight: new Position(graph.originPosition.getX() + graph.width * 0.25, graph.originPosition.getY() + graph.height * 0.25),
-			bottomLeft: new Position(graph.originPosition.getX() - graph.width * 0.25, graph.originPosition.getY() + graph.height * 0.25)
+			middleLeft: new Position(graph.originPosition.getX() - this.width * 0.25, graph.originPosition.getY()),
+			middleRight: new Position(graph.originPosition.getX() + this.width * 0.25, graph.originPosition.getY()),
+			topLeft: new Position(graph.originPosition.getX() - this.width * 0.25, graph.originPosition.getY() - this.height * 0.25),
+			topRight: new Position(graph.originPosition.getX() + this.width * 0.25, graph.originPosition.getY() - this.height * 0.25),
+			bottomRight: new Position(graph.originPosition.getX() + this.width * 0.25, graph.originPosition.getY() + this.height * 0.25),
+			bottomLeft: new Position(graph.originPosition.getX() - this.width * 0.25, graph.originPosition.getY() + this.height * 0.25)
 		};
-		
+
 		// drawing the graph axis
 		this.drawAxis(lineCoordinates);
 		// drawing boundaries between graphs
@@ -198,16 +198,16 @@ class DataLoggerHandler extends CanvasHandler {
 		this.drawText(graph.axisY + " " + graph.unitsY, yAxisTitlePosition.getX(), yAxisTitlePosition.getY(), "black");
 		const xAxisTitlePosition = graph.translateDataToCanvasPlane(new Position(280, 10));
 		this.drawText(graph.axisX + " (s)", xAxisTitlePosition.getX(), xAxisTitlePosition.getY(), "black");
-		
+
 	}
 
 	drawScales(graph) {
 		let yValueScale;
-		const xPosOfYScale = graph.originPosition.getX() - graph.width*0.225;
+		const xPosOfYScale = graph.originPosition.getX() - this.width * 0.225;
 		for (let i = 0; i < 6; i++) {
-			yValueScale = graph.roundToSignificantFigures(20*(i+1)*(1/graph.scale.getY()), 3);
-			this.drawText(yValueScale, xPosOfYScale, graph.originPosition.getY()-(i+1)*20, "black");
-			this.drawText(-yValueScale, xPosOfYScale, graph.originPosition.getY()+(i+1)*20, "black");
+			yValueScale = graph.roundToSignificantFigures(20 * (i + 1) * (1 / graph.scale.getY()), 3);
+			this.drawText(yValueScale, xPosOfYScale, graph.originPosition.getY() - (i + 1) * 20, "black");
+			this.drawText(-yValueScale, xPosOfYScale, graph.originPosition.getY() + (i + 1) * 20, "black");
 		}
 	}
 
@@ -216,12 +216,12 @@ class DataLoggerHandler extends CanvasHandler {
 		const timeStep = graph.getXStepInPlot();
 		for (let i = 0; i < graph.queue.getLength() - 1; i++) {
 			index = graph.queue.getQueueIndex(i);
-			indexNext = graph.queue.getQueueIndex(i+1);
-			position = graph.translateDataToCanvasPlane(new Position((i)*timeStep, graph.queue.data[index][0]));
-			positionNext = graph.translateDataToCanvasPlane(new Position((i+1)*timeStep, graph.queue.data[indexNext][0]));
+			indexNext = graph.queue.getQueueIndex(i + 1);
+			position = graph.translateDataToCanvasPlane(new Position((i) * timeStep, graph.queue.data[index][0]));
+			positionNext = graph.translateDataToCanvasPlane(new Position((i + 1) * timeStep, graph.queue.data[indexNext][0]));
 			colour = graph.getColourOfDataPoint(graph.queue.data[indexNext][2]);
 			this.drawLine(position, positionNext, colour);
-			if ((i+50) % 100 == 0){
+			if ((i + 50) % 100 == 0) {
 				// draws the x axis scales
 				this.drawText(graph.queue.data[index][3], position.getX(), graph.originPosition.getY() + 20, "black");
 			}
@@ -232,7 +232,7 @@ class DataLoggerHandler extends CanvasHandler {
 	animateFrame() {
 		this.drawBackground();
 		for (const graph of this.graphs) {
-			if (this.trackedObject && this.running){
+			if (this.trackedObject && this.running) {
 				graph.addData(this.trackedObject);
 			}
 			this.drawGraph(graph);
@@ -244,9 +244,6 @@ class DataLoggerHandler extends CanvasHandler {
 // CONSTANTS
 
 const RESOLUTION = [640, 480];
-
-// GLOBALS--------------
-
 
 // CORE FUNCTIONS--------
 
@@ -261,13 +258,11 @@ function init() {
 
 	document.getElementById("add-object-btn").addEventListener("click", () => {
 		const newObject = getInputtedObject();
-		simulationHandler.addObject(newObject)
+		simulationHandler.addObject(newObject);
 	});
-		
+
 	document.getElementById("preset-btn").addEventListener("click", () => {
-		for (const graph of dataLoggerHandler.graphs) {
-			graph.queue.clearQueue();
-		}
+		dataLoggerHandler.clearGraphQueues();
 		const preset = document.getElementById("presets").value;
 		if (preset != "none") {
 			const presetObjects = getPresetObjectList(preset);
@@ -279,27 +274,27 @@ function init() {
 
 	document.getElementById("refresh-scaling-btn").addEventListener("click", () => {
 		dataLoggerHandler.yAutoScaling = false;
-		if (document.getElementById("auto-scale-y").checked){
+		if (document.getElementById("auto-scale-y").checked) {
 			dataLoggerHandler.yAutoScaling = true;
 		}
 		const information = {
 			Displacement: new Vector2(getElementFloatValue("displacement-scale-x"), getElementFloatValue("displacement-scale-y")),
 			Velocity: new Vector2(getElementFloatValue("velocity-scale-x"), getElementFloatValue("velocity-scale-y")),
 			Acceleration: new Vector2(getElementFloatValue("acceleration-scale-x"), getElementFloatValue("acceleration-scale-y")),
-			"Kinetic Energy": new Vector2(getElementFloatValue("kinetic-energy-scale-x"), getElementFloatValue("kinetic-energy-scale-y"))};
+			"Kinetic Energy": new Vector2(getElementFloatValue("kinetic-energy-scale-x"), getElementFloatValue("kinetic-energy-scale-y"))
+		};
 		let scales;
 		for (const graph of dataLoggerHandler.graphs) {
 			scales = information[graph.getAxisY()];
-			if (!dataLoggerHandler.yAutoScaling){
+			if (!dataLoggerHandler.yAutoScaling) {
 				graph.setScale(scales.getX(), scales.getY());
 			}
 			else {
 				graph.setAutomaticScale();
-				graph.setScale(x=scales.getX());
+				graph.setScale(x = scales.getX());
 			}
 		}
-
-		const displacementComponent =  document.getElementById("displacement-component").value;
+		const displacementComponent = document.getElementById("displacement-component").value;
 		const velocityComponent = document.getElementById("velocity-component").value;
 		const accelerationComponent = document.getElementById("acceleration-component").value;
 		const components = {
@@ -310,13 +305,13 @@ function init() {
 		let componentToSet;
 		for (const graph of dataLoggerHandler.graphs) {
 			componentToSet = components[graph.getAxisY()];
-			if (graph.getAxisYComponent() != componentToSet){
+			if (graph.getAxisYComponent() != componentToSet) {
 				graph.setAxisYComponent(componentToSet);
 			}
 		}
 	});
 
-	document.getElementById("refresh-btn").addEventListener("click", () => {
+	document.getElementById("refresh-const-btn").addEventListener("click", () => {
 		simulationHandler.setConstants(getConstants());
 	});
 
@@ -330,12 +325,16 @@ function init() {
 		dataLoggerHandler.running = true;
 	});
 
+	document.getElementById("refresh-sim-btn").addEventListener("click", () => {
+		init();
+	});
+
 	clock(60, simulationHandler, dataLoggerHandler);
 }
 
 // this function runs the update every 10ms using an interval function, this interval loops the update function which updates the positions of all balls in the animation.
 function clock(refreshRate, simulationHandler, dataLoggerHandler) {
-	const milliSecondsPerFrame = 1000/refreshRate;
+	const milliSecondsPerFrame = 1000 / refreshRate;
 	interval = setInterval(update, milliSecondsPerFrame, simulationHandler, dataLoggerHandler);
 }
 
@@ -351,9 +350,15 @@ function getInputtedObject() {
 	const shape = document.getElementById("object-type").value;
 	const colour = document.getElementById("colour").value;
 	const density = getElementFloatValue("density");
-	const position = new Position(getElementFloatValue("position-x"), 480 - (getElementFloatValue("position-y")+(1/9)*480));
-	const velocity = new Velocity(getElementFloatValue("velocity-x"), -getElementFloatValue("velocity-y"));
-	const acceleration = new Acceleration(getElementFloatValue("acceleration-x"), -getElementFloatValue("acceleration-y"));
+	const position = new Position(
+		getElementFloatValue("position-x"),
+		 RESOLUTION[1] - (getElementFloatValue("position-y") + (1 / 9) * RESOLUTION[1]));
+	const velocity = new Velocity(
+		getElementFloatValue("velocity-x"),
+		 -getElementFloatValue("velocity-y"));
+	const acceleration = new Acceleration(
+		getElementFloatValue("acceleration-x"), 
+		-getElementFloatValue("acceleration-y"));
 	if (shape == "circle") {
 		const radius = getElementFloatValue("radius");
 		newObj = new Circle(radius, density, colour, velocity, acceleration, position);
@@ -367,7 +372,7 @@ function getInputtedObject() {
 
 // PRESET HANDLING FUNCTIONS------
 
-function setInputFieldsToNewConstants(E, G, T, P, input=false) {
+function setInputFieldsToNewConstants(E, G, T, P, input = false) {
 	T *= 10;
 	document.getElementById("restit").value = E.toString();
 	document.getElementById("gravity").value = G.toString();
@@ -390,80 +395,65 @@ function presetConstants(preset) {
 
 function getPresetObjectList(preset) {
 	// object filled with lists of objects which will be added to current object list to be drawn according to each preset.
+	const presetObjects = {
+		diffusion: createDiffusionPresetObjectList(),
+		atmosphericDiffusion: createAtmosphericDiffusionPresetObjectList(),
+		oneToOneMassCollision: null,
+		twoToOneMassCollision: null,
+		threeToOneMassCollision: null
+	}
+	const presetObjectList = presetObjects[preset];
+	return presetObjectList;
+}
+
+// PRESET GENERATING FUNCTIONS-----
+
+function createDiffusionPresetObjectList() {
 	let presetObjectList = [];
-	switch (preset) {
-		case "diffusion":
-			for (let i = 0; i < 100; i++) {
-				// randomly decides if the y velocity will be upwards or downwards.
-				presetObjectList.push(
-					new Circle(5, 5, "red", new Velocity(
-						ExtraMaths.generateRandomFloat(-50, 50),  
-						ExtraMaths.generateRandomFloat(-50, 50)), new Acceleration(), 
-						new Position(ExtraMaths.generateRandomFloat(0, 0.25 * RESOLUTION[0]),
-					 	(((8 / 9) * RESOLUTION[1]) / 100) * i))
-				);
-			}
-			for (let i = 0; i < 100; i++) {
-				// randomly decides if the y velocity will be upwards or downwards.
-				presetObjectList.push(
-					new Circle(5, 5, "green", new Velocity(ExtraMaths.generateRandomFloat(-50, 50), ExtraMaths.generateRandomFloat(-50, 50)), new Acceleration(), new Position(ExtraMaths.generateRandomFloat(0.75 * RESOLUTION[0], RESOLUTION[0]), (((8 / 9) * RESOLUTION[1]) / 100) * i))
-				);
-			}
-			break;
-		case "atmospheric-diffusion":
-			const possibleMasses = [5,10,15]; 
-			for (let i = 0; i < 66; i++) {
-				// randomly decides if the y velocity will be upwards or downwards.
-				presetObjectList.push(
-					new Circle(5, possibleMasses[0], "red", new Velocity(ExtraMaths.generateRandomFloat(-50, 50), ExtraMaths.generateRandomFloat(-50, 50)), new Acceleration(), new Position(ExtraMaths.generateRandomFloat(0, RESOLUTION[0]), generateRandomFloat(0, RESOLUTION[1])))
-				);
-			}
-			for (let i = 0; i < 66; i++) {
-				// randomly decides if the y velocity will be upwards or downwards.
-				presetObjectList.push(
-					new Circle(5, possibleMasses[1], "blue", new Velocity(ExtraMaths.generateRandomFloat(-50, 50), ExtraMaths.generateRandomFloat(-50, 50)), new Acceleration(), new Position(ExtraMaths.generateRandomFloat(0, RESOLUTION[0]), ExtraMaths.generateRandomFloat(0, RESOLUTION[1])))
-				);
-			}
-			for (let i = 0; i < 66; i++) {
-				// randomly decides if the y velocity will be upwards or downwards.
-				presetObjectList.push(
-					new Circle(5, possibleMasses[2], "green", new Velocity(ExtraMaths.generateRandomFloat(-50, 50), ExtraMaths.generateRandomFloat(-50, 50)), new Acceleration(), new Position(ExtraMaths.generateRandomFloat(0, RESOLUTION[0]), ExtraMaths.generateRandomFloat(0, RESOLUTION[1])))
-				);
-			}
-			break;
-		case "1:1-mass-collision":
-			break;
-		case "2:1-mass-collision":
-			break;
-		default:
-			break;
+	for (let i = 0; i < 100; i++) {
+		// randomly decides if the y velocity will be upwards or downwards.
+		presetObjectList.push(
+			new Circle(5, 5, "red", new Velocity(
+				generateRandomFloat(-50, 50),
+				generateRandomFloat(-50, 50)), new Acceleration(),
+				new Position(generateRandomFloat(0, 0.25 * RESOLUTION[0]),
+					(((8 / 9) * RESOLUTION[1]) / 100) * i))
+		);
+	}
+	for (let i = 0; i < 100; i++) {
+		// randomly decides if the y velocity will be upwards or downwards.
+		presetObjectList.push(
+			new Circle(5, 5, "green", new Velocity(generateRandomFloat(-50, 50), generateRandomFloat(-50, 50)), new Acceleration(), new Position(generateRandomFloat(0.75 * RESOLUTION[0], RESOLUTION[0]), (((8 / 9) * RESOLUTION[1]) / 100) * i))
+		);
+	}
+	return presetObjectList;
+}
+
+function createAtmosphericDiffusionPresetObjectList() {
+	const presetObjectList = [];
+	const possibleMasses = [5, 10, 15];
+	for (let i = 0; i < 66; i++) {
+		// randomly decides if the y velocity will be upwards or downwards.
+		presetObjectList.push(
+			new Circle(5, possibleMasses[0], "red", new Velocity(generateRandomFloat(-50, 50), generateRandomFloat(-50, 50)), new Acceleration(), new Position(generateRandomFloat(0, RESOLUTION[0]), generateRandomFloat(0, RESOLUTION[1])))
+		);
+	}
+	for (let i = 0; i < 66; i++) {
+		// randomly decides if the y velocity will be upwards or downwards.
+		presetObjectList.push(
+			new Circle(5, possibleMasses[1], "blue", new Velocity(generateRandomFloat(-50, 50), generateRandomFloat(-50, 50)), new Acceleration(), new Position(generateRandomFloat(0, RESOLUTION[0]), generateRandomFloat(0, RESOLUTION[1])))
+		);
+	}
+	for (let i = 0; i < 66; i++) {
+		// randomly decides if the y velocity will be upwards or downwards.
+		presetObjectList.push(
+			new Circle(5, possibleMasses[2], "green", new Velocity(generateRandomFloat(-50, 50), generateRandomFloat(-50, 50)), new Acceleration(), new Position(generateRandomFloat(0, RESOLUTION[0]), generateRandomFloat(0, RESOLUTION[1])))
+		);
 	}
 	return presetObjectList;
 }
 
 // INPUT HANDLING FUNCTIONS------
-
-// mouse input function which updates the position attribute of the mouse class used for player input
-function updateMousePos(event) {
-	const canvas = document.getElementById("Simulation");
-	const relativeCoords = canvas.getBoundingClientRect();
-	// convert this to relative canvas coords :)
-	mouse.containInBounds(event.clientX - relativeCoords.left, event.clientY - relativeCoords.top);
-	for (let i = 0; i < 4; i++) {
-		if (i < 2) {
-			mouse.hitbox[i] = mouse.position.getX();
-		} else {
-			mouse.hitbox[i] = mouse.position.getY();
-		}
-	}
-}
-
-// mouse input handle which handles the event of the mouse click (of any buttons), i.e. inputting a force on an object.
-function onMouseClick(event) {
-	if (event.button == 0) {
-		mouse.leftClicked = true;
-	}
-}
 
 // Grabs the values from each input field in order to update the constants array to user selected values.
 function getConstants() {
@@ -480,30 +470,15 @@ function getConstants() {
 	return constants;
 }
 
- function getElementFloatValue(elementName) {
+function getElementFloatValue(elementName) {
 	const valueString = document.getElementById(elementName).value;
 	const valueFloat = parseFloat(valueString);
 	return valueFloat;
 }
 
-function reInit() {
-	clearInterval(window.interval);
-	const c = document.getElementById("Simulation");
-	ctxSim = c.getContext("2d");
-	ctxSim.clearRect(0, 0, 640, 480);
-	init();
+function generateRandomFloat(lower, upper) {
+	return lower + Math.random() * (upper - lower);
 }
-
-// event listeners for user input ------------
-
-
-
-
-
-
-
-// document.getElementById("refresh-sim").addEventListener("click", reInit);
-
 
 
 // when the page is loaded the init function is ran.
@@ -526,6 +501,6 @@ window.onload = init;
 // GRAPHS:
 // drop down menus to decide on whether to plot the absolute value, x or y components of vectors
 // add axis titles and scales.
-// add an autoscaling algorithm for the graphing.	
+// add an autoscaling algorithm for the graphing.
 
 // ADD ERROR HANDLING (I DONT KNOW WHAT KIND, MAYBE TRY CHECKING IF THE NEGATIVE DISCRIMINANT ERROR STILL EXISTS IN THIS)

@@ -20,9 +20,11 @@
 				<label for="presets">Presets</label>
 				<select id="presets">
 					<option value="default">Select a preset</option>
-					<option value="atmospheric-diffusion">Atmospheric Diffusion</option>
+					<option value="atmosphericDiffusion">Atmospheric Diffusion</option>
 					<option value="diffusion">Diffusion</option>
-					<option value="WIP">Ask adams for more suggestions :)</option>
+					<option value="oneToOneMassCollision">1:1 mass collision</option>
+					<option value="twoToOneMassCollision">2:1 mass collision</option>
+					<option value="threeToOneMassCollision">3:1 mass collision</option>
 				</select>
 				<label for="force-enabled">Enable force input?</label>
 				<input type="checkbox" id="force-enabled" checked />
@@ -39,8 +41,8 @@
 				<label for="restit">Coefficient of Restitution</label>
 				<input type="number" value="1" min="0" step="0.001" id="restit" /><br />
 			</div>
-			<button id="refresh-btn">Refresh constants</button>
-			<button id="refresh-sim">Refresh simulation</button>
+			<button id="refresh-const-btn">Refresh constants</button>
+			<button id="refresh-sim-btn">Refresh simulation</button>
 			<button id="pause-btn">Pause simulation</button>
 			<br />
 			<div class="object-inputs">
