@@ -65,7 +65,7 @@ class Graph {
 		if (this.axisY != "Kinetic Energy") {
 			const components = {
 				x: toPlot.getX(),
-				y: toPlot.getY(),
+				y: -toPlot.getY(),
 				abs: toPlot.getMag(),
 			};
 			toPlot = components[this.axisYComponent];

@@ -107,32 +107,17 @@ class MyObject {
 		}
 	}
 
-	isCollision(other, timeStep, useTimeStep = true) {
+	isCollision(other, timeStep) {
 		const thisFutureVelocity = this.velocity.mult(timeStep);
 		const otherFutureVelocity = other.velocity.mult(timeStep);
-		if (useTimeStep) {
-			if (
-				((this.hitbox[0] + thisFutureVelocity.getX() > other.hitbox[1] + otherFutureVelocity.getX() && this.hitbox[1] + thisFutureVelocity.getX() < other.hitbox[1] + otherFutureVelocity.getX()) ||
-					(this.hitbox[0] + thisFutureVelocity.getX() > other.hitbox[0] + otherFutureVelocity.getX() && this.hitbox[1] + thisFutureVelocity.getX() < other.hitbox[0] + otherFutureVelocity.getX())) &&
-				((this.hitbox[2] + thisFutureVelocity.getY() > other.hitbox[3] + otherFutureVelocity.getY() && this.hitbox[3] + thisFutureVelocity.getY() < other.hitbox[3] + otherFutureVelocity.getY()) ||
-					(this.hitbox[2] + thisFutureVelocity.getY() > other.hitbox[2] + otherFutureVelocity.getY() && this.hitbox[3] + thisFutureVelocity.getY() < other.hitbox[2] + otherFutureVelocity.getY()))
-			) {
-				return true;
-			}
-			return false;
+		const case1 = this.hitbox[0] + thisFutureVelocity.getX()> other.hitbox[1] + otherFutureVelocity.getX();
+		const case2= this.hitbox[1] + thisFutureVelocity.getX() < other.hitbox[0] + otherFutureVelocity.getX();
+		const case3 = this.hitbox[2] + thisFutureVelocity.getY() > other.hitbox[3] + otherFutureVelocity.getY();
+		const case4 = this.hitbox[3] + thisFutureVelocity.getY() < other.hitbox[2] + otherFutureVelocity.getY();
+		if (case1 && case2 && case3 && case4) {
+			return true;
 		}
-		else{
-			if (
-				((this.hitbox[0] > other.hitbox[1] && this.hitbox[1] < other.hitbox[1]) ||
-					(this.hitbox[0] > other.hitbox[0] && this.hitbox[1] < other.hitbox[0])) &&
-				((this.hitbox[2] > other.hitbox[3] && this.hitbox[3] < other.hitbox[3]) ||
-					(this.hitbox[2] > other.hitbox[2] && this.hitbox[3] < other.hitbox[2]))
-			) {
-				return true;
-			}
-			return false;
-
-		}
+		return false;
 	}
 
 	getCollisionPlanes(otherObject) {
@@ -142,7 +127,7 @@ class MyObject {
 			const gradient = (this.position.getY() - otherObject.getPosition().getY()) / (this.position.getX() - otherObject.getPosition().getX());
 			centreJointPlane = new Vector2(1, gradient);
 			perpendicularJointPlane = new Vector2(1, -1 / gradient);
-		} else if (this.position.getY() - otherObject.getPosition.getY() != 0) {
+		} else if (this.position.getY() - otherObject.getPosition().getY() != 0) {
 			centreJointPlane = new Vector2(1, 0);
 			perpendicularJointPlane = new Vector2(0, 1);
 		} else {

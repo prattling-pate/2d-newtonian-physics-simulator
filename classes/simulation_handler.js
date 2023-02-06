@@ -3,6 +3,9 @@ class SimulationHandler extends CanvasHandler {
 	constructor(canvasId) {
 		super(canvasId);
 		this.objects = [];
+		this.collisionBuffer = {};
+		this.bufferCounter=0;
+		this.bufferFrames=5;
 		this.trackedObjectIndex;
 		this.trackedObject;
 		this.constants = {
@@ -57,6 +60,10 @@ class SimulationHandler extends CanvasHandler {
 	}
 
 	moveTimeForward() {
+		if ((this.bufferCounter + 1) % this.bufferFrames == 0){
+			this.collisionBuffer = {};
+		}
+		this.bufferCounter++;
 		if (this.objects.length > 0 && this.reloaded) {
 			this.trackedObject = this.objects[0];
 			this.objects[0].trackedObject = true;
@@ -72,7 +79,9 @@ class SimulationHandler extends CanvasHandler {
 		}
 		for (const object1 of this.objects) {
 			for (const object2 of this.objects) {
-				if (object1.isCollision(object2, this.constants.timeStep)) {
+				if (object1.isCollision(object2, this.constants.timeStep) && object1!=object2 && !(this.collisionBuffer.hasOwnProperty(object1)||this.collisionBuffer.hasOwnProperty(object2))) {
+					this.collisionBuffer.object1=true;
+					this.collisionBuffer.object2=true;
 					object1.otherObjectCollision(object2);
 				}
 			}
