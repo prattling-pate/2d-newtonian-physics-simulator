@@ -89,37 +89,7 @@ class MyObject {
 		const dragY = -Math.sign(this.velocity.getY()) * 0.5 * densityOfAir * this.coeffDrag * this.height * this.velocity.getY() ** 2;
 		this.forces[1] = new Vector2(dragX, dragY);
 	}
-
-	sideCollision(coeffRest, timeStep, planeWidth) {
-		// side collision check (checks if out of bounds on right side or on left side respectively in if statement)
-		if (this.position.getX() + this.velocity.getX() * timeStep + this.radius >= planeWidth || this.position.getX() + this.velocity.getX() * timeStep - this.radius <= 0) {
-			this.velocity.setX(-this.velocity.getX() * coeffRest);
-		}
-	}
-
-	groundCeilingCollision(coeffRest, timeStep, planeHeight) {
-		// ground collision check - statement 1. ceiling collision check - statement 2
-		if (this.position.getY() + this.velocity.getY() * timeStep + this.radius >= planeHeight * (8 / 9)) {
-			this.position.setY(planeHeight * (8 / 9) - this.radius);
-			this.velocity.setY(-this.velocity.getY() * coeffRest);
-		} else if (this.position.getY() + this.velocity.getY() * timeStep + this.radius <= 0) {
-			this.velocity.setY(-this.velocity.getY() * coeffRest);
-		}
-	}
-
-	isCollision(other, timeStep) {
-		const thisFutureVelocity = this.velocity.mult(timeStep);
-		const otherFutureVelocity = other.velocity.mult(timeStep);
-		const case1 = this.hitbox.right + thisFutureVelocity.getX()> other.hitbox.left + otherFutureVelocity.getX();
-		const case2= this.hitbox.right + thisFutureVelocity.getX() < other.hitbox.right + otherFutureVelocity.getX();
-		const case3 = this.hitbox.bottom + thisFutureVelocity.getY() > other.hitbox.top + otherFutureVelocity.getY();
-		const case4 = this.hitbox.top + thisFutureVelocity.getY() < other.hitbox.bottom + otherFutureVelocity.getY();
-		if (case1 && case2 && case3 && case4) {
-			return true;
-		}
-		return false;
-	}
-
+	
 	getCollisionPlanes(otherObject) {
 		let centreJointPlane = 0;
 		let perpendicularJointPlane = 0;
@@ -137,18 +107,7 @@ class MyObject {
 		return [centreJointPlane, perpendicularJointPlane];
 	}
 
-	getFinalVelocities(otherObject) {
-		const planes = this.getCollisionPlanes(otherObject);
-		const centreJointPlane = planes[0];
-		const perpendicularJointPlane = planes[1];
-		const thisCosCentrePlane = this.velocity.getCosAngle(centreJointPlane);
-		const thisCosPerpendicularPlane = this.velocity.getCosAngle(perpendicularJointPlane);
-		const otherCosCentrePlane = otherObject.velocity.getCosAngle(centreJointPlane);
-		const otherCosPerpendicularPlane = otherObject.velocity.getCosAngle(perpendicularJointPlane);
-		const thisMomentumCentrePlane = this.mass * this.velocity.getMag() * thisCosCentrePlane;
-		const otherMomentumCentrePlane = otherObject.mass * otherObject.velocity.getMag() * otherCosCentrePlane;
-		const sumMomentum = thisMomentumCentrePlane + otherMomentumCentrePlane;
-		const sumEnergy = 0.5 * (this.mass * (this.velocity.getMag() * thisCosCentrePlane) ** 2 + otherObject.mass * (otherObject.velocity.getMag() * otherCosCentrePlane) ** 2);
+	perfectlyElasticallyCollide(otherObject, sumEnergy, sumMomentum) {
 		const a = -this.mass * (otherObject.mass + this.mass);
 		const b = 2 * sumMomentum * this.mass;
 		const c = 2 * sumEnergy * otherObject.mass - sumMomentum ** 2;
@@ -162,6 +121,29 @@ class MyObject {
 			thisFinalVelocityCentrePlane = this.velocity.getMag() * thisCosCentrePlane;
 			otherFinalVelocityCentrePlane = otherObject.getVelocity().getMag() * otherCosCentrePlane;
 		}
+		return [thisFinalVelocityCentrePlane, otherFinalVelocityCentrePlane];
+	}
+
+	getFinalVelocities(otherObject) {
+		// get the vector planes for the collision between the two objects (tangent to each other's centres and normal to those centres)
+		const planes = this.getCollisionPlanes(otherObject);
+		const centreJointPlane = planes[0];
+		const perpendicularJointPlane = planes[1];
+		// Get the cosine of the angle between the objects velocity vectors and the new planes
+		// used to find the components of these velocities in these planes afterwards
+		const thisCosCentrePlane = this.velocity.getCosAngle(centreJointPlane);
+		const thisCosPerpendicularPlane = this.velocity.getCosAngle(perpendicularJointPlane);
+		const otherCosCentrePlane = otherObject.velocity.getCosAngle(centreJointPlane);
+		const otherCosPerpendicularPlane = otherObject.velocity.getCosAngle(perpendicularJointPlane);
+		// find momentum of each object in the collision plane
+		const thisMomentumCentrePlane = this.mass * this.velocity.getMag() * thisCosCentrePlane;
+		const otherMomentumCentrePlane = otherObject.mass * otherObject.velocity.getMag() * otherCosCentrePlane;
+		// get all numeric values to solve the derived quadratic equation for an elastic collision
+		const sumMomentum = thisMomentumCentrePlane + otherMomentumCentrePlane;
+		const sumEnergy = 0.5 * (this.mass * (this.velocity.getMag() * thisCosCentrePlane) ** 2 + otherObject.mass * (otherObject.velocity.getMag() * otherCosCentrePlane) ** 2);
+		const calculatedVelocities=this.perfectlyElasticallyCollide(otherObject, sumEnergy, sumMomentum);
+		const thisFinalVelocityCentrePlane = calculatedVelocities[0];
+		const otherFinalVelocityCentrePlane = calculatedVelocities[1];
 		const thisFinalVelocityPerpendicularPlane = this.velocity.getMag() * thisCosPerpendicularPlane;
 		const otherFinalVelocityPerpendicularPlane = otherObject.getVelocity().getMag() * otherCosPerpendicularPlane;
 		return [thisFinalVelocityCentrePlane, otherFinalVelocityCentrePlane, thisFinalVelocityPerpendicularPlane, otherFinalVelocityPerpendicularPlane];
@@ -175,7 +157,6 @@ class MyObject {
 		const thisFinalVelocityYComp = thisFinalVelocity.getMag() * thisFinalVelocity.getCosAngle(new Vector2(0, 1));
 		const otherFinalVelocityXComp = otherFinalVelocity.getMag() * otherFinalVelocity.getCosAngle(new Vector2(1, 0));
 		const otherFinalVelocityYComp = otherFinalVelocity.getMag() * otherFinalVelocity.getCosAngle(new Vector2(0, 1));
-		// maybe add coefficient of restitution to this equation after creating a function which fixes the problem of object getting stuck in each other post collision (similar to side collision logic)
 		this.setVelocity(thisFinalVelocityXComp, thisFinalVelocityYComp);
 		otherObject.setVelocity(otherFinalVelocityXComp, otherFinalVelocityYComp);
 	}

@@ -53,8 +53,8 @@ class SimulationHandler extends CanvasHandler {
 			this.drawCircle(objectXPosition, objectYPosition, object.radius, objectColour);
 		}
 		else {
-			objectXPosition = object.getCorner.getX();
-			objectYPosition = object.getCorner.getY();
+			objectXPosition = object.getCorner().getX();
+			objectYPosition = object.getCorner().getY();
 			this.drawRectangle(objectXPosition, objectYPosition, object.width, object.height, objectColour);
 		}
 	}
@@ -75,14 +75,18 @@ class SimulationHandler extends CanvasHandler {
 			object.groundCeilingCollision(this.constants.CoeffRest, this.constants.timeStep, this.height);
 			object.sideCollision(this.constants.CoeffRest, this.constants.timeStep, this.width);
 			object.updateKinematics(this.constants.DensityOfAir, this.constants.timeStep);
-			object.updateHitbox();
+			if (object.shape == 'rectangle'){
+				object.updateHitbox();
+			}
 		}
 		for (const object1 of this.objects) {
 			for (const object2 of this.objects) {
-				if (object1.isCollision(object2, this.constants.timeStep) && object1!=object2 && !(this.collisionBuffer.hasOwnProperty(object1)||this.collisionBuffer.hasOwnProperty(object2))) {
-					this.collisionBuffer.object1=true;
-					this.collisionBuffer.object2=true;
-					object1.otherObjectCollision(object2);
+				if (object1!=object2 && !(this.collisionBuffer.hasOwnProperty(object1)||this.collisionBuffer.hasOwnProperty(object2))) {
+					if (object1.isCollision(object2, this.constants.timeStep)){
+						this.collisionBuffer.object1=true;
+						this.collisionBuffer.object2=true;
+						object1.otherObjectCollision(object2);
+					}
 				}
 			}
 		}

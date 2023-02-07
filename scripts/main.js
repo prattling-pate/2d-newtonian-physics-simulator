@@ -8,6 +8,7 @@ const RESOLUTION = [640, 480];
 
 // function which initializes the simulation
 function init() {
+	// create all necessary objects for application
 	const mouse = new Mouse();
 	const simulationHandler = new SimulationHandler("Simulation");
 	const dataLoggerHandler = new DataLoggerHandler("Graphs");
@@ -107,7 +108,6 @@ function init() {
 			return null;
 		}
 		const index = mouse.updateTrackedObject(simulationHandler.objects, simulationHandler.constants.timeStep);
-		console.log(mouse.position)
 		if (!index) {
 			return null;
 		}
@@ -115,8 +115,10 @@ function init() {
 		simulationHandler.objects[index].trackedObject = true;
 		simulationHandler.trackedObject = simulationHandler.objects[index];
 		simulationHandler.trackedObjectIndex = index;
+		dataLoggerHandler.clearGraphQueues();
 	});
 
+	// run the recurring application loop
 	clock(60, simulationHandler, dataLoggerHandler);
 }
 
@@ -180,9 +182,10 @@ function getPresetObjectList(preset) {
 	const presetObjects = {
 		diffusion: createDiffusionPresetObjectList(),
 		atmosphericDiffusion: createAtmosphericDiffusionPresetObjectList(),
-		oneToOneMassCollision: null,
-		twoToOneMassCollision: null,
-		threeToOneMassCollision: null
+		oneToOneMassCollision: createOneToOneMassCollisionObjectList(),
+		twoToOneMassCollision: createTwoToOneMassCollisionObjectList(),
+		threeToOneMassCollision: createThreeToOneMassCollisionObjectList(),
+		None: []
 	}
 	const presetObjectList = presetObjects[preset];
 	return presetObjectList;
@@ -233,6 +236,18 @@ function createAtmosphericDiffusionPresetObjectList() {
 		);
 	}
 	return presetObjectList;
+}
+
+function createOneToOneMassCollisionObjectList() {
+	return [];
+}
+
+function createTwoToOneMassCollisionObjectList() {
+	return [];
+}
+
+function createThreeToOneMassCollisionObjectList() {
+	return [];
 }
 
 // INPUT GRABBING FUNCTIONS------

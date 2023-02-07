@@ -98,12 +98,12 @@ class DataLoggerHandler extends CanvasHandler {
 
 	plotData(graph) {
 		let position; let positionNext; let index; let indexNext; let colour;
-		const timeStep = graph.timeStep;
+		const xScale = graph.scale.getX();
 		for (let i = 0; i < graph.queue.getLength() - 1; i++) {
 			index = graph.queue.getQueueIndex(i);
 			indexNext = graph.queue.getQueueIndex(i + 1);
-			position = graph.translateDataToCanvasPlane(new Position(i, graph.queue.data[index][0]));
-			positionNext = graph.translateDataToCanvasPlane(new Position((i + 1), graph.queue.data[indexNext][0]));
+			position = graph.translateDataToCanvasPlane(new Position(i*xScale, graph.queue.data[index][0]));
+			positionNext = graph.translateDataToCanvasPlane(new Position((i + 1)*xScale, graph.queue.data[indexNext][0]));
 			colour = graph.getColourOfDataPoint(graph.queue.data[indexNext][2]);
 			this.drawLine(position.getX(), position.getY(), positionNext.getX(), positionNext.getY(), colour, 1);
 			if ((i + 51) % 100 == 0) {

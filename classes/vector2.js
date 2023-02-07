@@ -36,6 +36,13 @@ class Vector2 {
 		return this.dotProduct(otherVector) / (this.getMag() * otherVector.getMag());
 	}
 
+	normalize() {
+		if (this.getMag() != 0){
+			return new Vector2(this.x/this.getMag(), this.y/this.getMag())
+		}
+		return new Vector2(0,0)
+	}
+
 	add(otherVector) {
 		return new Vector2(this.x + otherVector.getX(), this.y + otherVector.getY());
 	}

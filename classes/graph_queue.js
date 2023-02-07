@@ -4,7 +4,7 @@ class GraphQueue {
 		this.backPointer = -1;
 		this.maximumLength = maximumLength;
 		this.largestPresentValue = [0, 0]; // [largest stored value, index in graph of this value]
-		this.data = [];
+		this.data = []; // stores the actual data of the queue within this list
 	}
 
 	getLargestPresentValue() {

@@ -8,10 +8,18 @@ class Mouse {
 	isInObject(other) {
 		const x = this.position.getX();
 		const y = this.position.getY();
-		if (x > other.hitbox.left && x < other.hitbox.right && y < other.hitbox.bottom && y > other.hitbox.top) {
-			return true;
+		if (other.shape == 'rectangle'){
+			if (x > other.hitbox.left && x < other.hitbox.right && y < other.hitbox.bottom && y > other.hitbox.top) {
+				return true;
+			}
+			return false;
 		}
-		return false;
+		else {
+			if ((x-other.position.getX())**2 + (y - other.position.getY())**2 <= other.radius**2) {
+				return true;
+			}
+			return false;
+		}
 	}
 
 	updatePosition(event, canvasCoordinates) {
