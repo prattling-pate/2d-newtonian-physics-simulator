@@ -5,7 +5,7 @@ class MyObject {
 		this.acceleration = acceleration;
 		this.velocity = velocity;
 		this.position = position;
-		this.initialPosition = position;
+		this.initialPosition = new Position(position.getX(), position.getY());
 		this.timeSinceSpawned = 0;
 		this.trackedObject = false;
 	}
@@ -89,7 +89,7 @@ class MyObject {
 		const dragY = -Math.sign(this.velocity.getY()) * 0.5 * densityOfAir * this.coeffDrag * this.height * this.velocity.getY() ** 2;
 		this.forces[1] = new Vector2(dragX, dragY);
 	}
-	
+
 	getCollisionPlanes(otherObject) {
 		let centreJointPlane = 0;
 		let perpendicularJointPlane = 0;
