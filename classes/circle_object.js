@@ -8,12 +8,19 @@ class Circle extends MyObject {
 		this.radius = radius;
 		this.volume = Math.PI * radius ** 2;
 		this.mass = density * this.volume;
-		this.hitbox = [position.getX() + radius, position.getX() - radius, position.getY() + radius, position.getY() - radius];
+		this.hitbox = {
+			right: position.getX() + radius, 
+			left: position.getX() - radius, 
+			bottom: position.getY() + radius, 
+			top: position.getY() - radius};
 	}
 
 	updateHitbox() {
-		this.hitbox = [this.position.getX() + 0.5 * this.radius, this.position.getX() - 0.5 * this.radius, this.position.getY() + 0.5 * this.radius, this.position.getY() - 0.5 * this.radius];
-	}
+		this.hitbox = {
+			right: this.position.getX() + this.radius, 
+			left: this.position.getX() - this.radius, 
+			bottom: this.position.getY() + this.radius, 
+			top: this.position.getY() - this.radius};	}
 
 	getShape() {
 		return this.shape;

@@ -44,9 +44,9 @@ class Graph {
 
 	// uses simple inverse proportionality after finding 2500 length is good for timescale of 0.1.
 	findGraphQueueLength() {
-		const distancePerPoint = this.scaleInXAxis(this.timeStep);
+		const distanceBetweenPoints = this.scaleInXAxis(this.timeStep);
 		const plottableGraphSpace = 250/320 * this.width;
-		const distanceBetweenPointsInXAxis = plottableGraphSpace / distancePerPoint;
+		const distanceBetweenPointsInXAxis = plottableGraphSpace / distanceBetweenPoints;
 		return distanceBetweenPointsInXAxis;
 	}
 

@@ -110,10 +110,10 @@ class MyObject {
 	isCollision(other, timeStep) {
 		const thisFutureVelocity = this.velocity.mult(timeStep);
 		const otherFutureVelocity = other.velocity.mult(timeStep);
-		const case1 = this.hitbox[0] + thisFutureVelocity.getX()> other.hitbox[1] + otherFutureVelocity.getX();
-		const case2= this.hitbox[1] + thisFutureVelocity.getX() < other.hitbox[0] + otherFutureVelocity.getX();
-		const case3 = this.hitbox[2] + thisFutureVelocity.getY() > other.hitbox[3] + otherFutureVelocity.getY();
-		const case4 = this.hitbox[3] + thisFutureVelocity.getY() < other.hitbox[2] + otherFutureVelocity.getY();
+		const case1 = this.hitbox.right + thisFutureVelocity.getX()> other.hitbox.left + otherFutureVelocity.getX();
+		const case2= this.hitbox.right + thisFutureVelocity.getX() < other.hitbox.right + otherFutureVelocity.getX();
+		const case3 = this.hitbox.bottom + thisFutureVelocity.getY() > other.hitbox.top + otherFutureVelocity.getY();
+		const case4 = this.hitbox.top + thisFutureVelocity.getY() < other.hitbox.bottom + otherFutureVelocity.getY();
 		if (case1 && case2 && case3 && case4) {
 			return true;
 		}

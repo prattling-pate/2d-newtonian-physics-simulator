@@ -2,26 +2,25 @@ class Mouse {
 	constructor() {
 		this.position = new Position();
 		this.velocity = new Velocity();
-		this.hitbox = [0, 0, 0, 0]; // have to use the same .hitbox property structure to not have to code a new function for detecting whether mouse is in an object
 		this.trackedObject = null;
 	}
 
-	isInObject(other, timeStep) {
-		return other.isCollision(this, timeStep);
-	}
-
-	updateHitbox() {
-		this.hitbox = [this.position.getX() + 20, this.position.getX() - 20, this.position.getY() + 20, this.position.getY() - 20];
+	isInObject(other) {
+		const x = this.position.getX();
+		const y = this.position.getY();
+		if (x > other.hitbox.left && x < other.hitbox.right && y < other.hitbox.bottom && y > other.hitbox.top) {
+			return true;
+		}
+		return false;
 	}
 
 	updatePosition(event, canvasCoordinates) {
 		this.containInBounds(event.clientX - canvasCoordinates.left, event.clientY - canvasCoordinates.top);
-		this.updateHitbox();
 	}
 
-	updateTrackedObject(objects, timeStep, useTimeStep) {
+	updateTrackedObject(objects, timeStep) {
 		for (let i = 0; i < objects.length; i++) {
-			if (this.isInObject(objects[i], timeStep, useTimeStep)) {
+			if (this.isInObject(objects[i], timeStep)) {
 				this.trackedObject=objects[i];
 				return i;
 			}

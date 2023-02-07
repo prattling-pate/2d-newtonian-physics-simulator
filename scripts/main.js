@@ -106,7 +106,7 @@ function init() {
 		if (event.button != 0) {
 			return null;
 		}
-		const index = mouse.updateTrackedObject(simulationHandler.objects, simulationHandler.constants.timeStep, false);
+		const index = mouse.updateTrackedObject(simulationHandler.objects, simulationHandler.constants.timeStep);
 		console.log(mouse.position)
 		if (!index) {
 			return null;

@@ -102,8 +102,8 @@ class DataLoggerHandler extends CanvasHandler {
 		for (let i = 0; i < graph.queue.getLength() - 1; i++) {
 			index = graph.queue.getQueueIndex(i);
 			indexNext = graph.queue.getQueueIndex(i + 1);
-			position = graph.translateDataToCanvasPlane(new Position(i * timeStep, graph.queue.data[index][0]));
-			positionNext = graph.translateDataToCanvasPlane(new Position((i + 1) * timeStep, graph.queue.data[indexNext][0]));
+			position = graph.translateDataToCanvasPlane(new Position(i, graph.queue.data[index][0]));
+			positionNext = graph.translateDataToCanvasPlane(new Position((i + 1), graph.queue.data[indexNext][0]));
 			colour = graph.getColourOfDataPoint(graph.queue.data[indexNext][2]);
 			this.drawLine(position.getX(), position.getY(), positionNext.getX(), positionNext.getY(), colour, 1);
 			if ((i + 51) % 100 == 0) {

@@ -5,12 +5,19 @@ class Rectangle extends MyObject {
 		this.coeffDrag = 1.05;
 		this.width = width;
 		this.mass = this.height * this.width * density;
-		this.hitbox = [position.getX() + 0.5 * width, position.getX() - 0.5 * width, position.getY() + 0.5 * height, position.getY() - 0.5 * height];
+		this.hitbox = {
+			right:position.getX() + 0.5 * width,
+			left: position.getX() - 0.5 * width,
+			bottom: position.getY() + 0.5 * height,
+			top: position.getY() - 0.5 * height};
 	}
 
 	updateHitbox() {
-		this.hitbox = [this.position.getX() + 0.5 * width, this.position.getX() - 0.5 * width, this.position.getY() + 0.5 * height, this.position.getY() - 0.5 * height];
-	}
+		this.hitbox = {
+			right:this.position.getX() + 0.5 * this.width,
+			left: this.position.getX() - 0.5 * this.width,
+			bottom: this.position.getY() + 0.5 * this.height,
+			top: this.position.getY() - 0.5 * this.height};	}
 
 	getWidth() {
 		return this.width;
