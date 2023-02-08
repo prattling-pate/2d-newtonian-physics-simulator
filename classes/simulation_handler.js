@@ -64,12 +64,6 @@ class SimulationHandler extends CanvasHandler {
 			this.collisionBuffer = {};
 		}
 		this.bufferCounter++;
-		if (this.objects.length > 0 && this.reloaded) {
-			this.trackedObject = this.objects[0];
-			this.objects[0].trackedObject = true;
-			this.trackedObjectIndex = 0;
-			this.reloaded = false;
-		}
 		for (const object of this.objects) {
 			object.addWeight(this.constants.GravitationalFieldStrength);
 			object.groundCeilingCollision(this.constants.CoeffRest, this.constants.timeStep, this.height);
@@ -100,10 +94,21 @@ class SimulationHandler extends CanvasHandler {
 		}
 	}
 
+	setTrackedObject() {
+		if (this.objects.length > 0 && this.reloaded) {
+			this.trackedObject = this.objects[0];
+			this.objects[0].trackedObject = true;
+			this.trackedObjectIndex = 0;
+			this.reloaded = false;
+		}
+	}
+
 	animateFrame() {
 		this.drawFrame();
-		if (this.running) {
+		// figure out how to have this run only when an object is tracked
+		if (this.running && this.objects.length>0 && !this.reloaded) {
 			this.moveTimeForward();
 		}
+		this.setTrackedObject();
 	}
 }

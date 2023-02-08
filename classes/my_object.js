@@ -93,7 +93,8 @@ class MyObject {
 	getCollisionPlanes(otherObject) {
 		let centreJointPlane = 0;
 		let perpendicularJointPlane = 0;
-		if (this.position.getX() - otherObject.getPosition().getX() != 0 && this.position.getY() - otherObject.getPosition().getY() != 0) {
+		// if the two objects colliding dont have the same position vectors
+		if (this.position.sub(otherObject.getPosition()) != new Vector2(0, 0)) {
 			const gradient = (this.position.getY() - otherObject.getPosition().getY()) / (this.position.getX() - otherObject.getPosition().getX());
 			centreJointPlane = new Vector2(1, gradient);
 			perpendicularJointPlane = new Vector2(1, -1 / gradient);

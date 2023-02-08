@@ -131,8 +131,8 @@ function clock(refreshRate, simulationHandler, dataLoggerHandler) {
 // function which draws the simulations current frame using the canvas drawing functions.
 function update(simulationHandler, dataLoggerHandler) {
 	dataLoggerHandler.setTrackedObject(simulationHandler.trackedObject);
-	simulationHandler.animateFrame();
 	dataLoggerHandler.animateFrame();
+	simulationHandler.animateFrame();
 }
 
 function getInputtedObject() {

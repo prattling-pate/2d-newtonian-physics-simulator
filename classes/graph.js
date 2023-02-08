@@ -94,6 +94,9 @@ class Graph {
 		let toPlotScaled = this.scaleInYAxis(toPlot);
 		toPlotScaled = this.putDataPointInBounds(toPlotScaled);
 		const outOfBounds = this.isPointOutOfBounds(toPlotScaled);
+		if (this.axisY == "Acceleration" && this.queue.getLength() % 2 == 0) {
+			this.differentiateQueue();
+		}
 		this.queue.enqueueData([toPlotScaled, toPlot, outOfBounds, timeAtAxis]);
 		this.queue.updateLargestPresentValue();
 	}
@@ -165,6 +168,14 @@ class Graph {
 			return -graphHeight;
 		}
 		return dataPoint;
+	}
+
+	// pass in the backPointer of the queue
+	differentiateQueue() {
+		// first data point is passed in by default as the initial circumstances, then second is generate during the frame.
+		// find the gradient between those two points
+		// then for further repetition differentiate between the last point and the new point to be added :)
+		return null;
 	}
 
 	// finds the slope (rate of change of the y variable) between two points.
