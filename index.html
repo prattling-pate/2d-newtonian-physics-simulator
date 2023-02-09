@@ -30,12 +30,15 @@
 				<div class="preset-options">
 					<label for="presets">Presets</label>
 					<select id="presets">
-						<option value="default">Select a preset</option>
+						<option value="None">None</option>
 						<option value="atmosphericDiffusion">Atmospheric Diffusion</option>
 						<option value="diffusion">Diffusion</option>
-						<option value="oneToOneMassCollision">1:1 mass collision</option>
-						<option value="twoToOneMassCollision">2:1 mass collision</option>
-						<option value="threeToOneMassCollision">3:1 mass collision</option>
+						<option value="oneToOneMassCollision">1:1 mass collision (elastic)</option>
+						<option value="twoToOneMassCollision">2:1 mass collision (elastic)</option>
+						<option value="threeToOneMassCollision">3:1 mass collision (elastic)</option>
+						<option value="inelasticOneToOneMassCollision">1:1 mass collision (inelastic)</option>
+						<option value="inelasticTwoToOneMassCollision">2:1 mass collision (inelastic)</option>
+						<option value="inelasticThreeToOneMassCollision">3:1 mass collision (inelastic)</option>
 					</select>
 					<button id="preset-btn">Load Preset</button>
 				</div>

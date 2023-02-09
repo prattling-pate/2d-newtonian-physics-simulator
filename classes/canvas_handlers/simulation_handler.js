@@ -1,4 +1,3 @@
-
 class SimulationHandler extends CanvasHandler {
 	constructor(canvasId) {
 		super(canvasId);

@@ -8,7 +8,6 @@ class Graph {
 		this.unitsY = this.getYUnits();
 		this.axisYComponent = "abs";
 		this.scale = new Vector2(1, 1);
-		this.largestValueRecorded = 0;
 		this.previousPoint = 0;
 		this.timeStep = 1;
 		this.originPosition = originPosition; // indicates the quadrant of the canvas the graph resides in
@@ -46,7 +45,7 @@ class Graph {
 
 	// uses simple inverse proportionality after finding 2500 length is good for timescale of 0.1.
 	findGraphQueueLength() {
-		const distanceBetweenPoints = this.scaleInXAxis(this.timeStep);
+		const distanceBetweenPoints = this.scale.getX();
 		const plottableGraphSpace = 250/320 * this.width;
 		const distanceBetweenPointsInXAxis = plottableGraphSpace / distanceBetweenPoints;
 		return distanceBetweenPointsInXAxis;

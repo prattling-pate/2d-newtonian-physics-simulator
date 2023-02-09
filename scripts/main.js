@@ -135,7 +135,7 @@ function init() {
 	});
 
 	// run the recurring application loop
-	clock(60, simulationHandler, dataLoggerHandler);
+	clock(100, simulationHandler, dataLoggerHandler);
 }
 
 // this function runs the update every 10ms using an interval function, this interval loops the update function which updates the positions of all balls in the animation.
@@ -180,6 +180,9 @@ function presetConstants(preset) {
 		oneToOneMassCollision: [1, 0, 0.1, 0],
 		twoToOneMassCollision: [1, 0, 0.1, 0],
 		threeToOneMassCollision: [1, 0, 0.1, 0],
+		inelasticOneToOneMassCollision: [0, 0, 0.1, 0],
+		inelasticTwoToOneMassCollision: [0, 0, 0.1, 0],
+		inelasticThreeToOneMassCollision: [0, 0, 0.1, 0]
 	};
 	const constants = presetConstants[preset];
 	setInputFieldsToNewConstants(constants[0], constants[1], constants[2], constants[3]);
@@ -194,7 +197,10 @@ function getPresetObjectList(preset) {
 		oneToOneMassCollision: createOneToOneMassCollisionObjectList(),
 		twoToOneMassCollision: createTwoToOneMassCollisionObjectList(),
 		threeToOneMassCollision: createThreeToOneMassCollisionObjectList(),
-		None: [],
+		inelasticOneToOneMassCollision: createOneToOneMassCollisionObjectList(),
+		inelasticTwoToOneMassCollision: createTwoToOneMassCollisionObjectList(),
+		inelasticThreeToOneMassCollision: createThreeToOneMassCollisionObjectList(),
+		None: []
 	};
 	const presetObjectList = presetObjects[preset];
 	return presetObjectList;
@@ -314,3 +320,5 @@ window.onload = init;
 // Check how long it takes in diffusion for all particles to be in the canvas 0.99 by 0.99 then 0.98 by 0.98 then decreasing by 0.01, need meaning scales. (silly)
 
 // ADD ERROR HANDLING (I DONT KNOW WHAT KIND, MAYBE TRY CHECKING IF THE NEGATIVE DISCRIMINANT ERROR STILL EXISTS IN THIS)
+
+// ADD INPUT VALIDATION (i.e. if coeffiient of restitution is < 0 or > 1)

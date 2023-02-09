@@ -9,6 +9,7 @@ class DataLoggerHandler extends CanvasHandler {
 	refreshTimeStepInGraphs(newTimeStep) {
 		for (const graph of this.graphs) {
 			graph.setXStepInPlot(newTimeStep);
+			graph.clearQueue();
 		}
 	}
 
@@ -53,14 +54,10 @@ class DataLoggerHandler extends CanvasHandler {
 			this.drawLine(
 				graph.originPosition.getX() - 0.525 * graph.width, graph.originPosition.getY() + distanceBetweenYTicks * (i + 1),
 				graph.originPosition.getX() - 0.475 * graph.width, graph.originPosition.getY() + distanceBetweenYTicks * (i + 1),
-				"black",
-				1
 			);
 			this.drawLine(
 				graph.originPosition.getX() - 0.525 * graph.width, graph.originPosition.getY() - distanceBetweenYTicks * (i + 1),
 				graph.originPosition.getX() - 0.475 * graph.width, graph.originPosition.getY() - distanceBetweenYTicks * (i + 1),
-				"black",
-				1
 			);
 		}
 	}
@@ -74,7 +71,6 @@ class DataLoggerHandler extends CanvasHandler {
 			bottomRight: new Position(graph.originPosition.getX() + this.width * 0.25, graph.originPosition.getY() + this.height * 0.25),
 			bottomLeft: new Position(graph.originPosition.getX() - this.width * 0.25, graph.originPosition.getY() + this.height * 0.25),
 		};
-
 		// drawing the graph axis
 		this.drawAxis(lineCoordinates);
 		// drawing boundaries between graphs
