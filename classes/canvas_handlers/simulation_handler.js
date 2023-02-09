@@ -9,10 +9,10 @@ class SimulationHandler extends CanvasHandler {
 		this.trackedObjectIndex;
 		this.trackedObject;
 		this.constants = {
-			CoeffRest: 0,
-			GravitationalFieldStrength: 0,
+			coeffRest: 0,
+			gravitationalFieldStrength: 0,
 			timeStep: 0,
-			DensityOfAir: 0,
+			densityOfAir: 0,
 		};
 		this.reloaded = true;
 	}
@@ -26,10 +26,10 @@ class SimulationHandler extends CanvasHandler {
 	}
 
 	setConstants(E, G, T, P) {
-		this.constants.CoeffRest = E;
-		this.constants.GravitationalFieldStrength = G;
+		this.constants.coeffRest = E;
+		this.constants.gravitationalFieldStrength = G;
 		this.constants.timeStep = T;
-		this.constants.DensityOfAir = P;
+		this.constants.densityOfAir = P;
 	}
 
 	drawBackground() {
@@ -65,10 +65,10 @@ class SimulationHandler extends CanvasHandler {
 		}
 		this.bufferCounter++;
 		for (const object of this.objects) {
-			object.addWeight(this.constants.GravitationalFieldStrength);
-			object.groundCeilingCollision(this.constants.CoeffRest, this.constants.timeStep, this.height);
-			object.sideCollision(this.constants.CoeffRest, this.constants.timeStep, this.width);
-			object.updateKinematics(this.constants.DensityOfAir, this.constants.timeStep);
+			object.addWeight(this.constants.gravitationalFieldStrength);
+			object.groundCeilingCollision(this.constants.coeffRest, this.constants.timeStep, this.height);
+			object.sideCollision(this.constants.coeffRest, this.constants.timeStep, this.width);
+			object.updateKinematics(this.constants.densityOfAir, this.constants.timeStep);
 			if (object.shape == 'rectangle'){
 				object.updateHitbox();
 			}
@@ -79,7 +79,7 @@ class SimulationHandler extends CanvasHandler {
 					if (object1.isCollision(object2, this.constants.timeStep)){
 						this.collisionBuffer.object1=true;
 						this.collisionBuffer.object2=true;
-						object1.otherObjectCollision(object2);
+						object1.otherObjectCollision(object2, this.constants.coeffRest);
 					}
 				}
 			}

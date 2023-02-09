@@ -33,14 +33,17 @@ class Vector2 {
 	}
 
 	getCosAngle(otherVector) {
+		if ((this.x == 0 && this.y == 0) || (otherVector.getX() == 0 && otherVector.getY() == 0)) {
+			return 0;
+		}
 		return this.dotProduct(otherVector) / (this.getMag() * otherVector.getMag());
 	}
 
 	normalize() {
-		if (this.getMag() != 0){
-			return new Vector2(this.x/this.getMag(), this.y/this.getMag())
+		if (this.getMag() != 0) {
+			return new Vector2(this.x / this.getMag(), this.y / this.getMag());
 		}
-		return new Vector2(0,0)
+		return new Vector2(0, 0);
 	}
 
 	add(otherVector) {

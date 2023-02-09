@@ -7,19 +7,19 @@
 		<link rel="stylesheet" href="style.css" />
 		<title>NEA</title>
 		<script src="https://code.jquery.com/jquery-3.6.3.min.js"></script>
-		<script src="./classes/vector2.js"></script>
-		<script src="./classes/position.js"></script>
-		<script src="./classes/velocity.js"></script>
-		<script src="./classes/acceleration.js"></script>
-		<script src="./classes/graph.js"></script>
-		<script src="./classes/graph_queue.js"></script>
-		<script src="./classes/my_object.js"></script>
-		<script src="./classes/circle_object.js"></script>
-		<script src="./classes/rectangle_object.js"></script>
+		<script src="./classes/vectors/vector2.js"></script>
+		<script src="./classes/vectors/position.js"></script>
+		<script src="./classes/vectors/velocity.js"></script>
+		<script src="./classes/vectors/acceleration.js"></script>
+		<script src="./classes/graph_logic/graph.js"></script>
+		<script src="./classes/graph_logic/graph_queue.js"></script>
+		<script src="./classes/my_objects/my_object.js"></script>
+		<script src="./classes/my_objects/circle_object.js"></script>
+		<script src="./classes/my_objects/rectangle_object.js"></script>
+		<script src="./classes/canvas_handlers/canvas_handler.js"></script>
+		<script src="./classes/canvas_handlers/simulation_handler.js"></script>
+		<script src="./classes/canvas_handlers/data_logger_handler.js"></script>
 		<script src="./classes/mouse.js"></script>
-		<script src="./classes/canvas_handler.js"></script>
-		<script src="./classes/simulation_handler.js"></script>
-		<script src="./classes/data_logger_handler.js"></script>
 	</head>
 
 	<body>
@@ -37,11 +37,9 @@
 						<option value="twoToOneMassCollision">2:1 mass collision</option>
 						<option value="threeToOneMassCollision">3:1 mass collision</option>
 					</select>
-					<label for="force-enabled">Enable force input?</label>
-					<input type="checkbox" id="force-enabled" checked />
 					<button id="preset-btn">Load Preset</button>
 				</div>
-				<div class="constants">
+				<div class="box">
 					<label for="G">Gravitational Field Strength:</label>
 					<input type="number" value="9.81" min="0" step="0.001" id="gravity" />ms<sup>2</sup><br />
 					<label for="densityOA">Density Of Air:</label>
@@ -55,13 +53,10 @@
 				<button id="refresh-const-btn">Refresh constants</button>
 				<button id="refresh-sim-btn">Refresh simulation</button>
 				<button id="pause-btn">Pause simulation</button>
+				<label for="display-graphs">Display Graphs?</label>
+				<input class="display-graphs-div" id="display-graphs" type="checkbox" checked />
 				<br />
-				<div class="object-inputs">
-					<label for="object-type">Type of object</label>
-					<select id="object-type" class="obj-type">
-						<option value="circle" type="text">Circle</option>
-						<option value="rectangle" type="text">Rectangle</option>
-					</select>
+				<div class="box">
 					<br />
 					<label for="colour">Colour of object</label>
 					<select id="colour">
@@ -70,16 +65,8 @@
 						<option value="#000000" type="text">Black</option>
 					</select>
 					<br />
-					<div class="radius-input">
-						<label for="radius">Input radius</label>
-						<input type="number" value="1" min="0" step="0.01" id="radius" />
-					</div>
-					<div class="rect-input">
-						<label for="width">Input width</label>
-						<input type="number" value="1" min="0" step="0.01" id="width" />m,
-						<label for="height">Input height</label>
-						<input type="number" value="1" min="0" step="0.01" id="height" />m
-					</div>
+					<label for="radius">Input radius</label>
+					<input type="number" value="1" min="0" step="0.01" id="radius" />
 					<label for="density"> Density of object </label>
 					<input value="1" id="density" step="0.01" min="0" type="number" />kgm<sup>-3</sup>
 					<br />
@@ -100,56 +87,71 @@
 			</div>
 		</div>
 		<div class="column">
-			<canvas id="Graphs" width="640" height="480" style="border: 5px #000000"></canvas>
+			<canvas class="graph-inputs" id="Graphs" width="640" height="480" style="border: 5px #000000"></canvas>
 			<div class="graph-inputs">
-				<label for="auto-scale-y">Auto-scale Y axis?</label>
-				<input class="auto-scale-div" id="auto-scale-y" type="checkbox" checked />
-				<button id="refresh-scaling-btn">Refresh graphs</button><br />
-				<label for="displacement-scale-x">X scaling for displacement graph</label><br />
-				<input type="number" id="displacement-scale-x" value="1" /><br />
-				<label for="displacement-component">Select Component of displacement to graph</label><br />
-				<select id="displacement-component">
-					<option value="abs">Magnitude</option>
-					<option value="x">X component</option>
-					<option value="y">Y component</option></select
-				><br />
-				<div class="y-inputs">
-					<label for="displacement-scale-y">Y scaling for displacement graph</label><br />
-					<input type="number" id="displacement-scale-y" value="1" /><br />
-				</div>
-				<label for="velocity-scale-x">X scaling for velocity graph</label><br />
-				<input type="number" id="velocity-scale-x" value="1" /><br />
-				<label for="velocity-component">Select Component of velocity to graph</label><br />
-				<select id="velocity-component">
-					<option value="abs">Magnitude</option>
-					<option value="x">X component</option>
-					<option value="y">Y component</option>
-				</select>
-				<br />
-
-				<div class="y-inputs">
-					<label for="velocity-scale-y">Y scaling for velocity graph</label><br />
-					<input type="number" id="velocity-scale-y" value="1" /><br />
-				</div>
-				<label for="acceleration-scale-x">X scaling for acceleration graph</label><br />
-				<input type="number" id="acceleration-scale-x" value="1" /><br />
-				<label for="acceleration-component">Select Component of acceleration to graph</label><br />
-				<select id="acceleration-component">
-					<option value="abs">Magnitude</option>
-					<option value="x">X component</option>
-					<option value="y">Y component</option></select
-				><br />
-				<div class="y-inputs">
-					<label for="acceleration-scale-y">Y scaling for acceleration graph</label><br />
-					<input type="number" id="acceleration-scale-y" value="1" /><br />
-				</div>
-				<label for="kinetic-energy-scale-x">X scaling for kinetic energy graph</label><br />
-				<input type="number" id="kinetic-energy-scale-x" value="1" /><br />
-				<div class="y-inputs">
-					<label for="kinetic-energy-scale-y">Y scaling for kinetic energy graph</label><br />
-					<input type="number" id="kinetic-energy-scale-y" value="1" /><br />
+				<button id="refresh-scaling-btn">Refresh graphs</button> <br />
+				<div class="box">
+					<label for="displacement-scale-x">X scaling for displacement graph</label><br />
+					<input type="number" id="displacement-scale-x" value="1" /><br />
+					<label for="displacement-component">Select Component of displacement to graph</label><br />
+					<select id="displacement-component">
+						<option value="abs">Magnitude</option>
+						<option value="x">X component</option>
+						<option value="y">Y component</option></select
+					><br />
+					<label for="auto-scale-displacement-y">Auto-scale Y axis?</label>
+					<input class="auto-scale-displacement" id="auto-scale-displacement-y" type="checkbox" checked />
+					<div class="y-displacement-inputs">
+						<label for="displacement-scale-y">Y scaling for displacement graph</label><br />
+						<input type="number" id="displacement-scale-y" value="1" /><br />
+					</div>
 				</div>
 				<br />
+				<div class="box">
+					<label for="velocity-scale-x">X scaling for velocity graph</label><br />
+					<input type="number" id="velocity-scale-x" value="1" /><br />
+					<label for="velocity-component">Select Component of velocity to graph</label><br />
+					<select id="velocity-component">
+						<option value="abs">Magnitude</option>
+						<option value="x">X component</option>
+						<option value="y">Y component</option>
+					</select>
+					<br />
+					<label for="auto-scale-velocity-y">Auto-scale Y axis?</label>
+					<input class="auto-scale-velocity" id="auto-scale-velocity-y" type="checkbox" checked />
+					<div class="y-velocity-inputs">
+						<label for="velocity-scale-y">Y scaling for velocity graph</label><br />
+						<input type="number" id="velocity-scale-y" value="1" /><br />
+					</div>
+				</div>
+				<br />
+				<div class="box">
+					<label for="acceleration-scale-x">X scaling for acceleration graph</label><br />
+					<input type="number" id="acceleration-scale-x" value="1" /><br />
+					<label for="acceleration-component">Select Component of acceleration to graph</label><br />
+					<select id="acceleration-component">
+						<option value="abs">Magnitude</option>
+						<option value="x">X component</option>
+						<option value="y">Y component</option></select
+					><br />
+					<label for="auto-scale-acceleration-y">Auto-scale Y axis?</label>
+					<input class="auto-scale-acceleration" id="auto-scale-acceleration-y" type="checkbox" checked />
+					<div class="y-acceleration-inputs">
+						<label for="acceleration-scale-y">Y scaling for acceleration graph</label><br />
+						<input type="number" id="acceleration-scale-y" value="1" /><br />
+					</div>
+				</div>
+				<br />
+				<div class="box">
+					<label for="kinetic-energy-scale-x">X scaling for kinetic energy graph</label><br />
+					<input type="number" id="kinetic-energy-scale-x" value="1" /><br />
+					<label for="auto-scale-kinetic-energy-y">Auto-scale Y axis?</label>
+					<input class="auto-scale-kinetic-energy" id="auto-scale-kinetic-energy-y" type="checkbox" checked />
+					<div class="y-kinetic-energy-inputs">
+						<label for="kinetic-energy-scale-y">Y scaling for kinetic energy graph</label><br />
+						<input type="number" id="kinetic-energy-scale-y" value="1" /><br />
+					</div>
+				</div>
 			</div>
 		</div>
 		<div class="column">

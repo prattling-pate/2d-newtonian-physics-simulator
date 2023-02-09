@@ -3,7 +3,6 @@ class DataLoggerHandler extends CanvasHandler {
 		super(canvasId);
 		this.graphs = [];
 		this.trackedObject;
-		this.yAutoScaling = false;
 		this.canvasCtx.fontStyle = "30px Calibri";
 	}
 

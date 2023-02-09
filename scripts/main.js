@@ -36,29 +36,37 @@ function init() {
 			simulationHandler.setObjectsList(presetObjects);
 			const newConstants = presetConstants(preset);
 			simulationHandler.setConstants(newConstants[0], newConstants[1], newConstants[2], newConstants[3]);
-		};
+		}
 	});
 
 	document.getElementById("refresh-scaling-btn").addEventListener("click", () => {
-		dataLoggerHandler.yAutoScaling = false;
-		if (document.getElementById("auto-scale-y").checked) {
-			dataLoggerHandler.yAutoScaling = true;
+		const autoScaling = {
+			Displacement: document.getElementById("auto-scale-displacement-y").checked,
+			Velocity: document.getElementById("auto-scale-velocity-y").checked,
+			Acceleration: document.getElementById("auto-scale-acceleration-y").checked,
+			"Kinetic Energy": document.getElementById("auto-scale-kinetic-energy-y").checked,
+		};
+		for (const graph of dataLoggerHandler.graphs) {
+			if (autoScaling[graph.getAxisY()]) {
+				graph.yAutoScaling = true;
+			} else {
+				graph.yAutoScaling = false;
+			}
 		}
 		const information = {
 			Displacement: new Vector2(getElementFloatValue("displacement-scale-x"), getElementFloatValue("displacement-scale-y")),
 			Velocity: new Vector2(getElementFloatValue("velocity-scale-x"), getElementFloatValue("velocity-scale-y")),
 			Acceleration: new Vector2(getElementFloatValue("acceleration-scale-x"), getElementFloatValue("acceleration-scale-y")),
-			"Kinetic Energy": new Vector2(getElementFloatValue("kinetic-energy-scale-x"), getElementFloatValue("kinetic-energy-scale-y"))
+			"Kinetic Energy": new Vector2(getElementFloatValue("kinetic-energy-scale-x"), getElementFloatValue("kinetic-energy-scale-y")),
 		};
 		let scales;
 		for (const graph of dataLoggerHandler.graphs) {
 			scales = information[graph.getAxisY()];
-			if (!dataLoggerHandler.yAutoScaling) {
+			if (!graph.yAutoScaling) {
 				graph.setScale(scales.getX(), scales.getY());
-			}
-			else {
+			} else {
 				graph.setAutomaticScale();
-				graph.setScale(x = scales.getX());
+				graph.setScale((x = scales.getX()));
 			}
 		}
 		const displacementComponent = document.getElementById("displacement-component").value;
@@ -67,7 +75,7 @@ function init() {
 		const components = {
 			Displacement: displacementComponent,
 			Velocity: velocityComponent,
-			Acceleration: accelerationComponent
+			Acceleration: accelerationComponent,
 		};
 		let componentToSet;
 		for (const graph of dataLoggerHandler.graphs) {
@@ -81,7 +89,7 @@ function init() {
 	document.getElementById("refresh-const-btn").addEventListener("click", () => {
 		const constants = getConstants();
 		simulationHandler.setConstants(constants.coeffRest, constants.gravitationalFieldStrength, constants.timeStep, constants.densityOfAir);
-		dataLoggerHandler.refreshTimeStepInGraphs(simulationHandler.constants["timeStep"])
+		dataLoggerHandler.refreshTimeStepInGraphs(simulationHandler.constants["timeStep"]);
 	});
 
 	document.getElementById("pause-btn").addEventListener("click", () => {
@@ -103,7 +111,7 @@ function init() {
 		mouse.updatePosition(event, simulationHandler.canvas.getBoundingClientRect());
 	});
 
-	document.addEventListener("mousedown", (event) =>{
+	document.addEventListener("mousedown", (event) => {
 		if (event.button != 0) {
 			return null;
 		}
@@ -116,6 +124,14 @@ function init() {
 		simulationHandler.trackedObject = simulationHandler.objects[index];
 		simulationHandler.trackedObjectIndex = index;
 		dataLoggerHandler.clearGraphQueues();
+	});
+
+	document.getElementById("display-graphs").addEventListener("click", () => {
+		if (document.getElementById("display-graphs").checked) {
+			dataLoggerHandler.running = true;
+		} else {
+			dataLoggerHandler.running = false;
+		}
 	});
 
 	// run the recurring application loop
@@ -137,43 +153,36 @@ function update(simulationHandler, dataLoggerHandler) {
 
 function getInputtedObject() {
 	let newObj;
-	const shape = getElementStringValue("object-type");
 	const colour = getElementStringValue("colour");
 	const density = getElementFloatValue("density");
-	const position = new Position(getElementFloatValue("position-x"),RESOLUTION[1] - (getElementFloatValue("position-y") + (1 / 9) * RESOLUTION[1]));
-	const velocity = new Velocity(getElementFloatValue("velocity-x"),-getElementFloatValue("velocity-y"));
+	const position = new Position(getElementFloatValue("position-x"), RESOLUTION[1] - (getElementFloatValue("position-y") + (1 / 9) * RESOLUTION[1]));
+	const velocity = new Velocity(getElementFloatValue("velocity-x"), -getElementFloatValue("velocity-y"));
 	const acceleration = new Acceleration(getElementFloatValue("acceleration-x"), -getElementFloatValue("acceleration-y"));
-	if (shape == "circle") {
-		const radius = getElementFloatValue("radius");
-		newObj = new Circle(radius, density, colour, velocity, acceleration, position);
-	} else {
-		const width = getElementFloatValue("width");
-		const height = getElementFloatValue("height");
-		newObj = new Rectangle(height, width, density, colour, velocity, acceleration, position);
-	}
+	const radius = getElementFloatValue("radius");
+	newObj = new Circle(radius, density, colour, velocity, acceleration, position);
 	return newObj;
 }
 
 // PRESET HANDLING FUNCTIONS------
 
-function setInputFieldsToNewConstants(E, G, T, P, input = false) {
+function setInputFieldsToNewConstants(E, G, T, P) {
 	T *= 10;
 	document.getElementById("restit").value = E.toString();
 	document.getElementById("gravity").value = G.toString();
 	document.getElementById("scale").value = T.toString();
 	document.getElementById("densityOA").value = P.toString();
-	document.getElementById("force-enabled").checked = input;
 }
-
 
 function presetConstants(preset) {
 	const presetConstants = {
-		diffusion: [1, 0, 0.1, 0, false],
-		"atmosphericDiffusion": [1, 9.81, 0.1, 0, false],
-		default: [1, 9.81, 0.1, 1.225, true]
+		diffusion: [1, 0, 0.1, 0],
+		atmosphericDiffusion: [1, 9.81, 0.1, 0],
+		oneToOneMassCollision: [1, 0, 0.1, 0],
+		twoToOneMassCollision: [1, 0, 0.1, 0],
+		threeToOneMassCollision: [1, 0, 0.1, 0],
 	};
 	const constants = presetConstants[preset];
-	setInputFieldsToNewConstants(constants[0], constants[1], constants[2], constants[3], constants[4]);
+	setInputFieldsToNewConstants(constants[0], constants[1], constants[2], constants[3]);
 	return constants;
 }
 
@@ -185,8 +194,8 @@ function getPresetObjectList(preset) {
 		oneToOneMassCollision: createOneToOneMassCollisionObjectList(),
 		twoToOneMassCollision: createTwoToOneMassCollisionObjectList(),
 		threeToOneMassCollision: createThreeToOneMassCollisionObjectList(),
-		None: []
-	}
+		None: [],
+	};
 	const presetObjectList = presetObjects[preset];
 	return presetObjectList;
 }
@@ -197,13 +206,7 @@ function createDiffusionPresetObjectList() {
 	let presetObjectList = [];
 	for (let i = 0; i < 100; i++) {
 		// randomly decides if the y velocity will be upwards or downwards.
-		presetObjectList.push(
-			new Circle(5, 5, "red", new Velocity(
-				generateRandomFloat(-50, 50),
-				generateRandomFloat(-50, 50)), new Acceleration(),
-				new Position(generateRandomFloat(0, 0.25 * RESOLUTION[0]),
-					(((8 / 9) * RESOLUTION[1]) / 100) * i))
-		);
+		presetObjectList.push(new Circle(5, 5, "red", new Velocity(generateRandomFloat(-50, 50), generateRandomFloat(-50, 50)), new Acceleration(), new Position(generateRandomFloat(0, 0.25 * RESOLUTION[0]), (((8 / 9) * RESOLUTION[1]) / 100) * i)));
 	}
 	for (let i = 0; i < 100; i++) {
 		// randomly decides if the y velocity will be upwards or downwards.
@@ -220,34 +223,43 @@ function createAtmosphericDiffusionPresetObjectList() {
 	for (let i = 0; i < 66; i++) {
 		// randomly decides if the y velocity will be upwards or downwards.
 		presetObjectList.push(
-			new Circle(5, possibleMasses[0], "red", new Velocity(generateRandomFloat(-50, 50), generateRandomFloat(-50, 50)), new Acceleration(), new Position(generateRandomFloat(0, RESOLUTION[0]), generateRandomFloat(0, 8/9*RESOLUTION[1])))
+			new Circle(5, possibleMasses[0], "red", new Velocity(generateRandomFloat(-50, 50), generateRandomFloat(-50, 50)), new Acceleration(), new Position(generateRandomFloat(0, RESOLUTION[0]), generateRandomFloat(0, (8 / 9) * RESOLUTION[1])))
 		);
 	}
 	for (let i = 0; i < 66; i++) {
 		// randomly decides if the y velocity will be upwards or downwards.
 		presetObjectList.push(
-			new Circle(5, possibleMasses[1], "blue", new Velocity(generateRandomFloat(-50, 50), generateRandomFloat(-50, 50)), new Acceleration(), new Position(generateRandomFloat(0, RESOLUTION[0]), generateRandomFloat(0, 8/9*RESOLUTION[1])))
+			new Circle(5, possibleMasses[1], "blue", new Velocity(generateRandomFloat(-50, 50), generateRandomFloat(-50, 50)), new Acceleration(), new Position(generateRandomFloat(0, RESOLUTION[0]), generateRandomFloat(0, (8 / 9) * RESOLUTION[1])))
 		);
 	}
 	for (let i = 0; i < 66; i++) {
 		// randomly decides if the y velocity will be upwards or downwards.
 		presetObjectList.push(
-			new Circle(5, possibleMasses[2], "green", new Velocity(generateRandomFloat(-50, 50), generateRandomFloat(-50, 50)), new Acceleration(), new Position(generateRandomFloat(0, RESOLUTION[0]), generateRandomFloat(0, 8/9*RESOLUTION[1])))
+			new Circle(5, possibleMasses[2], "green", new Velocity(generateRandomFloat(-50, 50), generateRandomFloat(-50, 50)), new Acceleration(), new Position(generateRandomFloat(0, RESOLUTION[0]), generateRandomFloat(0, (8 / 9) * RESOLUTION[1])))
 		);
 	}
 	return presetObjectList;
 }
 
 function createOneToOneMassCollisionObjectList() {
-	return [];
+	const objectList = [];
+	objectList.push(new Circle(20, 1, "red", new Velocity(25, 0), new Acceleration(), new Position(RESOLUTION[0] * 0.25, RESOLUTION[1] * 0.5)));
+	objectList.push(new Circle(20, 1, "red", new Velocity(-25, 0), new Acceleration(), new Position(RESOLUTION[0] * 0.75, RESOLUTION[1] * 0.5)));
+	return objectList;
 }
 
 function createTwoToOneMassCollisionObjectList() {
-	return [];
+	const objectList = [];
+	objectList.push(new Circle(20, 2, "red", new Velocity(25, 0), new Acceleration(), new Position(RESOLUTION[0] * 0.25, RESOLUTION[1] * 0.5)));
+	objectList.push(new Circle(20, 1, "red", new Velocity(-25, 0), new Acceleration(), new Position(RESOLUTION[0] * 0.75, RESOLUTION[1] * 0.5)));
+	return objectList;
 }
 
 function createThreeToOneMassCollisionObjectList() {
-	return [];
+	const objectList = [];
+	objectList.push(new Circle(20, 3, "red", new Velocity(25, 0), new Acceleration(), new Position(RESOLUTION[0] * 0.25, RESOLUTION[1] * 0.5)));
+	objectList.push(new Circle(20, 1, "red", new Velocity(-25, 0), new Acceleration(), new Position(RESOLUTION[0] * 0.75, RESOLUTION[1] * 0.5)));
+	return objectList;
 }
 
 // INPUT GRABBING FUNCTIONS------
@@ -294,7 +306,6 @@ window.onload = init;
 // bugs with user input of force on objects, again :(.
 
 // TO ADD ========================================================================
-
 
 // TOP PRIORITY AFTER BUGS ARE FIXED
 // Presets (Mr Adams, Helpful for showing helpful teaching):

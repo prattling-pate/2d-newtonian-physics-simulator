@@ -8,7 +8,7 @@ class GraphQueue {
 	}
 
 	getLargestPresentValue() {
-		return this.largestPresentValue[0];
+		return Math.abs(this.largestPresentValue[0]);
 	}
 
 	updateLargestPresentValue() {

@@ -4,10 +4,12 @@ class Graph {
 		this.height = height;
 		this.axisX = axisX;
 		this.axisY = axisY;
+		this.yAutoScaling = true;
 		this.unitsY = this.getYUnits();
 		this.axisYComponent = "abs";
 		this.scale = new Vector2(1, 1);
 		this.largestValueRecorded = 0;
+		this.previousPoint = 0;
 		this.timeStep = 1;
 		this.originPosition = originPosition; // indicates the quadrant of the canvas the graph resides in
 		this.queue = new GraphQueue(this.findGraphQueueLength()); // queue property is a circular queue, allows old datapoints to be taken from graph while new ones are untouched.
@@ -89,14 +91,15 @@ class Graph {
 	}
 
 	addData(objectData) {
-		const toPlot = this.getDataPoint(objectData);
+		let toPlot = this.getDataPoint(objectData);
+		if (this.axisY == "Acceleration" && this.queue.getLength() >= 2) {
+			toPlot = this.differentiate(toPlot);
+		}
+		this.previousPoint = this.getDataPoint(objectData);
 		const timeAtAxis = objectData.getTime().toFixed(3);
 		let toPlotScaled = this.scaleInYAxis(toPlot);
 		toPlotScaled = this.putDataPointInBounds(toPlotScaled);
 		const outOfBounds = this.isPointOutOfBounds(toPlotScaled);
-		if (this.axisY == "Acceleration" && this.queue.getLength() % 2 == 0) {
-			this.differentiateQueue();
-		}
 		this.queue.enqueueData([toPlotScaled, toPlot, outOfBounds, timeAtAxis]);
 		this.queue.updateLargestPresentValue();
 	}
@@ -170,16 +173,12 @@ class Graph {
 		return dataPoint;
 	}
 
-	// pass in the backPointer of the queue
-	differentiateQueue() {
-		// first data point is passed in by default as the initial circumstances, then second is generate during the frame.
-		// find the gradient between those two points
-		// then for further repetition differentiate between the last point and the new point to be added :)
-		return null;
-	}
-
 	// finds the slope (rate of change of the y variable) between two points.
-	differentiate(dataPointY, dataPointNextY) {
-		return (dataPointNextY - dataPointY) / this.timeScale;
+	differentiate(newData) {
+		let slope = (newData - this.previousPoint) / (this.timeStep/10);
+		if (this.axisYComponent == 'abs') {
+			slope = Math.abs(slope);
+		}
+		return slope;
 	}
 }

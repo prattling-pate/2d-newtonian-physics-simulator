@@ -94,21 +94,21 @@ class MyObject {
 		let centreJointPlane = 0;
 		let perpendicularJointPlane = 0;
 		// if the two objects colliding dont have the same position vectors
-		if (this.position.sub(otherObject.getPosition()) != new Vector2(0, 0)) {
+		if (this.position.x - otherObject.position.getX() != 0 && this.position.y - otherObject.position.getY() != 0) {
 			const gradient = (this.position.getY() - otherObject.getPosition().getY()) / (this.position.getX() - otherObject.getPosition().getX());
 			centreJointPlane = new Vector2(1, gradient);
 			perpendicularJointPlane = new Vector2(1, -1 / gradient);
-		} else if (this.position.getY() - otherObject.getPosition().getY() != 0) {
+		} else if (this.position.getY() - otherObject.getPosition().getY() == 0) {
 			centreJointPlane = new Vector2(1, 0);
 			perpendicularJointPlane = new Vector2(0, 1);
-		} else {
+		} else if (this.position.getX() - otherObject.getPosition().getX() == 0) {
 			centreJointPlane = new Vector2(0, 1);
 			perpendicularJointPlane = new Vector2(1, 0);
 		}
 		return [centreJointPlane, perpendicularJointPlane];
 	}
 
-	perfectlyElasticallyCollide(otherObject, sumEnergy, sumMomentum) {
+	perfectlyElasticallyCollide(otherObject, thisInitalVelocity, otherInitialVelocity, sumEnergy, sumMomentum, elasticity) {
 		const a = -this.mass * (otherObject.mass + this.mass);
 		const b = 2 * sumMomentum * this.mass;
 		const c = 2 * sumEnergy * otherObject.mass - sumMomentum ** 2;
@@ -116,7 +116,7 @@ class MyObject {
 		let otherFinalVelocityCentrePlane = 0;
 		if (b ** 2 - 4 * a * c >= 0) {
 			thisFinalVelocityCentrePlane = (-b + Math.sqrt(b ** 2 - 4 * a * c)) / (2 * a);
-			otherFinalVelocityCentrePlane = (sumMomentum - this.mass * thisFinalVelocityCentrePlane) / otherObject.getMass();
+			otherFinalVelocityCentrePlane = elasticity * Math.abs(thisInitalVelocity - otherInitialVelocity) + thisFinalVelocityCentrePlane;
 		} else {
 			alert("Negative discriminant error");
 			thisFinalVelocityCentrePlane = this.velocity.getMag() * thisCosCentrePlane;
@@ -125,7 +125,7 @@ class MyObject {
 		return [thisFinalVelocityCentrePlane, otherFinalVelocityCentrePlane];
 	}
 
-	getFinalVelocities(otherObject) {
+	getFinalVelocities(otherObject, elasticity) {
 		// get the vector planes for the collision between the two objects (tangent to each other's centres and normal to those centres)
 		const planes = this.getCollisionPlanes(otherObject);
 		const centreJointPlane = planes[0];
@@ -142,7 +142,7 @@ class MyObject {
 		// get all numeric values to solve the derived quadratic equation for an elastic collision
 		const sumMomentum = thisMomentumCentrePlane + otherMomentumCentrePlane;
 		const sumEnergy = 0.5 * (this.mass * (this.velocity.getMag() * thisCosCentrePlane) ** 2 + otherObject.mass * (otherObject.velocity.getMag() * otherCosCentrePlane) ** 2);
-		const calculatedVelocities=this.perfectlyElasticallyCollide(otherObject, sumEnergy, sumMomentum);
+		const calculatedVelocities = this.perfectlyElasticallyCollide(otherObject, this.velocity.getMag() * thisCosCentrePlane, otherObject.velocity.getMag() * otherCosCentrePlane, sumEnergy, sumMomentum, elasticity);
 		const thisFinalVelocityCentrePlane = calculatedVelocities[0];
 		const otherFinalVelocityCentrePlane = calculatedVelocities[1];
 		const thisFinalVelocityPerpendicularPlane = this.velocity.getMag() * thisCosPerpendicularPlane;
@@ -150,8 +150,8 @@ class MyObject {
 		return [thisFinalVelocityCentrePlane, otherFinalVelocityCentrePlane, thisFinalVelocityPerpendicularPlane, otherFinalVelocityPerpendicularPlane];
 	}
 
-	otherObjectCollision(otherObject) {
-		const velocityComponents = this.getFinalVelocities(otherObject);
+	otherObjectCollision(otherObject, elasticity = 1) {
+		const velocityComponents = this.getFinalVelocities(otherObject, elasticity);
 		const thisFinalVelocity = new Velocity(velocityComponents[0], velocityComponents[2]);
 		const otherFinalVelocity = new Velocity(velocityComponents[1], velocityComponents[3]);
 		const thisFinalVelocityXComp = thisFinalVelocity.getMag() * thisFinalVelocity.getCosAngle(new Vector2(1, 0));
