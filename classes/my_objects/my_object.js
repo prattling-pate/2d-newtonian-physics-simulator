@@ -93,6 +93,7 @@ class MyObject {
 	getCollisionPlanes(otherObject) {
 		let centreJointPlane = 0;
 		let perpendicularJointPlane = 0;
+		let flipAxis = false;
 		// if the two objects colliding dont have the same position vectors
 		if (this.position.x - otherObject.position.getX() != 0 && this.position.y - otherObject.position.getY() != 0) {
 			const gradient = (this.position.getY() - otherObject.getPosition().getY()) / (this.position.getX() - otherObject.getPosition().getX());
@@ -104,8 +105,9 @@ class MyObject {
 		} else if (this.position.getX() - otherObject.getPosition().getX() == 0) {
 			centreJointPlane = new Vector2(0, 1);
 			perpendicularJointPlane = new Vector2(1, 0);
+			flipAxis = true;
 		}
-		return [centreJointPlane, perpendicularJointPlane];
+		return [centreJointPlane, perpendicularJointPlane, flipAxis];
 	}
 
 	perfectlyElasticallyCollide(otherObject, thisInitalVelocity, otherInitialVelocity, sumEnergy, sumMomentum, elasticity) {
@@ -118,7 +120,7 @@ class MyObject {
 			thisFinalVelocityCentrePlane = (-b + Math.sqrt(b ** 2 - 4 * a * c)) / (2 * a);
 			otherFinalVelocityCentrePlane = elasticity * Math.abs(thisInitalVelocity - otherInitialVelocity) + thisFinalVelocityCentrePlane;
 		} else {
-			alert("Negative discriminant error");
+			alert("No more energy left in system");
 			thisFinalVelocityCentrePlane = this.velocity.getMag() * thisCosCentrePlane;
 			otherFinalVelocityCentrePlane = otherObject.getVelocity().getMag() * otherCosCentrePlane;
 		}
@@ -130,6 +132,7 @@ class MyObject {
 		const planes = this.getCollisionPlanes(otherObject);
 		const centreJointPlane = planes[0];
 		const perpendicularJointPlane = planes[1];
+		const flipAxis = planes[2];
 		// Get the cosine of the angle between the objects velocity vectors and the new planes
 		// used to find the components of these velocities in these planes afterwards
 		const thisCosCentrePlane = this.velocity.getCosAngle(centreJointPlane);
@@ -147,13 +150,21 @@ class MyObject {
 		const otherFinalVelocityCentrePlane = calculatedVelocities[1];
 		const thisFinalVelocityPerpendicularPlane = this.velocity.getMag() * thisCosPerpendicularPlane;
 		const otherFinalVelocityPerpendicularPlane = otherObject.getVelocity().getMag() * otherCosPerpendicularPlane;
-		return [thisFinalVelocityCentrePlane, otherFinalVelocityCentrePlane, thisFinalVelocityPerpendicularPlane, otherFinalVelocityPerpendicularPlane];
+		return [thisFinalVelocityCentrePlane, otherFinalVelocityCentrePlane, thisFinalVelocityPerpendicularPlane, otherFinalVelocityPerpendicularPlane, flipAxis];
 	}
 
 	otherObjectCollision(otherObject, elasticity = 1) {
 		const velocityComponents = this.getFinalVelocities(otherObject, elasticity);
-		const thisFinalVelocity = new Velocity(velocityComponents[0], velocityComponents[2]);
-		const otherFinalVelocity = new Velocity(velocityComponents[1], velocityComponents[3]);
+		let thisFinalVelocity;
+		let otherFinalVelocity;
+		if (!velocityComponents[4]){
+			thisFinalVelocity = new Velocity(velocityComponents[0], velocityComponents[2]);
+			otherFinalVelocity = new Velocity(velocityComponents[1], velocityComponents[3]);
+		}
+		else {
+			thisFinalVelocity = new Velocity(velocityComponents[2], velocityComponents[0]);
+			otherFinalVelocity = new Velocity(velocityComponents[3], velocityComponents[1]);
+		}
 		const thisFinalVelocityXComp = thisFinalVelocity.getMag() * thisFinalVelocity.getCosAngle(new Vector2(1, 0));
 		const thisFinalVelocityYComp = thisFinalVelocity.getMag() * thisFinalVelocity.getCosAngle(new Vector2(0, 1));
 		const otherFinalVelocityXComp = otherFinalVelocity.getMag() * otherFinalVelocity.getCosAngle(new Vector2(1, 0));

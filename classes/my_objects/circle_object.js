@@ -12,16 +12,18 @@ class Circle extends MyObject {
 
 	sideCollision(coeffRest, timeStep, planeWidth) {
 		// side collision check (checks if out of bounds on right side or on left side respectively in if statement)
-		if (this.position.getX() + this.velocity.getX() * timeStep + this.radius >= planeWidth || this.position.getX() + this.velocity.getX() * timeStep - this.radius <= 0) {
+		if (this.position.getX() + this.velocity.getX() * timeStep + this.radius > planeWidth || this.position.getX() + this.velocity.getX() * timeStep - this.radius < 0) {
 			this.velocity.setX(-this.velocity.getX() * coeffRest);
 		}
 	}
 
 	groundCeilingCollision(coeffRest, timeStep, planeHeight) {
 		// ground collision check - statement 1. ceiling collision check - statement 2
-		if (this.position.getY() + this.velocity.getY() * timeStep + this.radius >= planeHeight * (8 / 9)) {
+		if (this.position.getY() + this.velocity.getY() * timeStep + this.radius > planeHeight * (8 / 9)) {
+			this.position.setY(planeHeight*(8/9) - this.radius)
 			this.velocity.setY(-this.velocity.getY() * coeffRest);
-		} else if (this.position.getY() + this.velocity.getY() * timeStep + this.radius <= 0) {
+		} else if (this.position.getY() + this.velocity.getY() * timeStep - this.radius < 0) {
+			this.position.setY(this.radius)
 			this.velocity.setY(-this.velocity.getY() * coeffRest);
 		}
 	}

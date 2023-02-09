@@ -62,6 +62,9 @@ function init() {
 		let scales;
 		for (const graph of dataLoggerHandler.graphs) {
 			scales = information[graph.getAxisY()];
+			scales.setX(handleInputError(scales.getX(),"scales"));
+			scales.setY(handleInputError(scales.getY(), "scales"))
+			setInputFieldsForGraphs(scales.getX(), scales.getY(), graph.getAxisY());
 			if (!graph.yAutoScaling) {
 				graph.setScale(scales.getX(), scales.getY());
 			} else {
@@ -165,13 +168,6 @@ function getInputtedObject() {
 
 // PRESET HANDLING FUNCTIONS------
 
-function setInputFieldsToNewConstants(E, G, T, P) {
-	T *= 10;
-	document.getElementById("restit").value = E.toString();
-	document.getElementById("gravity").value = G.toString();
-	document.getElementById("scale").value = T.toString();
-	document.getElementById("densityOA").value = P.toString();
-}
 
 function presetConstants(preset) {
 	const presetConstants = {
@@ -180,9 +176,13 @@ function presetConstants(preset) {
 		oneToOneMassCollision: [1, 0, 0.1, 0],
 		twoToOneMassCollision: [1, 0, 0.1, 0],
 		threeToOneMassCollision: [1, 0, 0.1, 0],
+		partialOneToOneMassCollision: [0.5, 0, 0.1, 0],
+		partialTwoToOneMassCollision: [0.5, 0, 0.1, 0],
+		partialThreeToOneMassCollision: [0.5, 0, 0.1, 0],
 		inelasticOneToOneMassCollision: [0, 0, 0.1, 0],
 		inelasticTwoToOneMassCollision: [0, 0, 0.1, 0],
-		inelasticThreeToOneMassCollision: [0, 0, 0.1, 0]
+		inelasticThreeToOneMassCollision: [0, 0, 0.1, 0],
+		threeBallDrop: [1, 9.81, 0.05, 0]
 	};
 	const constants = presetConstants[preset];
 	setInputFieldsToNewConstants(constants[0], constants[1], constants[2], constants[3]);
@@ -197,9 +197,13 @@ function getPresetObjectList(preset) {
 		oneToOneMassCollision: createOneToOneMassCollisionObjectList(),
 		twoToOneMassCollision: createTwoToOneMassCollisionObjectList(),
 		threeToOneMassCollision: createThreeToOneMassCollisionObjectList(),
+		partialOneToOneMassCollision: createOneToOneMassCollisionObjectList(),
+		partialTwoToOneMassCollision: createTwoToOneMassCollisionObjectList(),
+		partialThreeToOneMassCollision: createThreeToOneMassCollisionObjectList(),
 		inelasticOneToOneMassCollision: createOneToOneMassCollisionObjectList(),
 		inelasticTwoToOneMassCollision: createTwoToOneMassCollisionObjectList(),
 		inelasticThreeToOneMassCollision: createThreeToOneMassCollisionObjectList(),
+		threeBallDrop: createThreeBallDropObjectList(),
 		None: []
 	};
 	const presetObjectList = presetObjects[preset];
@@ -268,25 +272,80 @@ function createThreeToOneMassCollisionObjectList() {
 	return objectList;
 }
 
+function createThreeBallDropObjectList() {
+	const objectList = [];
+	objectList.push(new Circle(5, 1, "red", new Velocity(), new Acceleration(), new Position(RESOLUTION[0] * 0.5, RESOLUTION[1] * 0.25)));
+	objectList.push(new Circle(10, 1, "yellow", new Velocity(), new Acceleration(), new Position(RESOLUTION[0] * 0.5, RESOLUTION[1] * 0.25 + 20)));
+	objectList.push(new Circle(15, 1, "blue", new Velocity(), new Acceleration(), new Position(RESOLUTION[0] * 0.5, RESOLUTION[1] * 0.25 + 50)))
+	return objectList;
+}
+
 // INPUT GRABBING FUNCTIONS------
 
 // Grabs the values from each input field in order to update the constants array to user selected values.
+
+function handleInputError(input, type) {
+	let output = input;
+	const isInvalid = {
+		gravitationalFieldStrength: (input < 0),
+		densityOfAir: (input < 0),
+		timeStep: (input <= 0),
+		restitution: (input < 0 || input > 1),
+		scales: (input < 0)
+	};
+	const errorMessages = {
+		gravitationalFieldStrength: "Gravity cannot be negative",
+		densityOfAir: "Density of Air cannot be negative",
+		timeStep: "Time step in simulation cannot be negative or 0, pausing the simulation can be done using the button",
+		restitution: "Coefficient of restitution cannot be less than 0 or greater than 1",
+		scales: "Graph scales must be greater than 0"
+	};
+	const boundaryInputs = {
+		gravitationalFieldStrength: 0,
+		densityOfAir: 0,
+		timeStep: 0.1,
+		restitution: 1,
+		scales: 1
+	}
+	if (isInvalid[type]) {
+		alert(errorMessages[type]);
+		output = boundaryInputs[type];
+	}
+	return output;
+}
+
 function getConstants() {
-	const G = getElementFloatValue("gravity");
-	const densityOfAir = getElementFloatValue("densityOA");
-	const RATE = getElementFloatValue("scale") / 10;
-	const E = getElementFloatValue("restit");
+	let gravitationalFieldStrength = handleInputError(getElementFloatValue("gravity"), "gravitationalFieldStrength");
+	let densityOfAir = handleInputError(getElementFloatValue("densityOA"), "densityOfAir");
+	let timeStep = handleInputError(getElementFloatValue("scale") / 10, "timeStep");
+	let restitution = handleInputError(getElementFloatValue("restit"), "restitution");
+	setInputFieldsToNewConstants(restitution, gravitationalFieldStrength, timeStep, densityOfAir);
 	const constants = {
-		coeffRest: E,
-		gravitationalFieldStrength: G,
-		timeStep: RATE,
+		coeffRest: restitution,
+		gravitationalFieldStrength: gravitationalFieldStrength,
+		timeStep: timeStep,
 		densityOfAir: densityOfAir,
 	};
 	return constants;
 }
 
+// create object to translatea/map strings to other strings
+function setInputFieldsForGraphs(x, y, graph) {
+	document.getElementById(graph+"-scale-x").value = x.toString();
+	document.getElementById(graph+'-scale-y').value = y.toString();
+}
+
+function setInputFieldsToNewConstants(E, G, T, P) {
+	T *= 10;
+	document.getElementById("restit").value = E.toString();
+	document.getElementById("gravity").value = G.toString();
+	document.getElementById("scale").value = T.toString();
+	document.getElementById("densityOA").value = P.toString();
+}
+
 function getXStepInPlot() {
-	return getConstants().timeStep;
+	const timeStep = getConstants().timeStep;
+	return timeStep;
 }
 
 function getElementStringValue(elementId) {
