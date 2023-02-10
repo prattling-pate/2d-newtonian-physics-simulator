@@ -87,9 +87,16 @@ class SimulationHandler extends CanvasHandler {
 		}
 	}
 
+	drawScale() {
+		this.drawText("10m" , 50, 35/36 * this.height, "black");
+		this.drawLine()
+		this.drawLine(0,17/18 * this.height, 100, 17/18 * this.height, "black", 1);
+	}
+
 	drawFrame() {
 		this.drawBackground();
 		this.drawGround();
+		this.drawScale();
 		for (const object of this.objects) {
 			this.drawObject(object);
 			if (this.showMasses){

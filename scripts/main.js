@@ -201,7 +201,7 @@ function presetConstants(preset) {
 		inelasticThreeToOneMassCollision: [0, 0, 0.1, 0],
 		threeBallDrop: [1, 9.81, 0.05, 0],
 		terminalVelocity: [1, 9.81, 0.1, 1.225e-3],
-		stressTest: [0.75, 100, 0.01, 15e-3],
+		stressTest: [0.75, 100, 0.1, 15e-3],
 		none: [1, 9.81, 0.1, 1.225e-3]
 	};
 	const constants = presetConstants[preset];
@@ -353,7 +353,7 @@ function handleInputError(input, type) {
 	const boundaryInputs = {
 		gravitationalFieldStrength: 0,
 		densityOfAir: 0,
-		timeStep: 0.1,
+		timeStep: 0.01,
 		restitution: 1,
 		scales: 1,
 	};

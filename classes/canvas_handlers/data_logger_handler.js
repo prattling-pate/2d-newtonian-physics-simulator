@@ -115,11 +115,7 @@ class DataLoggerHandler extends CanvasHandler {
 	}
 	
 	plotData(graph) {
-		let position;
-		let positionNext;
-		let index;
-		let indexNext;
-		let colour;
+		let position; let positionNext; let index; let indexNext; let colour;
 		const xScale = graph.scale.getX();
 		for (let i = 0; i < graph.queue.getLength() - 1; i++) {
 			index = graph.queue.getQueueIndex(i);

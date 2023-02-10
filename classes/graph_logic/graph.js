@@ -57,17 +57,17 @@ class Graph {
 
 	getDataPoint(objectData) {
 		const information = {
-			Displacement: objectData.getDisplacement(), // could use integration but that could be very taxing on the performance
+			Displacement: objectData.getDisplacement(),
 			Velocity: objectData.getVelocity(),
 			Acceleration: objectData.getVelocity(),
-			"Kinetic Energy": objectData.getKineticEnergy(), // for now in 10^4 J
+			"Kinetic Energy": objectData.getKineticEnergy() / 100,
 		};
 		let toPlot = information[this.axisY];
 		if (this.axisY != "Kinetic Energy") {
 			const components = {
-				x: toPlot.getX(),
-				y: -toPlot.getY(),
-				abs: toPlot.getMag(),
+				x: toPlot.getX() / 10,
+				y: -toPlot.getY() / 10,
+				abs: toPlot.getMag() / 10,
 			};
 			toPlot = components[this.axisYComponent];
 		}
