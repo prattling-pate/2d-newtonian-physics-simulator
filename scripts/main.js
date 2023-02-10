@@ -22,11 +22,13 @@ function init() {
 
 	// MY ARMY OF EVENT LISTENERS o7
 
+	// Function which grabs the features of the user inputed object on the page and added to the simulation object list to be used
 	document.getElementById("add-object-btn").addEventListener("click", () => {
 		const newObject = getInputtedObject();
 		simulationHandler.addObject(newObject);
 	});
 
+	// clears the datalogger graphs and replaces the object list as well as constants according to the preset
 	document.getElementById("preset-btn").addEventListener("click", () => {
 		simulationHandler.reloaded = true;
 		dataLoggerHandler.clearGraphQueues();
@@ -40,30 +42,37 @@ function init() {
 	});
 
 	document.getElementById("refresh-scaling-btn").addEventListener("click", () => {
+		const displacementComponent = document.getElementById("displacement-component").value;
+		const velocityComponent = document.getElementById("velocity-component").value;
+		const accelerationComponent = document.getElementById("acceleration-component").value;
 		const autoScaling = {
 			Displacement: document.getElementById("auto-scale-displacement-y").checked,
 			Velocity: document.getElementById("auto-scale-velocity-y").checked,
 			Acceleration: document.getElementById("auto-scale-acceleration-y").checked,
 			"Kinetic Energy": document.getElementById("auto-scale-kinetic-energy-y").checked,
 		};
-		for (const graph of dataLoggerHandler.graphs) {
-			if (autoScaling[graph.getAxisY()]) {
-				graph.yAutoScaling = true;
-			} else {
-				graph.yAutoScaling = false;
-			}
-		}
 		const information = {
 			Displacement: new Vector2(getElementFloatValue("displacement-scale-x"), getElementFloatValue("displacement-scale-y")),
 			Velocity: new Vector2(getElementFloatValue("velocity-scale-x"), getElementFloatValue("velocity-scale-y")),
 			Acceleration: new Vector2(getElementFloatValue("acceleration-scale-x"), getElementFloatValue("acceleration-scale-y")),
 			"Kinetic Energy": new Vector2(getElementFloatValue("kinetic-energy-scale-x"), getElementFloatValue("kinetic-energy-scale-y")),
 		};
+		const components = {
+			Displacement: displacementComponent,
+			Velocity: velocityComponent,
+			Acceleration: accelerationComponent
+		};
 		let scales;
+		let componentToSet;
 		for (const graph of dataLoggerHandler.graphs) {
+			if (autoScaling[graph.getAxisY()]) {
+				graph.yAutoScaling = true;
+			} else {
+				graph.yAutoScaling = false;
+			}
 			scales = information[graph.getAxisY()];
-			scales.setX(handleInputError(scales.getX(),"scales"));
-			scales.setY(handleInputError(scales.getY(), "scales"))
+			scales.setX(handleInputError(scales.getX(), "scales"));
+			scales.setY(handleInputError(scales.getY(), "scales"));
 			setInputFieldsForGraphs(scales.getX(), scales.getY(), graph.getAxisY());
 			if (!graph.yAutoScaling) {
 				graph.setScale(scales.getX(), scales.getY());
@@ -71,20 +80,11 @@ function init() {
 				graph.setAutomaticScale();
 				graph.setScale((x = scales.getX()));
 			}
-		}
-		const displacementComponent = document.getElementById("displacement-component").value;
-		const velocityComponent = document.getElementById("velocity-component").value;
-		const accelerationComponent = document.getElementById("acceleration-component").value;
-		const components = {
-			Displacement: displacementComponent,
-			Velocity: velocityComponent,
-			Acceleration: accelerationComponent,
-		};
-		let componentToSet;
-		for (const graph of dataLoggerHandler.graphs) {
-			componentToSet = components[graph.getAxisY()];
-			if (graph.getAxisYComponent() != componentToSet) {
-				graph.setAxisYComponent(componentToSet);
+			if (graph.axisY != "Kinetic Energy"){
+				componentToSet = components[graph.getAxisY()];
+				if (graph.getAxisYComponent() != componentToSet) {
+					graph.setAxisYComponent(componentToSet);
+				}
 			}
 		}
 	});
@@ -97,10 +97,12 @@ function init() {
 
 	document.getElementById("pause-btn").addEventListener("click", () => {
 		if (simulationHandler.running) {
+			document.getElementById("pause-btn").innerHTML = "Unpause Simulation";
 			simulationHandler.running = false;
 			dataLoggerHandler.running = false;
 			return null;
 		}
+		document.getElementById("pause-btn").innerHTML = "Pause Simulation";
 		simulationHandler.running = true;
 		dataLoggerHandler.running = true;
 	});
@@ -119,7 +121,7 @@ function init() {
 			return null;
 		}
 		const index = mouse.updateTrackedObject(simulationHandler.objects, simulationHandler.constants.timeStep);
-		if (!index) {
+		if (index == -1) {
 			return null;
 		}
 		simulationHandler.objects[simulationHandler.trackedObjectIndex].trackedObject = false;
@@ -134,6 +136,22 @@ function init() {
 			dataLoggerHandler.running = true;
 		} else {
 			dataLoggerHandler.running = false;
+		}
+	});
+
+	document.getElementById("show-masses").addEventListener("click", () => {
+		if (document.getElementById("show-masses").checked) {
+			simulationHandler.showMasses = true;
+		} else {
+			simulationHandler.showMasses = false;
+		}
+	});
+
+	document.getElementById("show-grids").addEventListener("click", () => {
+		if (document.getElementById("show-grids").checked) {
+			dataLoggerHandler.showGrids = true;
+		} else {
+			dataLoggerHandler.showGrids = false;
 		}
 	});
 
@@ -168,7 +186,6 @@ function getInputtedObject() {
 
 // PRESET HANDLING FUNCTIONS------
 
-
 function presetConstants(preset) {
 	const presetConstants = {
 		diffusion: [1, 0, 0.1, 0],
@@ -182,7 +199,10 @@ function presetConstants(preset) {
 		inelasticOneToOneMassCollision: [0, 0, 0.1, 0],
 		inelasticTwoToOneMassCollision: [0, 0, 0.1, 0],
 		inelasticThreeToOneMassCollision: [0, 0, 0.1, 0],
-		threeBallDrop: [1, 9.81, 0.05, 0]
+		threeBallDrop: [1, 9.81, 0.05, 0],
+		terminalVelocity: [1, 9.81, 0.1, 1.225e-3],
+		stressTest: [0.75, 100, 0.01, 15e-3],
+		none: [1, 9.81, 0.1, 1.225e-3]
 	};
 	const constants = presetConstants[preset];
 	setInputFieldsToNewConstants(constants[0], constants[1], constants[2], constants[3]);
@@ -204,7 +224,9 @@ function getPresetObjectList(preset) {
 		inelasticTwoToOneMassCollision: createTwoToOneMassCollisionObjectList(),
 		inelasticThreeToOneMassCollision: createThreeToOneMassCollisionObjectList(),
 		threeBallDrop: createThreeBallDropObjectList(),
-		None: []
+		terminalVelocity: createTerminalVelocityObjectList(),
+		stressTest: createStressTestObjectList(),
+		none: [],
 	};
 	const presetObjectList = presetObjects[preset];
 	return presetObjectList;
@@ -216,12 +238,12 @@ function createDiffusionPresetObjectList() {
 	let presetObjectList = [];
 	for (let i = 0; i < 100; i++) {
 		// randomly decides if the y velocity will be upwards or downwards.
-		presetObjectList.push(new Circle(5, 5, "red", new Velocity(generateRandomFloat(-50, 50), generateRandomFloat(-50, 50)), new Acceleration(), new Position(generateRandomFloat(0, 0.25 * RESOLUTION[0]), (((8 / 9) * RESOLUTION[1]) / 100) * i)));
+		presetObjectList.push(new Circle(5, 0.001, "red", new Velocity(generateRandomFloat(-50, 50), generateRandomFloat(-50, 50)), new Acceleration(), new Position(generateRandomFloat(0, 0.25 * RESOLUTION[0]), (((8 / 9) * RESOLUTION[1]) / 100) * i)));
 	}
 	for (let i = 0; i < 100; i++) {
 		// randomly decides if the y velocity will be upwards or downwards.
 		presetObjectList.push(
-			new Circle(5, 5, "green", new Velocity(generateRandomFloat(-50, 50), generateRandomFloat(-50, 50)), new Acceleration(), new Position(generateRandomFloat(0.75 * RESOLUTION[0], RESOLUTION[0]), (((8 / 9) * RESOLUTION[1]) / 100) * i))
+			new Circle(5, 0.001, "green", new Velocity(generateRandomFloat(-50, 50), generateRandomFloat(-50, 50)), new Acceleration(), new Position(generateRandomFloat(0.75 * RESOLUTION[0], RESOLUTION[0]), (((8 / 9) * RESOLUTION[1]) / 100) * i))
 		);
 	}
 	return presetObjectList;
@@ -229,23 +251,22 @@ function createDiffusionPresetObjectList() {
 
 function createAtmosphericDiffusionPresetObjectList() {
 	const presetObjectList = [];
-	const possibleMasses = [5, 10, 15];
 	for (let i = 0; i < 66; i++) {
 		// randomly decides if the y velocity will be upwards or downwards.
 		presetObjectList.push(
-			new Circle(5, possibleMasses[0], "red", new Velocity(generateRandomFloat(-50, 50), generateRandomFloat(-50, 50)), new Acceleration(), new Position(generateRandomFloat(0, RESOLUTION[0]), generateRandomFloat(0, (8 / 9) * RESOLUTION[1])))
+			new Circle(5, 0.001, "red", new Velocity(generateRandomFloat(-50, 50), generateRandomFloat(-50, 50)), new Acceleration(), new Position(generateRandomFloat(0, RESOLUTION[0]), generateRandomFloat(0, (8 / 9) * RESOLUTION[1])))
 		);
 	}
 	for (let i = 0; i < 66; i++) {
 		// randomly decides if the y velocity will be upwards or downwards.
 		presetObjectList.push(
-			new Circle(5, possibleMasses[1], "blue", new Velocity(generateRandomFloat(-50, 50), generateRandomFloat(-50, 50)), new Acceleration(), new Position(generateRandomFloat(0, RESOLUTION[0]), generateRandomFloat(0, (8 / 9) * RESOLUTION[1])))
+			new Circle(5, 0.002, "blue", new Velocity(generateRandomFloat(-50, 50), generateRandomFloat(-50, 50)), new Acceleration(), new Position(generateRandomFloat(0, RESOLUTION[0]), generateRandomFloat(0, (8 / 9) * RESOLUTION[1])))
 		);
 	}
 	for (let i = 0; i < 66; i++) {
 		// randomly decides if the y velocity will be upwards or downwards.
 		presetObjectList.push(
-			new Circle(5, possibleMasses[2], "green", new Velocity(generateRandomFloat(-50, 50), generateRandomFloat(-50, 50)), new Acceleration(), new Position(generateRandomFloat(0, RESOLUTION[0]), generateRandomFloat(0, (8 / 9) * RESOLUTION[1])))
+			new Circle(5, 0.003, "green", new Velocity(generateRandomFloat(-50, 50), generateRandomFloat(-50, 50)), new Acceleration(), new Position(generateRandomFloat(0, RESOLUTION[0]), generateRandomFloat(0, (8 / 9) * RESOLUTION[1])))
 		);
 	}
 	return presetObjectList;
@@ -253,31 +274,60 @@ function createAtmosphericDiffusionPresetObjectList() {
 
 function createOneToOneMassCollisionObjectList() {
 	const objectList = [];
-	objectList.push(new Circle(20, 1, "red", new Velocity(25, 0), new Acceleration(), new Position(RESOLUTION[0] * 0.25, RESOLUTION[1] * 0.5)));
-	objectList.push(new Circle(20, 1, "red", new Velocity(-25, 0), new Acceleration(), new Position(RESOLUTION[0] * 0.75, RESOLUTION[1] * 0.5)));
+	objectList.push(new Circle(20, 0.001, "red", new Velocity(25, 0), new Acceleration(), new Position(RESOLUTION[0] * 0.25, RESOLUTION[1] * 0.5)));
+	objectList.push(new Circle(20, 0.001, "red", new Velocity(-25, 0), new Acceleration(), new Position(RESOLUTION[0] * 0.75, RESOLUTION[1] * 0.5)));
 	return objectList;
 }
 
 function createTwoToOneMassCollisionObjectList() {
 	const objectList = [];
-	objectList.push(new Circle(20, 2, "red", new Velocity(25, 0), new Acceleration(), new Position(RESOLUTION[0] * 0.25, RESOLUTION[1] * 0.5)));
-	objectList.push(new Circle(20, 1, "red", new Velocity(-25, 0), new Acceleration(), new Position(RESOLUTION[0] * 0.75, RESOLUTION[1] * 0.5)));
+	objectList.push(new Circle(20, 0.002, "red", new Velocity(25, 0), new Acceleration(), new Position(RESOLUTION[0] * 0.25, RESOLUTION[1] * 0.5)));
+	objectList.push(new Circle(20, 0.001, "red", new Velocity(-25, 0), new Acceleration(), new Position(RESOLUTION[0] * 0.75, RESOLUTION[1] * 0.5)));
 	return objectList;
 }
 
 function createThreeToOneMassCollisionObjectList() {
 	const objectList = [];
-	objectList.push(new Circle(20, 3, "red", new Velocity(25, 0), new Acceleration(), new Position(RESOLUTION[0] * 0.25, RESOLUTION[1] * 0.5)));
-	objectList.push(new Circle(20, 1, "red", new Velocity(-25, 0), new Acceleration(), new Position(RESOLUTION[0] * 0.75, RESOLUTION[1] * 0.5)));
+	objectList.push(new Circle(20, 0.003, "red", new Velocity(25, 0), new Acceleration(), new Position(RESOLUTION[0] * 0.25, RESOLUTION[1] * 0.5)));
+	objectList.push(new Circle(20, 0.001, "red", new Velocity(-25, 0), new Acceleration(), new Position(RESOLUTION[0] * 0.75, RESOLUTION[1] * 0.5)));
 	return objectList;
 }
 
 function createThreeBallDropObjectList() {
 	const objectList = [];
-	objectList.push(new Circle(5, 1, "red", new Velocity(), new Acceleration(), new Position(RESOLUTION[0] * 0.5, RESOLUTION[1] * 0.25)));
-	objectList.push(new Circle(10, 1, "yellow", new Velocity(), new Acceleration(), new Position(RESOLUTION[0] * 0.5, RESOLUTION[1] * 0.25 + 20)));
-	objectList.push(new Circle(15, 1, "blue", new Velocity(), new Acceleration(), new Position(RESOLUTION[0] * 0.5, RESOLUTION[1] * 0.25 + 50)))
+	objectList.push(new Circle(5, 0.1, "red", new Velocity(), new Acceleration(), new Position(RESOLUTION[0] * 0.5, RESOLUTION[1] * 0.25)));
+	objectList.push(new Circle(10, 0.1, "yellow", new Velocity(), new Acceleration(), new Position(RESOLUTION[0] * 0.5, RESOLUTION[1] * 0.25 + 20)));
+	objectList.push(new Circle(15, 0.1, "blue", new Velocity(), new Acceleration(), new Position(RESOLUTION[0] * 0.5, RESOLUTION[1] * 0.25 + 50)));
 	return objectList;
+}
+
+function createTerminalVelocityObjectList() {
+	const objectList = [];
+	objectList.push(new Circle(10, 0.001, "red", new Velocity(), new Acceleration(), new Position(RESOLUTION[0] * 0.25, RESOLUTION[1] * 0.1)));
+	objectList.push(new Circle(10, 0.002, "yellow", new Velocity(), new Acceleration(), new Position(RESOLUTION[0] * 0.5, RESOLUTION[1] * 0.1)));
+	objectList.push(new Circle(10, 0.003, "blue", new Velocity(), new Acceleration(), new Position(RESOLUTION[0] * 0.75, RESOLUTION[1] * 0.1)));
+	return objectList;
+}
+
+function createStressTestObjectList() {
+	const presetObjectList = [];
+	for (let i = 0; i < 200; i++) {
+		presetObjectList.push(
+			new Circle(generateRandomFloat(5, 15), generateRandomFloat(5, 20), "red", new Velocity(generateRandomFloat(-50, 50), generateRandomFloat(-50, 50)), new Acceleration(generateRandomFloat(-50, 50), generateRandomFloat(-50, 50)), new Position(generateRandomFloat(0, RESOLUTION[0]), generateRandomFloat(0, (8 / 9) * RESOLUTION[1])))
+		);
+	}
+	for (let i = 0; i < 200; i++) {
+		presetObjectList.push(
+			new Circle(generateRandomFloat(5, 15), generateRandomFloat(5, 20), "green", new Velocity(generateRandomFloat(-50, 50), generateRandomFloat(-50, 50)), new Acceleration(generateRandomFloat(-50, 50), generateRandomFloat(-50, 50)), new Position(generateRandomFloat(0, RESOLUTION[0]), generateRandomFloat(0, (8 / 9) * RESOLUTION[1])))
+		);
+	}
+	for (let i = 0; i < 200; i++) {
+		// randomly decides if the y velocity will be upwards or downwards.
+		presetObjectList.push(
+			new Circle(generateRandomFloat(5, 15), generateRandomFloat(5, 20), "blue", new Velocity(generateRandomFloat(-50, 50), generateRandomFloat(-50, 50)), new Acceleration(generateRandomFloat(-50, 50), generateRandomFloat(-50, 50)), new Position(generateRandomFloat(0, RESOLUTION[0]), generateRandomFloat(0, (8 / 9) * RESOLUTION[1])))
+		);
+	}
+	return presetObjectList;
 }
 
 // INPUT GRABBING FUNCTIONS------
@@ -287,26 +337,26 @@ function createThreeBallDropObjectList() {
 function handleInputError(input, type) {
 	let output = input;
 	const isInvalid = {
-		gravitationalFieldStrength: (input < 0),
-		densityOfAir: (input < 0),
-		timeStep: (input <= 0),
-		restitution: (input < 0 || input > 1),
-		scales: (input < 0)
+		gravitationalFieldStrength: input < 0,
+		densityOfAir: input < 0,
+		timeStep: input <= 0,
+		restitution: input < 0 || input > 1,
+		scales: input < 0,
 	};
 	const errorMessages = {
 		gravitationalFieldStrength: "Gravity cannot be negative",
 		densityOfAir: "Density of Air cannot be negative",
 		timeStep: "Time step in simulation cannot be negative or 0, pausing the simulation can be done using the button",
 		restitution: "Coefficient of restitution cannot be less than 0 or greater than 1",
-		scales: "Graph scales must be greater than 0"
+		scales: "Graph scales must be greater than 0",
 	};
 	const boundaryInputs = {
 		gravitationalFieldStrength: 0,
 		densityOfAir: 0,
 		timeStep: 0.1,
 		restitution: 1,
-		scales: 1
-	}
+		scales: 1,
+	};
 	if (isInvalid[type]) {
 		alert(errorMessages[type]);
 		output = boundaryInputs[type];
@@ -316,7 +366,7 @@ function handleInputError(input, type) {
 
 function getConstants() {
 	let gravitationalFieldStrength = handleInputError(getElementFloatValue("gravity"), "gravitationalFieldStrength");
-	let densityOfAir = handleInputError(getElementFloatValue("densityOA"), "densityOfAir");
+	let densityOfAir = handleInputError(getElementFloatValue("densityOA") / 1000, "densityOfAir");
 	let timeStep = handleInputError(getElementFloatValue("scale") / 10, "timeStep");
 	let restitution = handleInputError(getElementFloatValue("restit"), "restitution");
 	setInputFieldsToNewConstants(restitution, gravitationalFieldStrength, timeStep, densityOfAir);
@@ -331,16 +381,24 @@ function getConstants() {
 
 // create object to translatea/map strings to other strings
 function setInputFieldsForGraphs(x, y, graph) {
-	document.getElementById(graph+"-scale-x").value = x.toString();
-	document.getElementById(graph+'-scale-y').value = y.toString();
+	const mappingToElementId = {
+		"Kinetic Energy": "kinetic-energy",
+		Acceleration: "acceleration",
+		Velocity: "velocity",
+		Displacement: "displacement",
+	};
+	const graphId = mappingToElementId[graph];
+	document.getElementById(graphId + "-scale-x").value = x.toString();
+	document.getElementById(graphId + "-scale-y").value = y.toString();
 }
 
 function setInputFieldsToNewConstants(E, G, T, P) {
 	T *= 10;
+	P *= 1000;
 	document.getElementById("restit").value = E.toString();
 	document.getElementById("gravity").value = G.toString();
 	document.getElementById("scale").value = T.toString();
-	document.getElementById("densityOA").value = P.toString();
+	document.getElementById("densityOA").value = P.toFixed(3);
 }
 
 function getXStepInPlot() {
@@ -377,7 +435,3 @@ window.onload = init;
 // 3 (or 2) Balls decreasing size on top of each other, falling freely.
 // 1:1 mass, 1:2 mass, 1:1 mass but with velocity 2:1. Simple ratios of masses and velocities in the same plane, without gravity.
 // Check how long it takes in diffusion for all particles to be in the canvas 0.99 by 0.99 then 0.98 by 0.98 then decreasing by 0.01, need meaning scales. (silly)
-
-// ADD ERROR HANDLING (I DONT KNOW WHAT KIND, MAYBE TRY CHECKING IF THE NEGATIVE DISCRIMINANT ERROR STILL EXISTS IN THIS)
-
-// ADD INPUT VALIDATION (i.e. if coeffiient of restitution is < 0 or > 1)

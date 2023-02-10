@@ -6,8 +6,8 @@ class Circle extends MyObject {
 		this.width = radius * Math.PI;
 		this.height = radius * Math.PI;
 		this.radius = radius;
-		this.volume = Math.PI * radius ** 2;
-		this.mass = density * this.volume;
+		this.area = Math.PI * radius ** 2;
+		this.mass = density * this.area;
 	}
 
 	sideCollision(coeffRest, timeStep, planeWidth) {
@@ -20,24 +20,24 @@ class Circle extends MyObject {
 	groundCeilingCollision(coeffRest, timeStep, planeHeight) {
 		// ground collision check - statement 1. ceiling collision check - statement 2
 		if (this.position.getY() + this.velocity.getY() * timeStep + this.radius > planeHeight * (8 / 9)) {
-			this.position.setY(planeHeight*(8/9) - this.radius)
+			this.position.setY(planeHeight * (8 / 9) - this.radius);
 			this.velocity.setY(-this.velocity.getY() * coeffRest);
 		} else if (this.position.getY() + this.velocity.getY() * timeStep - this.radius < 0) {
-			this.position.setY(this.radius)
+			this.position.setY(this.radius);
 			this.velocity.setY(-this.velocity.getY() * coeffRest);
 		}
 	}
 
 	isCollision(other, timeStep) {
 		// finds the future position of both objects
-		const otherNextPosition = other.position.add(other.velocity.mult(timeStep));
-		const thisNextPosition = this.position.add(this.velocity.mult(timeStep));
+		const otherNextPosition = other.position.add(other.velocity.multiply(timeStep));
+		const thisNextPosition = this.position.add(this.velocity.multiply(timeStep));
 		// find the position vector from object A to B
 		const vectorToOtherCircle = otherNextPosition.sub(thisNextPosition);
 		// normalize the resulting vector
 		let pointCheck = vectorToOtherCircle.normalize();
 		// find the vector from object A's centre to it's circumference
-		pointCheck = pointCheck.mult(this.radius);
+		pointCheck = pointCheck.multiply(this.radius);
 		// convert this vector into a position vector relative to the origin
 		pointCheck = pointCheck.add(thisNextPosition);
 		// use the circle equation to find if the position vector is inside object B

@@ -46,7 +46,7 @@ class Graph {
 	// uses simple inverse proportionality after finding 2500 length is good for timescale of 0.1.
 	findGraphQueueLength() {
 		const distanceBetweenPoints = this.scale.getX();
-		const plottableGraphSpace = 250/320 * this.width;
+		const plottableGraphSpace = (250 / 320) * this.width;
 		const distanceBetweenPointsInXAxis = plottableGraphSpace / distanceBetweenPoints;
 		return distanceBetweenPointsInXAxis;
 	}
@@ -147,7 +147,7 @@ class Graph {
 		if (this.queue.getLargestPresentValue() == 0) {
 			return null;
 		}
-		const yScalingFactor = this.height / this.queue.getLargestPresentValue();
+		const yScalingFactor = this.height / (this.queue.getLargestPresentValue() * 1.25);
 		this.setScale(0, yScalingFactor);
 	}
 
@@ -174,8 +174,8 @@ class Graph {
 
 	// finds the slope (rate of change of the y variable) between two points.
 	differentiate(newData) {
-		let slope = (newData - this.previousPoint) / (this.timeStep/10);
-		if (this.axisYComponent == 'abs') {
+		let slope = (newData - this.previousPoint) / (this.timeStep / 10);
+		if (this.axisYComponent == "abs") {
 			slope = Math.abs(slope);
 		}
 		return slope;

@@ -54,7 +54,7 @@ class Vector2 {
 		return new Vector2(this.x - otherVector.getX(), this.y - otherVector.getY());
 	}
 
-	mult(number) {
+	multiply(number) {
 		return new Vector2(this.x * number, this.y * number);
 	}
 }

@@ -1,7 +1,7 @@
 class MyObject {
 	constructor(colour = "black", velocity = new Velocity(), acceleration = new Acceleration(), position = new Position()) {
 		this.colour = colour;
-		this.forces = [new Vector2(0, 0), new Vector2(0, 0), new Vector2(0, 0)];
+		this.forces = [new Vector2(0, 0), new Vector2(0, 0)];
 		this.acceleration = acceleration;
 		this.velocity = velocity;
 		this.position = position;
@@ -64,7 +64,6 @@ class MyObject {
 		this.acceleration.update(this);
 		this.velocity.update(this.acceleration, timeStep);
 		this.position.update(this.velocity, timeStep);
-		this.forces[2] = new Vector2();
 		this.timeSinceSpawned += timeStep;
 	}
 
@@ -77,7 +76,7 @@ class MyObject {
 	}
 
 	resolveVectors() {
-		let totalVector = new Vector2(0, 0);
+		let totalVector = new Vector2();
 		for (let i = 0; i < this.forces.length; i++) {
 			totalVector = totalVector.add(this.forces[i]);
 		}
@@ -85,15 +84,14 @@ class MyObject {
 	}
 
 	updateDrag(densityOfAir) {
-		const dragX = -Math.sign(this.velocity.getX()) * 0.5 * densityOfAir * this.coeffDrag * this.width * this.velocity.getX() ** 2;
-		const dragY = -Math.sign(this.velocity.getY()) * 0.5 * densityOfAir * this.coeffDrag * this.height * this.velocity.getY() ** 2;
-		this.forces[1] = new Vector2(dragX, dragY);
+		const dragX = -Math.sign(this.velocity.getX()) * 0.5 * densityOfAir * this.coeffDrag * this.width * (this.velocity.getX()) ** 2;
+		const dragY = -Math.sign(this.velocity.getY()) * 0.5 * densityOfAir * this.coeffDrag * this.height * (this.velocity.getY()) ** 2;
+		this.forces[1].setX(dragX);
+		this.forces[1].setY(dragY);
 	}
 
 	getCollisionPlanes(otherObject) {
-		let centreJointPlane = 0;
-		let perpendicularJointPlane = 0;
-		let flipAxis = false;
+		let centreJointPlane; let perpendicularJointPlane; let flipAxis = false;
 		// if the two objects colliding dont have the same position vectors
 		if (this.position.x - otherObject.position.getX() != 0 && this.position.y - otherObject.position.getY() != 0) {
 			const gradient = (this.position.getY() - otherObject.getPosition().getY()) / (this.position.getX() - otherObject.getPosition().getX());
@@ -110,20 +108,9 @@ class MyObject {
 		return [centreJointPlane, perpendicularJointPlane, flipAxis];
 	}
 
-	perfectlyElasticallyCollide(otherObject, thisInitalVelocity, otherInitialVelocity, sumEnergy, sumMomentum, elasticity) {
-		const a = -this.mass * (otherObject.mass + this.mass);
-		const b = 2 * sumMomentum * this.mass;
-		const c = 2 * sumEnergy * otherObject.mass - sumMomentum ** 2;
-		let thisFinalVelocityCentrePlane = 0;
-		let otherFinalVelocityCentrePlane = 0;
-		if (b ** 2 - 4 * a * c >= 0) {
-			thisFinalVelocityCentrePlane = (-b + Math.sqrt(b ** 2 - 4 * a * c)) / (2 * a);
-			otherFinalVelocityCentrePlane = elasticity * Math.abs(thisInitalVelocity - otherInitialVelocity) + thisFinalVelocityCentrePlane;
-		} else {
-			alert("No more energy left in system");
-			thisFinalVelocityCentrePlane = this.velocity.getMag() * thisCosCentrePlane;
-			otherFinalVelocityCentrePlane = otherObject.getVelocity().getMag() * otherCosCentrePlane;
-		}
+	collide(otherObject, thisInitialVelocity, otherInitialVelocity, sumMomentum, elasticity) {
+		const thisFinalVelocityCentrePlane = (sumMomentum + otherObject.getMass() * elasticity * (otherInitialVelocity - thisInitialVelocity))/(this.mass+otherObject.getMass());
+		const otherFinalVelocityCentrePlane = (sumMomentum + this.mass*elasticity*(thisInitialVelocity - otherInitialVelocity))/(this.mass+otherObject.getMass());
 		return [thisFinalVelocityCentrePlane, otherFinalVelocityCentrePlane];
 	}
 
@@ -144,8 +131,7 @@ class MyObject {
 		const otherMomentumCentrePlane = otherObject.mass * otherObject.velocity.getMag() * otherCosCentrePlane;
 		// get all numeric values to solve the derived quadratic equation for an elastic collision
 		const sumMomentum = thisMomentumCentrePlane + otherMomentumCentrePlane;
-		const sumEnergy = 0.5 * (this.mass * (this.velocity.getMag() * thisCosCentrePlane) ** 2 + otherObject.mass * (otherObject.velocity.getMag() * otherCosCentrePlane) ** 2);
-		const calculatedVelocities = this.perfectlyElasticallyCollide(otherObject, this.velocity.getMag() * thisCosCentrePlane, otherObject.velocity.getMag() * otherCosCentrePlane, sumEnergy, sumMomentum, elasticity);
+		const calculatedVelocities = this.collide(otherObject, this.velocity.getMag() * thisCosCentrePlane, otherObject.velocity.getMag() * otherCosCentrePlane, sumMomentum, elasticity);
 		const thisFinalVelocityCentrePlane = calculatedVelocities[0];
 		const otherFinalVelocityCentrePlane = calculatedVelocities[1];
 		const thisFinalVelocityPerpendicularPlane = this.velocity.getMag() * thisCosPerpendicularPlane;
@@ -157,11 +143,10 @@ class MyObject {
 		const velocityComponents = this.getFinalVelocities(otherObject, elasticity);
 		let thisFinalVelocity;
 		let otherFinalVelocity;
-		if (!velocityComponents[4]){
+		if (!velocityComponents[4]) {
 			thisFinalVelocity = new Velocity(velocityComponents[0], velocityComponents[2]);
 			otherFinalVelocity = new Velocity(velocityComponents[1], velocityComponents[3]);
-		}
-		else {
+		} else {
 			thisFinalVelocity = new Velocity(velocityComponents[2], velocityComponents[0]);
 			otherFinalVelocity = new Velocity(velocityComponents[3], velocityComponents[1]);
 		}

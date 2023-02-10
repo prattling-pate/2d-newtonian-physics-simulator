@@ -3,8 +3,8 @@ class SimulationHandler extends CanvasHandler {
 		super(canvasId);
 		this.objects = [];
 		this.collisionBuffer = {};
-		this.bufferCounter=0;
-		this.bufferFrames=5;
+		this.bufferCounter = 0;
+		this.bufferFrames = 5;
 		this.trackedObjectIndex;
 		this.trackedObject;
 		this.constants = {
@@ -13,6 +13,7 @@ class SimulationHandler extends CanvasHandler {
 			timeStep: 0,
 			densityOfAir: 0,
 		};
+		this.showMasses = false;
 		this.reloaded = true;
 	}
 
@@ -46,20 +47,21 @@ class SimulationHandler extends CanvasHandler {
 		if (object.trackedObject) {
 			objectColour = "#FFF04D";
 		}
-		if (object.shape == "circle") {
-			objectXPosition = object.position.getX();
-			objectYPosition = object.position.getY();
-			this.drawCircle(objectXPosition, objectYPosition, object.radius, objectColour);
-		}
-		else {
-			objectXPosition = object.getCorner().getX();
-			objectYPosition = object.getCorner().getY();
-			this.drawRectangle(objectXPosition, objectYPosition, object.width, object.height, objectColour);
-		}
+		objectXPosition = object.position.getX();
+		objectYPosition = object.position.getY();
+		this.drawCircle(objectXPosition, objectYPosition, object.radius, objectColour);
+	}
+
+	drawMasses(object) {
+		let objectXPosition;
+		let objectYPosition;
+		objectXPosition = object.position.getX();
+		objectYPosition = object.position.getY();
+		this.drawText(object.mass.toFixed(3) +" kg", objectXPosition, objectYPosition, "black")
 	}
 
 	moveTimeForward() {
-		if ((this.bufferCounter + 1) % this.bufferFrames == 0){
+		if ((this.bufferCounter + 1) % this.bufferFrames == 0) {
 			this.collisionBuffer = {};
 		}
 		this.bufferCounter++;
@@ -68,16 +70,16 @@ class SimulationHandler extends CanvasHandler {
 			object.groundCeilingCollision(this.constants.coeffRest, this.constants.timeStep, this.height);
 			object.sideCollision(this.constants.coeffRest, this.constants.timeStep, this.width);
 			object.updateKinematics(this.constants.densityOfAir, this.constants.timeStep);
-			if (object.shape == 'rectangle'){
+			if (object.shape == "rectangle") {
 				object.updateHitbox();
 			}
 		}
 		for (const object1 of this.objects) {
 			for (const object2 of this.objects) {
-				if (object1!=object2 && !(this.collisionBuffer.hasOwnProperty(object1)||this.collisionBuffer.hasOwnProperty(object2))) {
-					if (object1.isCollision(object2, this.constants.timeStep)){
-						this.collisionBuffer.object1=true;
-						this.collisionBuffer.object2=true;
+				if (object1 != object2 && !(this.collisionBuffer.hasOwnProperty(object1) && this.collisionBuffer.hasOwnProperty(object2))) {
+					if (object1.isCollision(object2, this.constants.timeStep)) {
+						this.collisionBuffer.object1 = true;
+						this.collisionBuffer.object2 = true;
 						object1.otherObjectCollision(object2, this.constants.coeffRest);
 					}
 				}
@@ -90,6 +92,9 @@ class SimulationHandler extends CanvasHandler {
 		this.drawGround();
 		for (const object of this.objects) {
 			this.drawObject(object);
+			if (this.showMasses){
+				this.drawMasses(object);
+			}
 		}
 	}
 
@@ -105,7 +110,7 @@ class SimulationHandler extends CanvasHandler {
 	animateFrame() {
 		this.drawFrame();
 		// figure out how to have this run only when an object is tracked
-		if (this.running && this.objects.length>0 && !this.reloaded) {
+		if (this.running && this.objects.length > 0 && !this.reloaded) {
 			this.moveTimeForward();
 		}
 		this.setTrackedObject();

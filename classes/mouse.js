@@ -5,25 +5,19 @@ class Mouse {
 		this.trackedObject = null;
 	}
 
+	// check if mouse point is inside of a circular object using the circle equation
 	isInObject(other) {
 		const x = this.position.getX();
 		const y = this.position.getY();
-		if (other.shape == 'rectangle'){
-			if (x > other.hitbox.left && x < other.hitbox.right && y < other.hitbox.bottom && y > other.hitbox.top) {
-				return true;
-			}
-			return false;
+		if ((x-other.position.getX())**2 + (y - other.position.getY())**2 <= other.radius**2) {
+			return true;
 		}
-		else {
-			if ((x-other.position.getX())**2 + (y - other.position.getY())**2 <= other.radius**2) {
-				return true;
-			}
-			return false;
-		}
+		return false;
 	}
 
 	updatePosition(event, canvasCoordinates) {
-		this.containInBounds(event.clientX - canvasCoordinates.left, event.clientY - canvasCoordinates.top);
+		this.position.setX(event.clientX - canvasCoordinates.left);
+		this.position.setY(event.clientY - canvasCoordinates.top);
 	}
 
 	updateTrackedObject(objects, timeStep) {
@@ -33,35 +27,6 @@ class Mouse {
 				return i;
 			}
 		}
-		return false;
-	}
-
-	containInBounds(x, y) {
-		switch (x != null) {
-			case x > 0 && x < 640:
-				this.position.setX(x);
-				break;
-			case x < 0:
-				this.position.setX(0);
-				break;
-			case x > 640:
-				this.position.setX(640);
-				break;
-			default:
-				break;
-		}
-		switch (y != null) {
-			case y > 0 && y < 480:
-				this.position.setY(y);
-				break;
-			case y < 0:
-				this.position.setY(0);
-				break;
-			case y > 480:
-				this.position.setY(480);
-				break;
-			default:
-				break;
-		}
+		return -1;
 	}
 }
