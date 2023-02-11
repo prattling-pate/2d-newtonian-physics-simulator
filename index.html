@@ -6,6 +6,9 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<link rel="stylesheet" href="style.css" />
 		<title>NEA</title>
+		<!-- 
+			Load all classes and jQuery module
+		 -->
 		<script src="https://code.jquery.com/jquery-3.6.3.min.js"></script>
 		<script src="./classes/vectors/vector2.js"></script>
 		<script src="./classes/vectors/position.js"></script>
@@ -18,13 +21,19 @@
 		<script src="./classes/canvas_handlers/canvas_handler.js"></script>
 		<script src="./classes/canvas_handlers/simulation_handler.js"></script>
 		<script src="./classes/canvas_handlers/data_logger_handler.js"></script>
-		<script src="./classes/mouse.js"></script>
+		<script src="./classes/mouse.js"></script> 
+		<!--
+			Load scripts which initialize application
+		 -->
+		<script src="./scripts/jquery_handling.js"></script>
+		<script src="./scripts/main.js"></script>
 	</head>
 
 	<body>
 		<h1>2D Newtonian motion simulation</h1>
 		<div class="column">
-			<canvas id="Simulation" width="640" height="480" style="border: 5px #000000"> </canvas>
+			<canvas id="simulation" width="640" height="480" style="border: 5px #000000"> </canvas>
+			<!-- All user inputs to do with the simulation -->
 			<div class="user-inputs">
 				<div class="preset-options">
 					<label for="presets">Presets</label>
@@ -97,14 +106,15 @@
 			</div>
 		</div>
 		<div class="column">
-			<canvas class="graph-inputs" id="Graphs" width="640" height="480" style="border: 5px #000000"></canvas>
+			<!-- All user inputs to do with the data logger -->
+			<canvas class="graph-inputs" id="data-logger" width="640" height="480" style="border: 5px #000000"></canvas>
 			<div class="graph-inputs">
 				<button id="refresh-scaling-btn">Refresh graphs</button>
 				<label for="show-grids">Show grids?</label>
 				<input type="checkbox" id="show-grids" checked><br>
 				<div class="box">
-					<label for="displacement-scale-x">X scaling for displacement graph</label><br />
-					<input type="number" id="displacement-scale-x" value="1" /><br />
+					<label for="displacement-scale-x">X zoom for displacement graph</label><br />
+					<input type="number" id="displacement-scale-x" value="1" />x<br />
 					<label for="displacement-component">Select Component of displacement to graph</label><br />
 					<select id="displacement-component">
 						<option value="abs">Magnitude</option>
@@ -114,14 +124,14 @@
 					<label for="auto-scale-displacement-y">Auto-scale Y axis?</label>
 					<input class="auto-scale-displacement" id="auto-scale-displacement-y" type="checkbox" checked />
 					<div class="y-displacement-inputs">
-						<label for="displacement-scale-y">Y scaling for displacement graph</label><br />
-						<input type="number" id="displacement-scale-y" value="1" /><br />
+						<label for="displacement-scale-y">Y zoom for displacement graph</label><br />
+						<input type="number" id="displacement-scale-y" value="1" />x<br />
 					</div>
 				</div>
 				<br />
 				<div class="box">
-					<label for="velocity-scale-x">X scaling for velocity graph</label><br />
-					<input type="number" id="velocity-scale-x" value="1" /><br />
+					<label for="velocity-scale-x">X zoom for velocity graph</label><br />
+					<input type="number" id="velocity-scale-x" value="1" />x<br />
 					<label for="velocity-component">Select Component of velocity to graph</label><br />
 					<select id="velocity-component">
 						<option value="abs">Magnitude</option>
@@ -132,14 +142,14 @@
 					<label for="auto-scale-velocity-y">Auto-scale Y axis?</label>
 					<input class="auto-scale-velocity" id="auto-scale-velocity-y" type="checkbox" checked />
 					<div class="y-velocity-inputs">
-						<label for="velocity-scale-y">Y scaling for velocity graph</label><br />
-						<input type="number" id="velocity-scale-y" value="1" /><br />
+						<label for="velocity-scale-y">Y zoom for velocity graph</label><br />
+						<input type="number" id="velocity-scale-y" value="1" />x<br />
 					</div>
 				</div>
 				<br />
 				<div class="box">
-					<label for="acceleration-scale-x">X scaling for acceleration graph</label><br />
-					<input type="number" id="acceleration-scale-x" value="1" /><br />
+					<label for="acceleration-scale-x">X zoom for acceleration graph</label><br />
+					<input type="number" id="acceleration-scale-x" value="1" />x<br />
 					<label for="acceleration-component">Select Component of acceleration to graph</label><br />
 					<select id="acceleration-component">
 						<option value="abs">Magnitude</option>
@@ -149,19 +159,19 @@
 					<label for="auto-scale-acceleration-y">Auto-scale Y axis?</label>
 					<input class="auto-scale-acceleration" id="auto-scale-acceleration-y" type="checkbox" checked />
 					<div class="y-acceleration-inputs">
-						<label for="acceleration-scale-y">Y scaling for acceleration graph</label><br />
-						<input type="number" id="acceleration-scale-y" value="1" /><br />
+						<label for="acceleration-scale-y">Y zoom for acceleration graph</label><br />
+						<input type="number" id="acceleration-scale-y" value="1" />x<br />
 					</div>
 				</div>
 				<br />
 				<div class="box">
-					<label for="kinetic-energy-scale-x">X scaling for kinetic energy graph</label><br />
-					<input type="number" id="kinetic-energy-scale-x" value="1" /><br />
+					<label for="kinetic-energy-scale-x">X zoom for kinetic energy graph</label><br />
+					<input type="number" id="kinetic-energy-scale-x" value="1" />x<br />
 					<label for="auto-scale-kinetic-energy-y">Auto-scale Y axis?</label>
 					<input class="auto-scale-kinetic-energy" id="auto-scale-kinetic-energy-y" type="checkbox" checked />
 					<div class="y-kinetic-energy-inputs">
-						<label for="kinetic-energy-scale-y">Y scaling for kinetic energy graph</label><br />
-						<input type="number" id="kinetic-energy-scale-y" value="1" /><br />
+						<label for="kinetic-energy-scale-y">Y zoom for kinetic energy graph</label><br />
+						<input type="number" id="kinetic-energy-scale-y" value="1" />x<br />
 					</div>
 				</div>
 			</div>
@@ -180,8 +190,7 @@
 				<p>To use the graphs simply have the "Use Graphs?" checkbox checked, then add an object either manually or by loading a preset scenario. The graphs will automatically begin plotting data about the tracked object selected in the simulation.</p>
 			</div>
 		</div>
-		<script src="./scripts/jquery_handling.js"></script>
-		<script src="./scripts/main.js"></script>
+
 		<h2>Made by Kacper Lubczynski - 2023</h2>
 	</body>
 </html>

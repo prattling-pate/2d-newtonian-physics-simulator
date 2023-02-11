@@ -52,33 +52,33 @@ class DataLoggerHandler extends CanvasHandler {
 	drawYGrids(graph) {
 		const distanceBetweenYTicks = graph.height / 12;
 		for (let i = 0; i < 11; i++) {
-			this.drawLine(graph.originPosition.getX() - 0.5*graph.width, graph.originPosition.getY() + distanceBetweenYTicks * (i + 1), graph.originPosition.getX() + 0.5*graph.width, graph.originPosition.getY() + distanceBetweenYTicks * (i + 1), "#D3D3D3");
-			this.drawLine(graph.originPosition.getX() - 0.5*graph.width, graph.originPosition.getY() - distanceBetweenYTicks * (i + 1), graph.originPosition.getX() + 0.5*graph.width, graph.originPosition.getY() - distanceBetweenYTicks * (i + 1), "#D3D3D3");
+			this.drawLine(graph.centrePosition.getX() - 0.5*graph.width, graph.centrePosition.getY() + distanceBetweenYTicks * (i + 1), graph.centrePosition.getX() + 0.5*graph.width, graph.centrePosition.getY() + distanceBetweenYTicks * (i + 1), "#D3D3D3");
+			this.drawLine(graph.centrePosition.getX() - 0.5*graph.width, graph.centrePosition.getY() - distanceBetweenYTicks * (i + 1), graph.centrePosition.getX() + 0.5*graph.width, graph.centrePosition.getY() - distanceBetweenYTicks * (i + 1), "#D3D3D3");
 		}
 	}
 
 	drawXGrids(graph) {
 		for (let i=12.5; i < graph.width; i+=12.5) {
-			this.drawLine(graph.originPosition.getX() - 0.5*graph.width + i * graph.scale.getX(), graph.originPosition.getY() + graph.height, graph.originPosition.getX() - 0.5*graph.width + i * graph.scale.getX(), graph.originPosition.getY() - graph.height, "#D3D3D3")
+			this.drawLine(graph.centrePosition.getX() - 0.5*graph.width + i * graph.scale.getX(), graph.centrePosition.getY() + graph.height, graph.centrePosition.getX() - 0.5*graph.width + i * graph.scale.getX(), graph.centrePosition.getY() - graph.height, "#D3D3D3")
 		}
 	}
 
 	drawTicks(graph) {
 		const distanceBetweenYTicks = graph.height / 6;
 		for (let i = 0; i < 5; i++) {
-			this.drawLine(graph.originPosition.getX() - 0.525 * graph.width, graph.originPosition.getY() + distanceBetweenYTicks * (i + 1), graph.originPosition.getX() - 0.475 * graph.width, graph.originPosition.getY() + distanceBetweenYTicks * (i + 1));
-			this.drawLine(graph.originPosition.getX() - 0.525 * graph.width, graph.originPosition.getY() - distanceBetweenYTicks * (i + 1), graph.originPosition.getX() - 0.475 * graph.width, graph.originPosition.getY() - distanceBetweenYTicks * (i + 1));
+			this.drawLine(graph.centrePosition.getX() - 0.525 * graph.width, graph.centrePosition.getY() + distanceBetweenYTicks * (i + 1), graph.centrePosition.getX() - 0.475 * graph.width, graph.centrePosition.getY() + distanceBetweenYTicks * (i + 1));
+			this.drawLine(graph.centrePosition.getX() - 0.525 * graph.width, graph.centrePosition.getY() - distanceBetweenYTicks * (i + 1), graph.centrePosition.getX() - 0.475 * graph.width, graph.centrePosition.getY() - distanceBetweenYTicks * (i + 1));
 		}
 	}
 
 	drawGraph(graph) {
 		const lineCoordinates = {
-			middleLeft: new Position(graph.originPosition.getX() - this.width * 0.25, graph.originPosition.getY()),
-			middleRight: new Position(graph.originPosition.getX() + this.width * 0.25, graph.originPosition.getY()),
-			topLeft: new Position(graph.originPosition.getX() - this.width * 0.25, graph.originPosition.getY() - this.height * 0.25),
-			topRight: new Position(graph.originPosition.getX() + this.width * 0.25, graph.originPosition.getY() - this.height * 0.25),
-			bottomRight: new Position(graph.originPosition.getX() + this.width * 0.25, graph.originPosition.getY() + this.height * 0.25),
-			bottomLeft: new Position(graph.originPosition.getX() - this.width * 0.25, graph.originPosition.getY() + this.height * 0.25),
+			middleLeft: new Position(graph.centrePosition.getX() - this.width * 0.25, graph.centrePosition.getY()),
+			middleRight: new Position(graph.centrePosition.getX() + this.width * 0.25, graph.centrePosition.getY()),
+			topLeft: new Position(graph.centrePosition.getX() - this.width * 0.25, graph.centrePosition.getY() - this.height * 0.25),
+			topRight: new Position(graph.centrePosition.getX() + this.width * 0.25, graph.centrePosition.getY() - this.height * 0.25),
+			bottomRight: new Position(graph.centrePosition.getX() + this.width * 0.25, graph.centrePosition.getY() + this.height * 0.25),
+			bottomLeft: new Position(graph.centrePosition.getX() - this.width * 0.25, graph.centrePosition.getY() + this.height * 0.25),
 		};
 		if (this.showGrids) {
 			this.drawYGrids(graph);
@@ -96,11 +96,11 @@ class DataLoggerHandler extends CanvasHandler {
 
 	drawYScales(graph) {
 		let yValueScale;
-		const xPosOfYScale = graph.originPosition.getX() - this.width * 0.225;
+		const xPosOfYScale = graph.centrePosition.getX() - this.width * 0.225;
 		for (let i = 0; i < 5; i++) {
 			yValueScale = graph.roundToSignificantFigures(20 * (i + 1) * (1 / graph.scale.getY()), 3);
-			this.drawText(yValueScale, xPosOfYScale, graph.originPosition.getY() - (i + 1) * 20, "black");
-			this.drawText("-" + yValueScale, xPosOfYScale, graph.originPosition.getY() + (i + 1) * 20, "black");
+			this.drawText(yValueScale, xPosOfYScale, graph.centrePosition.getY() - (i + 1) * 20, "black");
+			this.drawText("-" + yValueScale, xPosOfYScale, graph.centrePosition.getY() + (i + 1) * 20, "black");
 		}
 	}
 
@@ -110,7 +110,7 @@ class DataLoggerHandler extends CanvasHandler {
 			index = graph.queue.getQueueIndex(i);
 			position = graph.translateDataToCanvasPlane(new Vector2(i*graph.scale.getX()));
 			// draws the x axis scales
-			this.drawText(graph.queue.data[index][3], position.getX(), graph.originPosition.getY() + 20, "black");
+			this.drawText(graph.queue.data[index][3], position.getX(), graph.centrePosition.getY() + 20, "black");
 		}
 	}
 	

@@ -131,7 +131,7 @@ class MyObject {
 		const otherMomentumCentrePlane = otherObject.mass * otherObject.velocity.getMag() * otherCosCentrePlane;
 		// get all numeric values to solve the derived quadratic equation for an elastic collision
 		const sumMomentum = thisMomentumCentrePlane + otherMomentumCentrePlane;
-		const calculatedVelocities = this.collide(otherObject, this.velocity.getMag() * thisCosCentrePlane, otherObject.velocity.getMag() * otherCosCentrePlane, sumMomentum, elasticity);
+		const calculatedVelocities = this.collide(otherObject, this.velocity.getMag() * thisCosCentrePlane, otherObject.getVelocity().getMag() * otherCosCentrePlane, sumMomentum, elasticity);
 		const thisFinalVelocityCentrePlane = calculatedVelocities[0];
 		const otherFinalVelocityCentrePlane = calculatedVelocities[1];
 		const thisFinalVelocityPerpendicularPlane = this.velocity.getMag() * thisCosPerpendicularPlane;

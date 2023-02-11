@@ -44,17 +44,17 @@ class SimulationHandler extends CanvasHandler {
 		if (object.trackedObject) {
 			objectColour = "#FFF04D";
 		}
-		objectXPosition = object.position.getX();
-		objectYPosition = object.position.getY();
+		objectXPosition = object.getPosition().getX();
+		objectYPosition = object.getPosition().getY();
 		this.drawCircle(objectXPosition, objectYPosition, object.radius, objectColour);
 	}
 
 	drawMasses(object) {
 		let objectXPosition;
 		let objectYPosition;
-		objectXPosition = object.position.getX();
-		objectYPosition = object.position.getY();
-		this.drawText(object.mass.toFixed(3) +" kg", objectXPosition, objectYPosition, "black")
+		objectXPosition = object.getPosition().getX();
+		objectYPosition = object.getPosition().getY();
+		this.drawText(object.getMass().toFixed(3) +" kg", objectXPosition, objectYPosition, "black")
 	}
 
 	moveTimeForward() {

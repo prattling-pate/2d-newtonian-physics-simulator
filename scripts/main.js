@@ -8,8 +8,8 @@ const RESOLUTION = [640, 480];
 function init() {
 	// create all necessary objects for application
 	const mouse = new Mouse();
-	const simulationHandler = new SimulationHandler("Simulation");
-	const dataLoggerHandler = new DataLoggerHandler("Graphs");
+	const simulationHandler = new SimulationHandler("simulation");
+	const dataLoggerHandler = new DataLoggerHandler("data-logger");
 	dataLoggerHandler.addGraph("Displacement", "upperLeft");
 	dataLoggerHandler.addGraph("Velocity", "upperRight");
 	dataLoggerHandler.addGraph("Acceleration", "bottomLeft");

@@ -14,6 +14,7 @@ class GraphQueue {
 	updateLargestPresentValue() {
 		const largestValue = this.largestPresentValue[0];
 		const indexOfValue = this.largestPresentValue[1];
+		// avoids index range error as queue shrinks in accordance to x scale
 		if (indexOfValue < this.data.length){
 			if (Math.abs(this.data[this.backPointer][1]) > Math.abs(largestValue) || this.data[indexOfValue][1] != largestValue) {
 				this.largestPresentValue[0] = this.data[this.backPointer][1];

@@ -1,5 +1,5 @@
 class Graph {
-	constructor(width, height, axisY, axisX = "Time", originPosition) {
+	constructor(width, height, axisY, axisX = "Time", centrePosition) {
 		this.width = width;
 		this.height = height;
 		this.axisX = axisX;
@@ -10,7 +10,7 @@ class Graph {
 		this.scale = new Vector2(1, 1);
 		this.previousPoint = 0;
 		this.timeStep = 1;
-		this.originPosition = originPosition; // indicates the quadrant of the canvas the graph resides in
+		this.centrePosition = centrePosition; // indicates the quadrant of the canvas the graph resides in
 		this.queue = new GraphQueue(this.findGraphQueueLength()); // queue property is a circular queue, allows old datapoints to be taken from graph while new ones are untouched.
 		// queue contains lists (so 2d lists) containing data to be plotted [scaled, unscaled, is the point out of bounds, time of the point taken].
 	}
@@ -153,8 +153,8 @@ class Graph {
 
 	// translates cartesian data point to the canvas coordinates system.
 	translateDataToCanvasPlane(data) {
-		const positionX = this.originPosition.getX() - 0.5 * this.width + data.getX();
-		const positionY = this.originPosition.getY() - data.getY();
+		const positionX = this.centrePosition.getX() - 0.5 * this.width + data.getX();
+		const positionY = this.centrePosition.getY() - data.getY();
 		const position = new Position(positionX, positionY);
 		return position;
 	}
