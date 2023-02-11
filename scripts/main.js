@@ -1,5 +1,3 @@
-// WHERE I CLICK IS CONSISTENTLY NOT COINCIDING WITH WHERE THE CIRCLE IS!?!?!<LKJWHDFAIWDJHBGVWA
-
 // CONSTANTS
 
 const RESOLUTION = [640, 480];
@@ -16,7 +14,9 @@ function init() {
 	dataLoggerHandler.addGraph("Velocity", "upperRight");
 	dataLoggerHandler.addGraph("Acceleration", "bottomLeft");
 	dataLoggerHandler.addGraph("Kinetic Energy", "bottomRight");
+	// grab all constants from main page
 	const constants = getConstants();
+	// change constants in both canvas handlers to new constants
 	simulationHandler.setConstants(constants.coeffRest, constants.gravitationalFieldStrength, constants.timeStep, constants.densityOfAir);
 	dataLoggerHandler.refreshTimeStepInGraphs(simulationHandler.constants.timeStep);
 
