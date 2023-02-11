@@ -108,6 +108,7 @@ function init() {
 	});
 
 	document.getElementById("refresh-sim-btn").addEventListener("click", () => {
+		document.getElementById("pause-btn").innerHTML = "Pause Simulation";
 		clearInterval(window.interval);
 		init();
 	});
