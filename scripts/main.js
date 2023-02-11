@@ -121,9 +121,11 @@ function init() {
 			return null;
 		}
 		const index = mouse.updateTrackedObject(simulationHandler.objects, simulationHandler.constants.timeStep);
+		// -1 indicates mouse isnt inside of an object
 		if (index == -1) {
 			return null;
 		}
+		// switch tracked object flags in object and simulation handler to new object from old object being tracked
 		simulationHandler.objects[simulationHandler.trackedObjectIndex].trackedObject = false;
 		simulationHandler.objects[index].trackedObject = true;
 		simulationHandler.trackedObject = simulationHandler.objects[index];
@@ -338,14 +340,14 @@ function handleInputError(input, type) {
 	let output = input;
 	const isInvalid = {
 		gravitationalFieldStrength: input < 0,
-		densityOfAir: input < 0,
+		densityOfAir: input < 0 && input >=100,
 		timeStep: input <= 0,
 		restitution: input < 0 || input > 1,
 		scales: input < 0,
 	};
 	const errorMessages = {
 		gravitationalFieldStrength: "Gravity cannot be negative",
-		densityOfAir: "Density of Air cannot be negative",
+		densityOfAir: "Density of Air cannot be negative or greater than 100 without causing simulation issues",
 		timeStep: "Time step in simulation cannot be negative or 0, pausing the simulation can be done using the button",
 		restitution: "Coefficient of restitution cannot be less than 0 or greater than 1",
 		scales: "Graph scales must be greater than 0",

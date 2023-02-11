@@ -47,7 +47,7 @@ class Graph {
 	findGraphQueueLength() {
 		const distanceBetweenPoints = this.scale.getX();
 		const plottableGraphSpace = (250 / 320) * this.width;
-		const distanceBetweenPointsInXAxis = plottableGraphSpace / distanceBetweenPoints;
+		const distanceBetweenPointsInXAxis = Math.floor(plottableGraphSpace / distanceBetweenPoints);
 		return distanceBetweenPointsInXAxis;
 	}
 

@@ -14,7 +14,13 @@ class GraphQueue {
 	updateLargestPresentValue() {
 		const largestValue = this.largestPresentValue[0];
 		const indexOfValue = this.largestPresentValue[1];
-		if (Math.abs(this.data[this.backPointer][1]) > Math.abs(largestValue) || this.data[indexOfValue][1] != largestValue) {
+		if (indexOfValue < this.data.length){
+			if (Math.abs(this.data[this.backPointer][1]) > Math.abs(largestValue) || this.data[indexOfValue][1] != largestValue) {
+				this.largestPresentValue[0] = this.data[this.backPointer][1];
+				this.largestPresentValue[1] = this.backPointer;
+				}
+		}
+		else {
 			this.largestPresentValue[0] = this.data[this.backPointer][1];
 			this.largestPresentValue[1] = this.backPointer;
 		}

@@ -2,9 +2,6 @@ class SimulationHandler extends CanvasHandler {
 	constructor(canvasId) {
 		super(canvasId);
 		this.objects = [];
-		this.collisionBuffer = {};
-		this.bufferCounter = 0;
-		this.bufferFrames = 5;
 		this.trackedObjectIndex;
 		this.trackedObject;
 		this.constants = {
@@ -61,10 +58,6 @@ class SimulationHandler extends CanvasHandler {
 	}
 
 	moveTimeForward() {
-		if ((this.bufferCounter + 1) % this.bufferFrames == 0) {
-			this.collisionBuffer = {};
-		}
-		this.bufferCounter++;
 		for (const object of this.objects) {
 			object.addWeight(this.constants.gravitationalFieldStrength);
 			object.groundCeilingCollision(this.constants.coeffRest, this.constants.timeStep, this.height);
@@ -76,10 +69,8 @@ class SimulationHandler extends CanvasHandler {
 		}
 		for (const object1 of this.objects) {
 			for (const object2 of this.objects) {
-				if (object1 != object2 && !(this.collisionBuffer.hasOwnProperty(object1) && this.collisionBuffer.hasOwnProperty(object2))) {
+				if (object1 != object2) {
 					if (object1.isCollision(object2, this.constants.timeStep)) {
-						this.collisionBuffer.object1 = true;
-						this.collisionBuffer.object2 = true;
 						object1.otherObjectCollision(object2, this.constants.coeffRest);
 					}
 				}
@@ -88,9 +79,10 @@ class SimulationHandler extends CanvasHandler {
 	}
 
 	drawScale() {
-		this.drawText("10m" , 50, 35/36 * this.height, "black");
-		this.drawLine()
-		this.drawLine(0,17/18 * this.height, 100, 17/18 * this.height, "black", 1);
+		this.drawText("10m" , 30/640 * this.width, 67/72 * this.height, "black");
+		this.drawLine(80/640 * this.width, 67/72 * this.height, 100/640  * this.width, 17/18 * this.height, "black")
+		this.drawLine(80/640 * this.width, 69/72 * this.height, 100/640 * this.width , 17/18 * this.height, "black")
+		this.drawLine(0,17/18 * this.height, 100, 17/18 * this.height, "black");
 	}
 
 	drawFrame() {
