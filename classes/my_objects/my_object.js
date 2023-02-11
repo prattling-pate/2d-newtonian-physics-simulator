@@ -84,14 +84,16 @@ class MyObject {
 	}
 
 	updateDrag(densityOfAir) {
-		const dragX = -Math.sign(this.velocity.getX()) * 0.5 * densityOfAir * this.coeffDrag * this.width * (this.velocity.getX()) ** 2;
-		const dragY = -Math.sign(this.velocity.getY()) * 0.5 * densityOfAir * this.coeffDrag * this.height * (this.velocity.getY()) ** 2;
+		const dragX = -Math.sign(this.velocity.getX()) * 0.5 * densityOfAir * this.coeffDrag * this.width * this.velocity.getX() ** 2;
+		const dragY = -Math.sign(this.velocity.getY()) * 0.5 * densityOfAir * this.coeffDrag * this.height * this.velocity.getY() ** 2;
 		this.forces[1].setX(dragX);
 		this.forces[1].setY(dragY);
 	}
 
 	getCollisionPlanes(otherObject) {
-		let centreJointPlane; let perpendicularJointPlane; let flipAxis = false;
+		let centreJointPlane;
+		let perpendicularJointPlane;
+		let flipAxis = false;
 		// if the two objects colliding dont have the same position vectors
 		if (this.position.x - otherObject.position.getX() != 0 && this.position.y - otherObject.position.getY() != 0) {
 			const gradient = (this.position.getY() - otherObject.getPosition().getY()) / (this.position.getX() - otherObject.getPosition().getX());
@@ -109,8 +111,8 @@ class MyObject {
 	}
 
 	collide(otherObject, thisInitialVelocity, otherInitialVelocity, sumMomentum, elasticity) {
-		const thisFinalVelocityCentrePlane = (sumMomentum + otherObject.getMass() * elasticity * (otherInitialVelocity - thisInitialVelocity))/(this.mass+otherObject.getMass());
-		const otherFinalVelocityCentrePlane = (sumMomentum + this.mass*elasticity*(thisInitialVelocity - otherInitialVelocity))/(this.mass+otherObject.getMass());
+		const thisFinalVelocityCentrePlane = (sumMomentum + otherObject.getMass() * elasticity * (otherInitialVelocity - thisInitialVelocity)) / (this.mass + otherObject.getMass());
+		const otherFinalVelocityCentrePlane = (sumMomentum + this.mass * elasticity * (thisInitialVelocity - otherInitialVelocity)) / (this.mass + otherObject.getMass());
 		return [thisFinalVelocityCentrePlane, otherFinalVelocityCentrePlane];
 	}
 

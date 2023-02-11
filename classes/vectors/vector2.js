@@ -23,7 +23,6 @@ class Vector2 {
 
 	// VECTOR ARITHMETIC METHODS -----
 
-	// implement fast inverse square root algorithm using bit manip., apparently slower than default method of 1 / Math.sqrt()
 	getMag() {
 		return Math.sqrt(this.x ** 2 + this.y ** 2);
 	}

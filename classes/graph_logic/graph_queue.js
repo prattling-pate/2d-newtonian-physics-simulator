@@ -15,18 +15,19 @@ class GraphQueue {
 		const largestValue = this.largestPresentValue[0];
 		const indexOfValue = this.largestPresentValue[1];
 		// avoids index range error as queue shrinks in accordance to x scale
-		if (indexOfValue < this.data.length){
+		if (indexOfValue < this.data.length) {
 			if (Math.abs(this.data[this.backPointer][1]) > Math.abs(largestValue) || this.data[indexOfValue][1] != largestValue) {
 				this.largestPresentValue[0] = this.data[this.backPointer][1];
 				this.largestPresentValue[1] = this.backPointer;
-				}
-		}
-		else {
+			}
+		} else {
 			this.largestPresentValue[0] = this.data[this.backPointer][1];
 			this.largestPresentValue[1] = this.backPointer;
 		}
 	}
 
+	// dequeues data and pops elements until length of data list is equal to newLength
+	// if the newLength is greater than the current then more elements are added to the list
 	setLength(newLength) {
 		this.maximumLength = newLength;
 		let pointerToPop;
@@ -60,6 +61,7 @@ class GraphQueue {
 		return this.frontPointer == -1;
 	}
 
+	// get number of data points in queue
 	getLength() {
 		return this.undoQueueIndex(this.backPointer) - this.undoQueueIndex(this.frontPointer) + 1;
 	}

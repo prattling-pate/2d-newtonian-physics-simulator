@@ -43,10 +43,12 @@ class Graph {
 		return "(" + units[this.axisY] + ")";
 	}
 
-	// uses simple inverse proportionality after finding 2500 length is good for timescale of 0.1.
+	// finds queue length going up to the
+	// limiting point (250/320 part way through the x axis) which is where the graph begins scrolling
 	findGraphQueueLength() {
 		const distanceBetweenPoints = this.scale.getX();
 		const plottableGraphSpace = (250 / 320) * this.width;
+		// floor function used as fractional indices do not exist in lists
 		const distanceBetweenPointsInXAxis = Math.floor(plottableGraphSpace / distanceBetweenPoints);
 		return distanceBetweenPointsInXAxis;
 	}
@@ -60,14 +62,16 @@ class Graph {
 			Displacement: objectData.getDisplacement(),
 			Velocity: objectData.getVelocity(),
 			Acceleration: objectData.getVelocity(),
-			"Kinetic Energy": objectData.getKineticEnergy() / 100,
-		};
+			"Kinetic Energy": objectData.getKineticEnergy() / 100, // divided by 100 (as kinetic energy is the square of velocity) to maintain scale that time
+		}; //is 10 times lower than stated on the UI in calculations
 		let toPlot = information[this.axisY];
 		if (this.axisY != "Kinetic Energy") {
+			toPlot = toPlot.multiply(0.1); // all components of vectors are divided by 10 in order to preserve scale of computation time
 			const components = {
-				x: toPlot.getX() / 10,
-				y: -toPlot.getY() / 10,
-				abs: toPlot.getMag() / 10,
+				//being 10 times lower than what is stated on the web page
+				x: toPlot.getX(),
+				y: -toPlot.getY(),
+				abs: toPlot.getMag(),
 			};
 			toPlot = components[this.axisYComponent];
 		}
@@ -79,14 +83,6 @@ class Graph {
 			return true;
 		}
 		return false;
-	}
-
-	// look at colour to make it easier to see the scale over it
-	getColourOfDataPoint(outOfBounds) {
-		if (outOfBounds) {
-			return "red";
-		}
-		return "black";
 	}
 
 	addData(objectData) {
@@ -113,10 +109,6 @@ class Graph {
 	}
 
 	setScale(x = 0, y = 0) {
-		if (x == 0 && y == 0) {
-			alert("Cannot set scales to 0");
-			return null;
-		}
 		if (x != 0) {
 			this.scale.setX(x);
 			this.queue.setLength(this.findGraphQueueLength());

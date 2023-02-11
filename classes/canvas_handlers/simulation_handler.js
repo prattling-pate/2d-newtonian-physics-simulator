@@ -54,7 +54,7 @@ class SimulationHandler extends CanvasHandler {
 		let objectYPosition;
 		objectXPosition = object.getPosition().getX();
 		objectYPosition = object.getPosition().getY();
-		this.drawText(object.getMass().toFixed(3) +" kg", objectXPosition, objectYPosition, "black")
+		this.drawText(object.getMass().toFixed(3) + " kg", objectXPosition, objectYPosition, "black");
 	}
 
 	moveTimeForward() {
@@ -79,10 +79,10 @@ class SimulationHandler extends CanvasHandler {
 	}
 
 	drawScale() {
-		this.drawText("10m" , 30/640 * this.width, 67/72 * this.height, "black");
-		this.drawLine(80/640 * this.width, 67/72 * this.height, 100/640  * this.width, 17/18 * this.height, "black")
-		this.drawLine(80/640 * this.width, 69/72 * this.height, 100/640 * this.width , 17/18 * this.height, "black")
-		this.drawLine(0,17/18 * this.height, 100, 17/18 * this.height, "black");
+		this.drawText("10m for scale", (10 / 640) * this.width, (67 / 72) * this.height, "black");
+		this.drawLine((80 / 640) * this.width, (67 / 72) * this.height, (100 / 640) * this.width, (17 / 18) * this.height, "black");
+		this.drawLine((80 / 640) * this.width, (69 / 72) * this.height, (100 / 640) * this.width, (17 / 18) * this.height, "black");
+		this.drawLine(0, (17 / 18) * this.height, 100, (17 / 18) * this.height, "black");
 	}
 
 	drawFrame() {
@@ -91,7 +91,7 @@ class SimulationHandler extends CanvasHandler {
 		this.drawScale();
 		for (const object of this.objects) {
 			this.drawObject(object);
-			if (this.showMasses){
+			if (this.showMasses) {
 				this.drawMasses(object);
 			}
 		}

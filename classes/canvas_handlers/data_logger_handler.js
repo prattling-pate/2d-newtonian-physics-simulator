@@ -52,14 +52,20 @@ class DataLoggerHandler extends CanvasHandler {
 	drawYGrids(graph) {
 		const distanceBetweenYTicks = graph.height / 12;
 		for (let i = 0; i < 11; i++) {
-			this.drawLine(graph.centrePosition.getX() - 0.5*graph.width, graph.centrePosition.getY() + distanceBetweenYTicks * (i + 1), graph.centrePosition.getX() + 0.5*graph.width, graph.centrePosition.getY() + distanceBetweenYTicks * (i + 1), "#D3D3D3");
-			this.drawLine(graph.centrePosition.getX() - 0.5*graph.width, graph.centrePosition.getY() - distanceBetweenYTicks * (i + 1), graph.centrePosition.getX() + 0.5*graph.width, graph.centrePosition.getY() - distanceBetweenYTicks * (i + 1), "#D3D3D3");
+			this.drawLine(graph.centrePosition.getX() - 0.5 * graph.width, graph.centrePosition.getY() + distanceBetweenYTicks * (i + 1), graph.centrePosition.getX() + 0.5 * graph.width, graph.centrePosition.getY() + distanceBetweenYTicks * (i + 1), "#D3D3D3");
+			this.drawLine(graph.centrePosition.getX() - 0.5 * graph.width, graph.centrePosition.getY() - distanceBetweenYTicks * (i + 1), graph.centrePosition.getX() + 0.5 * graph.width, graph.centrePosition.getY() - distanceBetweenYTicks * (i + 1), "#D3D3D3");
 		}
 	}
 
 	drawXGrids(graph) {
-		for (let i=12.5; i < graph.width; i+=12.5) {
-			this.drawLine(graph.centrePosition.getX() - 0.5*graph.width + i * graph.scale.getX(), graph.centrePosition.getY() + graph.height, graph.centrePosition.getX() - 0.5*graph.width + i * graph.scale.getX(), graph.centrePosition.getY() - graph.height, "#D3D3D3")
+		for (let i = 12.5; i < graph.width; i += 12.5) {
+			this.drawLine(
+				graph.centrePosition.getX() - 0.5 * graph.width + i * graph.scale.getX(),
+				graph.centrePosition.getY() + graph.height,
+				graph.centrePosition.getX() - 0.5 * graph.width + i * graph.scale.getX(),
+				graph.centrePosition.getY() - graph.height,
+				"#D3D3D3"
+			);
 		}
 	}
 
@@ -89,7 +95,7 @@ class DataLoggerHandler extends CanvasHandler {
 		// drawing boundaries between graphs
 		this.drawBorders(lineCoordinates);
 		const yAxisTitlePosition = graph.translateDataToCanvasPlane(new Position(10, 110));
-		this.drawText(graph.axisY + " " + graph.unitsY + " ("+ graph.axisYComponent + ")", yAxisTitlePosition.getX(), yAxisTitlePosition.getY(), "black");
+		this.drawText(graph.axisY + " " + graph.unitsY + " (" + graph.axisYComponent + ")", yAxisTitlePosition.getX(), yAxisTitlePosition.getY(), "black");
 		const xAxisTitlePosition = graph.translateDataToCanvasPlane(new Position(280, 10));
 		this.drawText(graph.axisX + " (s)", xAxisTitlePosition.getX(), xAxisTitlePosition.getY(), "black");
 	}
@@ -105,25 +111,30 @@ class DataLoggerHandler extends CanvasHandler {
 	}
 
 	drawXScales(graph) {
-		let index; let position;
-		for (let i=50; i < graph.queue.getLength(); i+=50){
+		let index;
+		let position;
+		const counter = 50 / graph.scale.getX();
+		for (let i = counter; i < graph.queue.getLength(); i += counter) {
 			index = graph.queue.getQueueIndex(i);
-			position = graph.translateDataToCanvasPlane(new Vector2(i*graph.scale.getX()));
+			position = graph.translateDataToCanvasPlane(new Vector2(i * graph.scale.getX()));
 			// draws the x axis scales
 			this.drawText(graph.queue.data[index][3], position.getX(), graph.centrePosition.getY() + 20, "black");
 		}
 	}
-	
+
 	plotData(graph) {
-		let position; let positionNext; let index; let indexNext; let colour;
+		let position;
+		let positionNext;
+		let index;
+		let indexNext;
 		const xScale = graph.scale.getX();
 		for (let i = 0; i < graph.queue.getLength() - 1; i++) {
+			// gets the data iteratively from oldest to newest using getQueueIndex
 			index = graph.queue.getQueueIndex(i);
 			indexNext = graph.queue.getQueueIndex(i + 1);
 			position = graph.translateDataToCanvasPlane(new Position(i * xScale, graph.queue.data[index][0]));
 			positionNext = graph.translateDataToCanvasPlane(new Position((i + 1) * xScale, graph.queue.data[indexNext][0]));
-			colour = graph.getColourOfDataPoint(graph.queue.data[indexNext][2]);
-			this.drawLine(position.getX(), position.getY(), positionNext.getX(), positionNext.getY(), colour, 1);
+			this.drawLine(position.getX(), position.getY(), positionNext.getX(), positionNext.getY(), "black", 1);
 		}
 		this.drawXScales(graph);
 		this.drawYScales(graph);

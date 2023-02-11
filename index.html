@@ -21,7 +21,7 @@
 		<script src="./classes/canvas_handlers/canvas_handler.js"></script>
 		<script src="./classes/canvas_handlers/simulation_handler.js"></script>
 		<script src="./classes/canvas_handlers/data_logger_handler.js"></script>
-		<script src="./classes/mouse.js"></script> 
+		<script src="./classes/mouse.js"></script>
 		<!--
 			Load scripts which initialize application
 		 -->
@@ -63,7 +63,7 @@
 					<input type="number" value="1.225" min="0" step="0.001" id="densityOA" />kgm<sup>-3</sup><br />
 					<label for="rate">Time Scale:</label>
 					<input type="number" value="1" min="0" step="0.001" id="scale" />
-					s<sup>-1</sup><br />
+					<br />
 					<label for="restit">Coefficient of Restitution</label>
 					<input type="number" value="1" min="0" step="0.001" id="restit" /><br />
 				</div>
@@ -111,7 +111,7 @@
 			<div class="graph-inputs">
 				<button id="refresh-scaling-btn">Refresh graphs</button>
 				<label for="show-grids">Show grids?</label>
-				<input type="checkbox" id="show-grids" checked><br>
+				<input type="checkbox" id="show-grids" checked /><br />
 				<div class="box">
 					<label for="displacement-scale-x">X zoom for displacement graph</label><br />
 					<input type="number" id="displacement-scale-x" value="1" />x<br />
@@ -176,21 +176,53 @@
 				</div>
 			</div>
 		</div>
-		<div class="column">
-			<div class="instructions">
-				<h1>Instructions for use:</h1>
-				<br />
-				<h2>Using the simulation</h2>
-				<h3>Presets</h3>
-				<p>To produce a preset scenario simply select from the drop down a scenario you'd like to simulate and click "Load preset". <br />You can then use the graphs in order to track a certain objects characteristics.</p>
-				<h3>Interpreting the Simulation</h3>
-				<p>When viewing the simulation each object is modelled as a circular object in 2 dimensions which can collide. The graphs on the right of the simulation display useful information about the kinematics of the object selected (which is selected by simply clicking on an object and is denoted by a bright yellow colour).</p>
-				<p>This along with the mass display allows for the momentum of objects to be calculated</p>
-				<h3>Graphs/Data Logger</h3>
-				<p>To use the graphs simply have the "Use Graphs?" checkbox checked, then add an object either manually or by loading a preset scenario. The graphs will automatically begin plotting data about the tracked object selected in the simulation.</p>
-			</div>
+		<h1>Instructions for use:</h1>
+		<br />
+		<div class="instructions">
+			<h2>Using the simulation tool</h2>
+			<h3>Changing simulation constants</h3>
+			<p>The constants within the simulation can be changed by the user by inputting the new values in the relevant fields then pressing "Refresh Constants".</p>
+			<p>The gravitational field strength indicates the strength of gravity in the simulation (9.81 is the Earth's gravitational field strength).</p>
+			<p>Density of air indicates how strong the air resistance acting on any objects in the simulation will be.</p>
+			<p>The time scale of the simulation indicates how fast the simulation will run, a lower value will cause the simulation to go in "slow motion" while a higher will cause it to go quickly.</p>
+			<p>The coefficient of Restitution indicates how elastic the collisions in the simulation are (how much kinetic energy is lost during a collision, 0 means all energy is lost and 1 means no enery is lost)</p>
+			<h3>Adding Objects Manually</h3>
+			<p>To add an object simply fill in the input boxes with number values you'd wish the objects' characteristics to have then press "Add Object".</p>
+			<p>To add vectors similarly fill in the number in the respective component for all float values (i indicates the component towards the right and j indicates the component directly upwards).</p>
+			<h3>Presets</h3>
+			<p>To produce a preset scenario simply select from the drop down a scenario you'd like to simulate and click "Load preset". <br />You can then use the graphs in order to track a certain objects characteristics.</p>
+			<h3>Interpreting the Simulation and selecting tracked objects</h3>
+			<p>
+				When viewing the simulation each object is modelled as a circular object in 2 dimensions which can collide. The graphs on the right of the simulation display useful information about the kinematics of the object selected (which is selected by
+				simply clicking on an object and is denoted by a bright yellow colour).
+			</p>
+			<p>This along with the mass display allows for the momentum of objects to be calculated.</p>
+			<h3>Calculating Momentum and teaching using this tool</h3>
+			<p>To teach using this tool conservation of momentum appropriate presets come preloaded with this webapp such as different ratios of masses and different kinds of collisions</p>
+			<p>
+				In order to allow students to show to themselves that the mometum and energy may be preserved use the graphs to find the velocities and energy of the objects before and after colliding and use the "Show masses?" checkbox to display the mass of
+				each individual object beneath it.
+			</p>
+			<p>Using these students may now show that momentum before and after the collision is the same for all collisions and that energy is either lost or kept depending on the type of collision.</p>
+			<h3>Graphs/Data Logger</h3>
+			<p>To use the graphs have the "Use Graphs?" checkbox checked, then add an object either manually or by loading a preset scenario. The graphs will automatically begin plotting data about the tracked object selected in the simulation.</p>
+			<h4>Scaling</h4>
+			<p>If no data is seen on the graphs then the data is out of range of the current scale so press refresh graphs if you have auto-scaling y on the relevant graphs, this will put the graph data points back in range of viewing.</p>
+			<p>If you do not wish to use the auto-scaling feature uncheck "Auto-scale Y axis?" for the relevant graphs and choose your own zoom for the graph axis.</p>
+			<p>This can be done regardless for the x axis if you want to see the finer details of the plot up close.</p>
+			<h4>Choosing components</h4>
+			<p>
+				To choose the component of the vector quantity being displayed on the graph choose one from the drop down lists for their respective graphs found below the graphs' canvas. After selecting the component you want from x, y and magnitude click
+				"Refresh graph" to apply the changes.
+			</p>
+			<h4>Grids</h4>
+			<p>Grids for the data loggers are optional but on by default. They are useful for users to be able to do things like:<ul>
+				<li>Calculate areas under curves</li>
+				<li>Calulcate gradients of curves</li>
+				<li>Find values for specific times on the graphs</li>
+				<li>Compare what is being logged on the graph to what is visually occuring in the simulation</li>
+			</ul></p>
 		</div>
-
-		<h2>Made by Kacper Lubczynski - 2023</h2>
+		<h2>Made by Kacper Piotr Lubczyński - 2023</h2>
 	</body>
 </html>
