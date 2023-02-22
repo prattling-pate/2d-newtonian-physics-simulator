@@ -123,10 +123,7 @@ class DataLoggerHandler extends CanvasHandler {
 	}
 
 	plotData(graph) {
-		let position;
-		let positionNext;
-		let index;
-		let indexNext;
+		let position; let positionNext; let index; let indexNext;
 		const xScale = graph.scale.getX();
 		for (let i = 0; i < graph.queue.getLength() - 1; i++) {
 			// gets the data iteratively from oldest to newest using getQueueIndex

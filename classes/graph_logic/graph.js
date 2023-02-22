@@ -57,6 +57,8 @@ class Graph {
 		this.timeStep = input * 10;
 	}
 
+	// gets data to plot from object passed in by grabbing its attributes according to the
+	// the graph's vector component and y axis plot.
 	getDataPoint(objectData) {
 		const information = {
 			Displacement: objectData.getDisplacement(),
@@ -168,6 +170,7 @@ class Graph {
 	differentiate(newData) {
 		let slope = (newData - this.previousPoint) / (this.timeStep / 10);
 		if (this.axisYComponent == "abs") {
+			// allows abs of acceleration to be positive for all values (as it should be)
 			slope = Math.abs(slope);
 		}
 		return slope;
