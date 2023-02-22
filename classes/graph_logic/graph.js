@@ -73,7 +73,7 @@ class Graph {
 				//being 10 times lower than what is stated on the web page
 				x: toPlot.getX(),
 				y: -toPlot.getY(),
-				abs: toPlot.getMag(),
+				abs: toPlot.getMagnitude(),
 			};
 			toPlot = components[this.axisYComponent];
 		}

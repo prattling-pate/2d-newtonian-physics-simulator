@@ -18,11 +18,11 @@
   .box {
     border: 1px solid black;
     width: 640px;
-    background-color: #d5cdbb;
+    background-color: rgb(219, 219, 219);
   }
 
   .instructions {
     border: 1px solid black;
-    background-color: #d5cdbb;
+    background-color: rgb(219, 219, 219);
     width: 50%;
   }

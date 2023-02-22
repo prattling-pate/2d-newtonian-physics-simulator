@@ -23,7 +23,7 @@ class Vector2 {
 
 	// VECTOR ARITHMETIC METHODS -----
 
-	getMag() {
+	getMagnitude() {
 		return Math.sqrt(this.x ** 2 + this.y ** 2);
 	}
 
@@ -35,12 +35,12 @@ class Vector2 {
 		if ((this.x == 0 && this.y == 0) || (otherVector.getX() == 0 && otherVector.getY() == 0)) {
 			return 0;
 		}
-		return this.dotProduct(otherVector) / (this.getMag() * otherVector.getMag());
+		return this.dotProduct(otherVector) / (this.getMagnitude() * otherVector.getMagnitude());
 	}
 
 	normalize() {
-		if (this.getMag() != 0) {
-			return new Vector2(this.x / this.getMag(), this.y / this.getMag());
+		if (this.getMagnitude() != 0) {
+			return new Vector2(this.x / this.getMagnitude(), this.y / this.getMagnitude());
 		}
 		return new Vector2(0, 0);
 	}

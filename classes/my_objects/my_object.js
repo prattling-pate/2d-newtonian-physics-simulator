@@ -44,11 +44,11 @@ class MyObject {
 	}
 
 	getKineticEnergy() {
-		return 0.5 * this.mass * this.velocity.getMag() ** 2;
+		return 0.5 * this.mass * this.velocity.getMagnitude() ** 2;
 	}
 
 	getMomentum() {
-		return this.velocity.getMag() * this.mass;
+		return this.velocity.getMagnitude() * this.mass;
 	}
 
 	getDisplacement() {
@@ -121,15 +121,15 @@ class MyObject {
 		const otherCosCentrePlane = otherObject.getVelocity().getCosAngle(centreJointPlane);
 		const otherCosPerpendicularPlane = otherObject.getVelocity().getCosAngle(perpendicularJointPlane);
 		// find momentum of each object in the collision plane
-		const thisMomentumCentrePlane = this.mass * this.velocity.getMag() * thisCosCentrePlane;
-		const otherMomentumCentrePlane = otherObject.getMass() * otherObject.getVelocity().getMag() * otherCosCentrePlane;
+		const thisMomentumCentrePlane = this.mass * this.velocity.getMagnitude() * thisCosCentrePlane;
+		const otherMomentumCentrePlane = otherObject.getMass() * otherObject.getVelocity().getMagnitude() * otherCosCentrePlane;
 		// get all numeric values to solve the derived quadratic equation for an elastic collision
 		const sumMomentum = thisMomentumCentrePlane + otherMomentumCentrePlane;
-		const calculatedVelocities = this.collide(otherObject, this.velocity.getMag() * thisCosCentrePlane, otherObject.getVelocity().getMag() * otherCosCentrePlane, sumMomentum, elasticity);
+		const calculatedVelocities = this.collide(otherObject, this.velocity.getMagnitude() * thisCosCentrePlane, otherObject.getVelocity().getMagnitude() * otherCosCentrePlane, sumMomentum, elasticity);
 		const thisFinalVelocityCentrePlane = calculatedVelocities.thisFinal;
 		const otherFinalVelocityCentrePlane = calculatedVelocities.otherFinal;
-		const thisFinalVelocityPerpendicularPlane = this.getVelocity().getMag() * thisCosPerpendicularPlane;
-		const otherFinalVelocityPerpendicularPlane = otherObject.getVelocity().getMag() * otherCosPerpendicularPlane;
+		const thisFinalVelocityPerpendicularPlane = this.getVelocity().getMagnitude() * thisCosPerpendicularPlane;
+		const otherFinalVelocityPerpendicularPlane = otherObject.getVelocity().getMagnitude() * otherCosPerpendicularPlane;
 		return {thisFinalCentreVelocity: thisFinalVelocityCentrePlane, otherFinalCentreVelocity: otherFinalVelocityCentrePlane, thisFinalPerpendicularVelocity: thisFinalVelocityPerpendicularPlane, otherFinalPerpendicularVelocity: otherFinalVelocityPerpendicularPlane, isFlipAxis: flipAxis};
 	}
 
@@ -149,10 +149,10 @@ class MyObject {
 			otherFinalVelocity = new Velocity(otherFinalVelocityComponents.b, otherFinalVelocityComponents.a);
 		}
 		// recombines vectors into i, j components using cosine angle of the vectors relative to i and j.
-		const thisFinalVelocityXComp = thisFinalVelocity.getMag() * thisFinalVelocity.getCosAngle(new Vector2(1, 0));
-		const thisFinalVelocityYComp = thisFinalVelocity.getMag() * thisFinalVelocity.getCosAngle(new Vector2(0, 1));
-		const otherFinalVelocityXComp = otherFinalVelocity.getMag() * otherFinalVelocity.getCosAngle(new Vector2(1, 0));
-		const otherFinalVelocityYComp = otherFinalVelocity.getMag() * otherFinalVelocity.getCosAngle(new Vector2(0, 1));
+		const thisFinalVelocityXComp = thisFinalVelocity.getMagnitude() * thisFinalVelocity.getCosAngle(new Vector2(1, 0));
+		const thisFinalVelocityYComp = thisFinalVelocity.getMagnitude() * thisFinalVelocity.getCosAngle(new Vector2(0, 1));
+		const otherFinalVelocityXComp = otherFinalVelocity.getMagnitude() * otherFinalVelocity.getCosAngle(new Vector2(1, 0));
+		const otherFinalVelocityYComp = otherFinalVelocity.getMagnitude() * otherFinalVelocity.getCosAngle(new Vector2(0, 1));
 		this.setVelocity(thisFinalVelocityXComp, thisFinalVelocityYComp);
 		otherObject.setVelocity(otherFinalVelocityXComp, otherFinalVelocityYComp);
 	}

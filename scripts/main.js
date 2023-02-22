@@ -82,7 +82,7 @@ function init() {
 				graph.setScale(scales.getX(), scales.getY());
 			} else {
 				graph.setAutomaticScale();
-				graph.setScale((scales.getX()));
+				graph.setScale(scales.getX());
 			}
 			// kinetic energy does not have vector components as it is a scalar
 			if (graph.axisY == "Kinetic Energy") {
