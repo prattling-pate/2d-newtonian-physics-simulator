@@ -88,7 +88,7 @@ class MyObject {
 		let flipAxis = false;
 		// if the two objects colliding dont have the same position vectors
 		if (this.position.x - otherObject.getPosition().getX() != 0 && this.position.y - otherObject.getPosition().getY() != 0) {
-			const gradient = (this.position.getY() - otherObject.getPosition().getY()) / (this.position.getX() - otherObject.getPosition().getX());
+			const gradient = (this.position.getY() - otherObject.getPosition().getY()) /(this.position.getX() - otherObject.getPosition().getX());
 			centreJointPlane = new Vector2(1, gradient);
 			perpendicularJointPlane = new Vector2(1, -1 / gradient);
 		} else if (this.position.getY() - otherObject.getPosition().getY() == 0) {
@@ -123,7 +123,7 @@ class MyObject {
 		// find momentum of each object in the collision plane
 		const thisMomentumCentrePlane = this.mass * this.velocity.getMagnitude() * thisCosCentrePlane;
 		const otherMomentumCentrePlane = otherObject.getMass() * otherObject.getVelocity().getMagnitude() * otherCosCentrePlane;
-		// get all numeric values to solve the derived quadratic equation for an elastic collision
+		// get all numeric values to solve for final velocities
 		const sumMomentum = thisMomentumCentrePlane + otherMomentumCentrePlane;
 		const calculatedVelocities = this.collide(otherObject, this.velocity.getMagnitude() * thisCosCentrePlane, otherObject.getVelocity().getMagnitude() * otherCosCentrePlane, sumMomentum, elasticity);
 		const thisFinalVelocityCentrePlane = calculatedVelocities.thisFinal;

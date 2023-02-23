@@ -166,7 +166,7 @@ function init() {
 	});
 
 	// run the recurring application loop
-	clock(100, simulationHandler, dataLoggerHandler);
+	clock(60, simulationHandler, dataLoggerHandler);
 }
 
 // this function runs the update every 10ms using an interval function, this interval loops the update function which updates the positions of all balls in the animation.

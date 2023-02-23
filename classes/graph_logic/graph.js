@@ -80,24 +80,16 @@ class Graph {
 		return toPlot;
 	}
 
-	isPointOutOfBounds(toPlotScaled) {
-		if (Math.abs(toPlotScaled) > this.height) {
-			return true;
-		}
-		return false;
-	}
-
 	addData(objectData) {
 		let toPlot = this.getDataPoint(objectData);
 		if (this.axisY == "Acceleration" && this.queue.getLength() >= 2) {
 			toPlot = this.differentiate(toPlot);
+			this.previousPoint = this.getDataPoint(objectData);
 		}
-		this.previousPoint = this.getDataPoint(objectData);
 		const timeAtAxis = objectData.getTime().toFixed(3);
 		let toPlotScaled = this.scaleInYAxis(toPlot);
 		toPlotScaled = this.putDataPointInBounds(toPlotScaled);
-		const outOfBounds = this.isPointOutOfBounds(toPlotScaled);
-		this.queue.enqueueData([toPlotScaled, toPlot, outOfBounds, timeAtAxis]);
+		this.queue.enqueueData([toPlotScaled, toPlot, timeAtAxis]);
 		this.queue.updateLargestPresentValue();
 	}
 
@@ -154,7 +146,6 @@ class Graph {
 	}
 
 	// if y data point is outside of the bounds of the graph the point will be replaced by the largest representable point on the graph.
-	// how do i denote a value is out of range?
 	putDataPointInBounds(dataPoint) {
 		const graphHeight = this.height;
 		if (graphHeight < dataPoint) {

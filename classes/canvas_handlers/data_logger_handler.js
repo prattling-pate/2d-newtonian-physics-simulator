@@ -118,7 +118,7 @@ class DataLoggerHandler extends CanvasHandler {
 			index = graph.queue.getQueueIndex(i);
 			position = graph.translateDataToCanvasPlane(new Vector2(i * graph.scale.getX()));
 			// draws the x axis scales
-			this.drawText(graph.queue.data[index][3], position.getX(), graph.centrePosition.getY() + 20, "black");
+			this.drawText(graph.queue.data[index][2], position.getX(), graph.centrePosition.getY() + 20, "black");
 		}
 	}
 

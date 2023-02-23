@@ -34,10 +34,10 @@ class GraphQueue {
 		while (newLength < this.data.length) {
 			pointerToPop = this.dequeueData();
 			this.data.pop(pointerToPop);
-			this.adjustPointerPositions();
+			this.frontPointer--;
 		}
 		while (newLength > this.data.length) {
-			this.data.splice(this.backPointer + 1, 0, [0, 0, false, 0]);
+			this.data.splice(this.backPointer + 1, 0, [0, 0, 0]);
 		}
 	}
 
@@ -95,9 +95,5 @@ class GraphQueue {
 		for (let i = 0; i < this.data.length; i++) {
 			this.dequeueData();
 		}
-	}
-
-	adjustPointerPositions() {
-		this.frontPointer--;
 	}
 }
