@@ -95,8 +95,9 @@ class Graph {
 
 	roundToSignificantFigures(input, precision) {
 		let output = input;
-		if (Math.abs(input) > 1000) {
-			output = output.toExponential();
+		if (Math.abs(input) > 1000 || Math.abs(input) < 0.001) {
+			output = output.toExponential(precision-1);
+			return output;
 		}
 		output = input.toPrecision(precision);
 		return output;

@@ -183,14 +183,14 @@ function update(simulationHandler, dataLoggerHandler) {
 }
 
 function getInputtedObject() {
-	let newObj;
 	const colour = getElementStringValue("colour");
-	const density = getElementFloatValue("density");
-	const position = new Position(getElementFloatValue("position-x"), RESOLUTION.y - (getElementFloatValue("position-y") + (1 / 9) * RESOLUTION.y));
+	const density = checkForValidInput(getElementFloatValue("density"), "density");
+	// multiplied positions by 10 to retain that 100px = 10m
+	const position = new Position(checkForValidInput(getElementFloatValue("position-x"), "positionx")*10, RESOLUTION.y - (checkForValidInput(getElementFloatValue("position-y"), "positiony")*10 + (1 / 9) * RESOLUTION.y));
 	const velocity = new Velocity(getElementFloatValue("velocity-x"), -getElementFloatValue("velocity-y"));
 	const acceleration = new Acceleration(getElementFloatValue("acceleration-x"), -getElementFloatValue("acceleration-y"));
-	const radius = getElementFloatValue("radius");
-	newObj = new Circle(radius, density, colour, velocity, acceleration, position);
+	const radius = checkForValidInput(getElementFloatValue("radius"), "radius")*10; // multiplied by 10 to retain that 100px = 10m
+	const newObj = new Circle(radius, density, colour, velocity, acceleration, position);
 	return newObj;
 }
 
@@ -362,16 +362,24 @@ function checkForValidInput(input, type) {
 	const isInvalid = {
 		gravitationalFieldStrength: input < 0,
 		densityOfAir: input * 1000 < 0 || input * 1000 >= 100,
+		density: input < 0,
 		timeStep: input <= 0,
 		restitution: input < 0 || input > 1,
+		radius: input < 0 || input > 10,
 		scales: input <= 0,
+		positionx: input < 0 || input > 64,
+		positiony: input < 0 || input > 42.5
 	};
 	const errorMessages = {
 		gravitationalFieldStrength: "Gravity cannot be negative",
 		densityOfAir: "Density of Air cannot be negative or greater than 100 without causing simulation issues",
+		density: "Density of object must be greater than 0",
 		timeStep: "Time step in simulation cannot be negative or 0, pausing the simulation can be done using the button",
 		restitution: "Coefficient of restitution cannot be less than 0 or greater than 1",
+		radius: "Radius of a circle must be greater than 0, upper limit set to 10",
 		scales: "Graph scales must be greater than 0",
+		positionx: "X Position must be in the range 0 - 64m",
+		positiony: "Y Position must be in the range 0 - 42.5m"
 	};
 	const boundaryInputs = {
 		gravitationalFieldStrength: 0,
@@ -379,6 +387,8 @@ function checkForValidInput(input, type) {
 		timeStep: 0.01,
 		restitution: 1,
 		scales: 1,
+		positionx: 10,
+		positiony: 10
 	};
 	if (isInvalid[type]) {
 		alert(errorMessages[type]);
