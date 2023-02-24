@@ -12,7 +12,12 @@ class Circle extends MyObject {
 
 	sideCollision(coeffRest, timeStep, planeWidth) {
 		// side collision check (checks if out of bounds on right side or on left side respectively in if statement)
-		if (this.position.getX() + this.velocity.getX() * timeStep + this.radius > planeWidth || this.position.getX() + this.velocity.getX() * timeStep - this.radius < 0) {
+		if (this.position.getX() + this.velocity.getX() * timeStep + this.radius > planeWidth) {
+			this.position.setX(planeWidth - this.radius)
+			this.velocity.setX(-this.velocity.getX() * coeffRest);
+		}
+		else if (this.position.getX() + this.velocity.getX() * timeStep - this.radius < 0){
+			this.position.setX(this.radius)
 			this.velocity.setX(-this.velocity.getX() * coeffRest);
 		}
 	}

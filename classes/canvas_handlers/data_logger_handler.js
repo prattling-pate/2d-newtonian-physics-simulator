@@ -113,7 +113,7 @@ class DataLoggerHandler extends CanvasHandler {
 	drawXScales(graph) {
 		let index;
 		let position;
-		const counter = 50 / graph.scale.getX();
+		const counter = Math.floor(50 / graph.scale.getX());
 		for (let i = counter; i < graph.queue.getLength(); i += counter) {
 			index = graph.queue.getQueueIndex(i);
 			position = graph.translateDataToCanvasPlane(new Vector2(i * graph.scale.getX()));

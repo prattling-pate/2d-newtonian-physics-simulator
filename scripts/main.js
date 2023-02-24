@@ -360,32 +360,34 @@ function checkForValidInput(input, type) {
 	let output = input;
 	// boundary boolean for valid inputs stored in object
 	const isInvalid = {
-		gravitationalFieldStrength: input < 0,
-		densityOfAir: input * 1000 < 0 || input * 1000 >= 100,
-		density: input < 0,
-		timeStep: input <= 0,
-		restitution: input < 0 || input > 1,
-		radius: input < 0 || input > 10,
-		scales: input <= 0,
-		positionx: input < 0 || input > 64,
-		positiony: input < 0 || input > 42.5
+		gravitationalFieldStrength: input < 0 || isNaN(input),
+		densityOfAir: input * 1000 < 0 || input * 1000 >= 100 || isNaN(input),
+		density: input < 0.01 || isNaN(input),
+		timeStep: input > 0.5 || input <= 0 || isNaN(input),
+		restitution: input < 0 || input > 1 || isNaN(input),
+		radius: input < 0.01 || input > 10 || isNaN(input),
+		scales: input <= 0 || isNaN(input),
+		positionx: input < 0.01 || input > 64 || isNaN(input),
+		positiony: input < 0.01 || input > 42.5 || isNaN(input)
 	};
 	const errorMessages = {
 		gravitationalFieldStrength: "Gravity cannot be negative",
 		densityOfAir: "Density of Air cannot be negative or greater than 100 without causing simulation issues",
-		density: "Density of object must be greater than 0",
-		timeStep: "Time step in simulation cannot be negative or 0, pausing the simulation can be done using the button",
+		density: "Density of object must be greater than 0.01",
+		timeStep: "Time step in simulation cannot be negative, 0 or greater than 5 (avoids simulation glitches), pausing the simulation can be done using the button",
 		restitution: "Coefficient of restitution cannot be less than 0 or greater than 1",
-		radius: "Radius of a circle must be greater than 0, upper limit set to 10",
+		radius: "Radius of a circle must be greater than 0.01, upper limit set to 10",
 		scales: "Graph scales must be greater than 0",
-		positionx: "X Position must be in the range 0 - 64m",
-		positiony: "Y Position must be in the range 0 - 42.5m"
+		positionx: "X Position must be in the range 0.01 - 64m",
+		positiony: "Y Position must be in the range 0.01 - 42.5m"
 	};
 	const boundaryInputs = {
 		gravitationalFieldStrength: 0,
 		densityOfAir: 0,
-		timeStep: 0.01,
+		timeStep: 0.1,
 		restitution: 1,
+		density: 1,
+		radius: 1,
 		scales: 1,
 		positionx: 10,
 		positiony: 10
