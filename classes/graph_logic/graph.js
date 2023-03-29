@@ -57,6 +57,8 @@ class Graph {
 		this.timeStep = input * 10;
 	}
 
+	// gets data to plot from object passed in by grabbing its attributes according to the
+	// the graph's vector component and y axis plot.
 	getDataPoint(objectData) {
 		const information = {
 			Displacement: objectData.getDisplacement(),
@@ -71,38 +73,31 @@ class Graph {
 				//being 10 times lower than what is stated on the web page
 				x: toPlot.getX(),
 				y: -toPlot.getY(),
-				abs: toPlot.getMag(),
+				abs: toPlot.getMagnitude(),
 			};
 			toPlot = components[this.axisYComponent];
 		}
 		return toPlot;
 	}
 
-	isPointOutOfBounds(toPlotScaled) {
-		if (Math.abs(toPlotScaled) > this.height) {
-			return true;
-		}
-		return false;
-	}
-
 	addData(objectData) {
 		let toPlot = this.getDataPoint(objectData);
 		if (this.axisY == "Acceleration" && this.queue.getLength() >= 2) {
 			toPlot = this.differentiate(toPlot);
+			this.previousPoint = this.getDataPoint(objectData);
 		}
-		this.previousPoint = this.getDataPoint(objectData);
 		const timeAtAxis = objectData.getTime().toFixed(3);
 		let toPlotScaled = this.scaleInYAxis(toPlot);
 		toPlotScaled = this.putDataPointInBounds(toPlotScaled);
-		const outOfBounds = this.isPointOutOfBounds(toPlotScaled);
-		this.queue.enqueueData([toPlotScaled, toPlot, outOfBounds, timeAtAxis]);
+		this.queue.enqueueData([toPlotScaled, toPlot, timeAtAxis]);
 		this.queue.updateLargestPresentValue();
 	}
 
 	roundToSignificantFigures(input, precision) {
 		let output = input;
-		if (Math.abs(input) > 1000) {
-			output = output.toExponential();
+		if (Math.abs(input) > 1000 || Math.abs(input) < 0.001) {
+			output = output.toExponential(precision-1);
+			return output;
 		}
 		output = input.toPrecision(precision);
 		return output;
@@ -152,7 +147,6 @@ class Graph {
 	}
 
 	// if y data point is outside of the bounds of the graph the point will be replaced by the largest representable point on the graph.
-	// how do i denote a value is out of range?
 	putDataPointInBounds(dataPoint) {
 		const graphHeight = this.height;
 		if (graphHeight < dataPoint) {
@@ -168,6 +162,7 @@ class Graph {
 	differentiate(newData) {
 		let slope = (newData - this.previousPoint) / (this.timeStep / 10);
 		if (this.axisYComponent == "abs") {
+			// allows abs of acceleration to be positive for all values (as it should be)
 			slope = Math.abs(slope);
 		}
 		return slope;

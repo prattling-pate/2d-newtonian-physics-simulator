@@ -57,15 +57,13 @@ class SimulationHandler extends CanvasHandler {
 		this.drawText(object.getMass().toFixed(3) + " kg", objectXPosition, objectYPosition, "black");
 	}
 
+	// updates the kinematics of every object as well as checking for all collision
 	moveTimeForward() {
 		for (const object of this.objects) {
 			object.addWeight(this.constants.gravitationalFieldStrength);
 			object.groundCeilingCollision(this.constants.coeffRest, this.constants.timeStep, this.height);
 			object.sideCollision(this.constants.coeffRest, this.constants.timeStep, this.width);
 			object.updateKinematics(this.constants.densityOfAir, this.constants.timeStep);
-			if (object.shape == "rectangle") {
-				object.updateHitbox();
-			}
 		}
 		for (const object1 of this.objects) {
 			for (const object2 of this.objects) {
@@ -108,7 +106,6 @@ class SimulationHandler extends CanvasHandler {
 
 	animateFrame() {
 		this.drawFrame();
-		// figure out how to have this run only when an object is tracked
 		if (this.running && this.objects.length > 0 && !this.reloaded) {
 			this.moveTimeForward();
 		}

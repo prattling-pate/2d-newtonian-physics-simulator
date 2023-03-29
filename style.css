@@ -15,16 +15,14 @@
     display: inline-grid;
   }
 
-  .simulation-canvas-containter {
-    display: inline-block;
-  }
-
   .box {
     border: 1px solid black;
     width: 640px;
+    background-color: rgb(219, 219, 219);
   }
 
   .instructions {
     border: 1px solid black;
+    background-color: rgb(219, 219, 219);
     width: 50%;
   }

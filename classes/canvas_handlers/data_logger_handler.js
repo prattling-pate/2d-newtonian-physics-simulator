@@ -113,20 +113,17 @@ class DataLoggerHandler extends CanvasHandler {
 	drawXScales(graph) {
 		let index;
 		let position;
-		const counter = 50 / graph.scale.getX();
+		const counter = Math.floor(50 / graph.scale.getX());
 		for (let i = counter; i < graph.queue.getLength(); i += counter) {
 			index = graph.queue.getQueueIndex(i);
 			position = graph.translateDataToCanvasPlane(new Vector2(i * graph.scale.getX()));
 			// draws the x axis scales
-			this.drawText(graph.queue.data[index][3], position.getX(), graph.centrePosition.getY() + 20, "black");
+			this.drawText(graph.queue.data[index][2], position.getX(), graph.centrePosition.getY() + 20, "black");
 		}
 	}
 
 	plotData(graph) {
-		let position;
-		let positionNext;
-		let index;
-		let indexNext;
+		let position; let positionNext; let index; let indexNext;
 		const xScale = graph.scale.getX();
 		for (let i = 0; i < graph.queue.getLength() - 1; i++) {
 			// gets the data iteratively from oldest to newest using getQueueIndex

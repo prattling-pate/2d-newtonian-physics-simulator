@@ -25,8 +25,7 @@
 		<!--
 			Load scripts which initialize application
 		 -->
-		<script src="./scripts/jquery_handling.js"></script>
-		<script src="./scripts/main.js"></script>
+		 <script src="./scripts/main.js"></script>
 	</head>
 
 	<body>
@@ -61,7 +60,7 @@
 					<input type="number" value="9.81" min="0" step="0.001" id="gravity" />ms<sup>2</sup><br />
 					<label for="densityOA">Density Of Air:</label>
 					<input type="number" value="1.225" min="0" step="0.001" id="densityOA" />kgm<sup>-3</sup><br />
-					<label for="rate">Time Scale:</label>
+					<label for="rate">Time Step:</label>
 					<input type="number" value="1" min="0" step="0.001" id="scale" />
 					<br />
 					<label for="restit">Coefficient of Restitution</label>
@@ -85,13 +84,13 @@
 					</select>
 					<br />
 					<label for="radius">Input radius</label>
-					<input type="number" value="1" min="0" step="0.01" id="radius" /><br />
+					<input type="number" value="1" min="0.01" step="0.01" id="radius" /><br />
 					<label for="density"> Density of object </label>
 					<input value="1" id="density" step="0.01" min="0" type="number" />kgm<sup>-3</sup>
 					<br />
 					<label for="position-x">Initial Position of object</label>
 					x=
-					<input value="0" step="0.01" min="0" max="640" id="position-x" type="number" />m, y= <input value="0" step="0.01" min="0" max="426" id="position-y" type="number" />m
+					<input value="0.01" step="0.01" min="0.01" max="64" id="position-x" type="number" />m, y= <input value="0.01" step="0.01" min="0.01" max="42.6" id="position-y" type="number" />m
 					<br />
 					<label for="velocity-x">Initial Velocity of object</label>
 					x=
@@ -218,11 +217,13 @@
 			<h4>Grids</h4>
 			<p>Grids for the data loggers are optional but on by default. They are useful for users to be able to do things like:<ul>
 				<li>Calculate areas under curves</li>
-				<li>Calulcate gradients of curves</li>
+				<li>Calculate gradients of curves</li>
 				<li>Find values for specific times on the graphs</li>
 				<li>Compare what is being logged on the graph to what is visually occuring in the simulation</li>
 			</ul></p>
 		</div>
 		<h2>Made by Kacper Piotr Lubczyński - 2023</h2>
+		<script src="./scripts/jquery_handling.js"></script>
+		
 	</body>
 </html>
