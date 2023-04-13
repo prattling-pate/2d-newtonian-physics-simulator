@@ -9,3 +9,5 @@ Objects phase through each other at low speed impacts due to no rest force handl
   - This technically isn't needed for it's purpose of teaching collisions, only for fun p much
   
 ## Other than that it is finished
+
+This webapp is hosted on Github Pages: https://notkacper.github.io/2d-newtonian-physics-simulator/
