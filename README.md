@@ -11,7 +11,3 @@ Objects phase through each other at low speed impacts due to no rest force handl
 ### Potential changes
 Grid spatial partitioning can be used to optimize the collision system
   - divide canvas into 3x3 grid, register each object into a grid and only check collision against the objects in the grid (still O(n^2) but with a smaller leading coefficient).
-  
-## Other than that it is finished
-
-This webapp is hosted on Github Pages: https://notkacper.github.io/2d-newtonian-physics-simulator/
